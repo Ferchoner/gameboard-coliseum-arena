@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, en revisión |
+| **Estado** | Versión 1, aceptada el 2026-11-14 por Fernando Hernandez Argueta |
 | **Sustituye a** | El modelo relacional preliminar |
 | **Aplica** | ADR-002 (Drizzle sobre PostgreSQL), ADR-004 (sesión con cookie), ADR-008 (alcance del MVP), ADR-009 (reglas de dominio), ADR-010 (persistencia de partida) y ADR-011 (convenciones y glosario) |
 
-**Cómo leer este documento.** Todo lo que deriva de una decisión aceptada cita su ADR o su regla. Lo que este documento añade por su cuenta está reunido en la [sección 10](#10-puntos-a-revisar), marcado como recomendación, y no debe darse por aprobado hasta que se confirme.
+**Cómo leer este documento.** Todo lo que deriva de una decisión aceptada cita su ADR o su regla. Las decisiones de diseño propias de este documento están reunidas en la [sección 10](#10-decisiones-de-diseño-propias-de-este-documento).
 
 Este documento describe el modelo lógico. No contiene código ni definiciones de migración; esas se escriben con Drizzle al implementar (ADR-002).
 
@@ -20,9 +20,9 @@ Este documento describe el modelo lógico. No contiene código ni definiciones d
 | Identificadores | `uuid` generado por el servidor. El identificador de petición (`request_id`) es un `uuid` generado por el cliente | 9.4 |
 | Fechas | `timestamptz`, siempre en UTC | 9.3 |
 | Duraciones y relojes | Enteros en milisegundos | 9.3 |
-| Valores enumerados | `text` con una restricción `CHECK` que limita los valores admitidos | Recomendación R2 |
+| Valores enumerados | `text` con una restricción `CHECK` que limita los valores admitidos | Decisión R2 |
 | Datos propios de cada juego | `jsonb`. La plataforma no interpreta su contenido; lo valida el motor del juego | B2 |
-| Tablas uno a uno | Usan como clave primaria la clave de la entidad a la que pertenecen | Recomendación R3 |
+| Tablas uno a uno | Usan como clave primaria la clave de la entidad a la que pertenecen | Decisión R3 |
 | Borrado | Nada se borra físicamente durante el MVP, salvo sesiones de autenticación, tokens de recuperación y pertenencias a salas | 8.19, 8.20 |
 
 Los cuatro nombres de versión no se mezclan (9.10). En este modelo aparecen dos: `game_versions.version`, que es la versión de las reglas, y `game_sessions.state_version`, que es el contador de cambios de una partida.
@@ -168,7 +168,7 @@ Restricciones: `slug` único.
 
 Restricciones: `(game_id, version)` único. Como mucho una versión vigente por juego, mediante un índice único parcial sobre `game_id` donde `is_current` es verdadero. La versión vigente debe estar activa.
 
-El número de jugadores y los controles de tiempo que admite una versión no se guardan aquí. Los declara el motor (9.9). Ver la recomendación R1.
+El número de jugadores y los controles de tiempo que admite una versión no se guardan aquí. Los declara el motor (9.9). Ver la decisión R1.
 
 ### 3.3. Salas
 
@@ -209,7 +209,7 @@ Forma de `time_control`. El campo `type` nombra la política (7.7). El MVP inclu
 
 Restricciones: clave primaria `(room_id, player_id)`. Índice por `player_id`.
 
-Esta tabla contiene solo los miembros actuales. El anfitrión también tiene su fila. Cuando alguien sale de la sala, su fila se borra. Quién jugó cada partida queda en `match_players`. Ver la recomendación R4.
+Esta tabla contiene solo los miembros actuales. El anfitrión también tiene su fila. Cuando alguien sale de la sala, su fila se borra. Quién jugó cada partida queda en `match_players`. Ver la decisión R4.
 
 La presencia, es decir, quién está conectado, no se guarda (7.24).
 
@@ -371,7 +371,7 @@ Una sola fila. El servidor anota de forma periódica que sigue en marcha, para p
 | `IN_MATCH` | `WAITING` | La partida termina o se anula, y la sala admite revancha (`rematch_enabled`) | 7.11, 7.31 |
 | `IN_MATCH` | `CLOSED` | La partida termina o se anula, y la sala no admite revancha | 7.31 |
 | `WAITING` | `CLOSED` | El anfitrión sale, la sala lleva demasiado tiempo inactiva o la cierra un administrador | 7.12, 7.14 |
-| `IN_MATCH` | `CLOSED` | La cierra un administrador. La partida en curso se anula en la misma transacción | Recomendación R8 |
+| `IN_MATCH` | `CLOSED` | La cierra un administrador. La partida en curso se anula en la misma transacción | Decisión R8 |
 
 `CLOSED` es final. "Todos listos" no es un estado: se calcula a partir de `room_players.is_ready`.
 
@@ -422,7 +422,7 @@ Si una transacción falla, el servidor descarta su copia en memoria de esa sesi�
 | Regla | Cómo se garantiza |
 |---|---|
 | Dos personas no ocupan la última plaza de una sala a la vez (7.15) | La entrada bloquea la fila de la sala antes de contar sus miembros |
-| Un jugador no supera sus límites de partidas simultáneas (7.30) | La entrada bloquea la fila del jugador antes de contar sus pertenencias. Ver la recomendación R7 |
+| Un jugador no supera sus límites de partidas simultáneas (7.30) | La entrada bloquea la fila del jugador antes de contar sus pertenencias. Ver la decisión R7 |
 | Una sala tiene como mucho una partida en curso | Índice único parcial en `matches` |
 | Un jugador ocupa un solo asiento por partida, y cada asiento tiene un solo jugador | Clave primaria y restricción única de `match_players` |
 | Solo un participante puede tener jugadas y resultado en una partida | Referencias compuestas a `match_players` |
@@ -431,7 +431,7 @@ Si una transacción falla, el servidor descarta su copia en memoria de esa sesi�
 | Una partida no se cuenta dos veces en las estadísticas (8.15) | `match_results` admite una sola fila por partida, y las estadísticas se actualizan en su misma transacción |
 | El juego y la versión de una partida coinciden | La partida solo guarda la versión |
 | Un juego tiene como mucho una versión vigente (9.8) | Índice único parcial en `game_versions` |
-| Toda versión activa tiene un motor registrado | Comprobación al arrancar el servidor. Ver la recomendación R1 |
+| Toda versión activa tiene un motor registrado | Comprobación al arrancar el servidor. Ver la decisión R1 |
 | Una cuenta con partidas no se borra (8.20) | Las referencias a `players` no permiten el borrado |
 
 ---
@@ -462,15 +462,15 @@ Tampoco se guarda un historial de snapshots (8.1).
 | `matches` gana `mode`, `time_control` y `abort_reason`, y pierde `game_id` | La partida conserva las condiciones con las que empezó. El juego se obtiene de la versión |
 | `game_sessions` gana `active_seat`, `clocks`, `turn_started_at` y `turn_deadline_at` | 8.4 y 8.17 |
 | Estados de sala, partida y sesión de juego | ADR-009. Resuelve los hallazgos C-11 y C-13 |
-| Se retiran `profiles.preferences`, `players.status`, `rooms.visibility`, `room_players.role`, `room_players.status`, `match_players.team`, `match_players.status`, `match_results.status`, `match_results.completed_at` y `game_sessions.last_activity_at` | Ninguna capacidad del MVP los usa, o repiten un dato que ya está en otra tabla. Ver la recomendación R5 |
+| Se retiran `profiles.preferences`, `players.status`, `rooms.visibility`, `room_players.role`, `room_players.status`, `match_players.team`, `match_players.status`, `match_results.status`, `match_results.completed_at` y `game_sessions.last_activity_at` | Ninguna capacidad del MVP los usa, o repiten un dato que ya está en otra tabla. Ver la decisión R5 |
 
 ---
 
-## 10. Puntos a revisar
+## 10. Decisiones de diseño propias de este documento
 
-Estas son las decisiones de diseño que este documento toma por su cuenta. Son **recomendaciones pendientes de confirmación**. Las demás partes del documento derivan de decisiones ya aceptadas.
+Estas decisiones no derivan de un ADR: se tomaron al escribir el modelo. Fueron **aceptadas el 2026-11-14** por Fernando Hernandez Argueta.
 
-| ID | Recomendación | Alternativa | Motivo |
+| ID | Decisión | Alternativa descartada | Motivo |
 |---|---|---|---|
 | R1 | El número de jugadores y los controles de tiempo que admite una versión **no se guardan en la base de datos**. La única fuente es lo que declara el motor. Al arrancar, el servidor comprueba que cada versión activa tiene su motor | Guardar una copia en `game_versions` | Con una copia habría dos fuentes que pueden discrepar, y un mecanismo para sincronizarlas |
 | R2 | Valores enumerados como texto con restricción `CHECK` | Tipos enumerados de PostgreSQL | Añadir o retirar un valor es una migración más sencilla |
