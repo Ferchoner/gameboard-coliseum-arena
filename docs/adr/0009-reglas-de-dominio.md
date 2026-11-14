@@ -11,7 +11,7 @@
 
 ## Contexto
 
-La documentación inicial definía estados de sala, partida y sesión de juego sin las transiciones entre ellos, y no cubría el reloj, el abandono, la revancha ni las caídas del servidor. Este ADR fija las reglas: qué estados existen, qué provoca cada cambio y qué ocurre en los casos límite. Son 30 reglas en 7 bloques.
+La documentación inicial definía estados de sala, partida y sesión de juego sin las transiciones entre ellos, y no cubría el reloj, el abandono, la revancha ni las caídas del servidor. Este ADR fija las reglas: qué estados existen, qué provoca cada cambio y qué ocurre en los casos límite. Son 31 reglas en 7 bloques.
 
 Los estados se nombran aquí en español. Sus nombres en el código están en ADR-011, convención 9.20. Cómo se guardan está en ADR-010, y los mensajes que las transportan, en `contracts/02-realtime.md`.
 
@@ -39,12 +39,13 @@ Cambio respecto a la documentación inicial: desaparece el estado READY. "Todos 
 | ID | Regla |
 |---|---|
 | 7.9 | **Inicio en tiempo real:** la partida empieza automáticamente cuando la sala está completa y todos sus miembros se han marcado como listos |
-| 7.10 | **Inicio por turnos:** la partida empieza automáticamente cuando la sala se completa, sin paso de "listo". Entrar a la sala es el compromiso de jugar, porque los jugadores no tienen que coincidir conectados |
-| 7.11 | **Tras terminar la partida**, la sala vuelve a EN ESPERA con los mismos miembros y sin marcas de "listo", para permitir la revancha. Una sala puede albergar varias partidas sucesivas |
+| 7.10 | **Inicio por turnos:** la partida empieza automáticamente cuando la sala se completa, sin paso de "listo". Entrar a la sala es el compromiso de jugar, porque los jugadores no tienen que coincidir conectados. La revancha sigue la regla 7.31 |
+| 7.11 | **Tras terminar una partida en tiempo real**, la sala vuelve a EN ESPERA con los mismos miembros y sin marcas de "listo", para permitir la revancha. Una sala puede albergar varias partidas sucesivas. Las salas por turnos siguen la regla 7.31 |
 | 7.12 | Si el anfitrión sale de una sala EN ESPERA, la sala se cierra. Si sale otro miembro, queda su plaza libre |
 | 7.13 | Durante una partida no se puede "salir de la sala". Quien quiera dejarla debe rendirse |
 | 7.14 | Una sala EN ESPERA sin actividad se cierra sola pasado un plazo. Valor inicial: 30 minutos en tiempo real y 7 días por turnos |
 | 7.15 | La capacidad se comprueba de forma atómica al entrar: dos personas no pueden ocupar la última plaza a la vez |
+| 7.31 | **Revancha por turnos:** por defecto, una sala por turnos se cierra al terminar su partida. Al crear la sala, el anfitrión puede activar la revancha. Si la activa, al terminar la partida la sala vuelve a EN ESPERA como en la regla 7.11, y la siguiente partida empieza cuando la sala está completa y todos sus miembros se han marcado como listos. *(Añadida el 2026-11-14. Resuelve un caso que las reglas 7.10 y 7.11 dejaban sin definir: una sala por turnos que seguía completa al terminar.)* |
 
 ## 3. Partida
 
@@ -114,7 +115,7 @@ Cambio respecto a la documentación inicial: INITIALIZING y RECOVERING dejan de 
 | **Vuelve a EN ESPERA para la revancha** | La revancha es inmediata y natural. Coincide con el modelo de datos, que ya permite varias partidas por sala | Hay que limpiar las salas que nadie usa (regla 7.14) |
 | La sala se cierra | Más simple: una sala, una partida | Para la revancha hay que crear otra sala y volver a encontrarse |
 
-**Decisión:** volver a EN ESPERA.
+**Decisión:** volver a EN ESPERA en tiempo real. Por turnos, la sala se cierra, salvo que el anfitrión haya activado la revancha al crearla (regla 7.31). Una revancha por turnos compromete a los jugadores durante horas o días, así que no se da por supuesta.
 
 ### 7.26. Desconexión en una partida en tiempo real
 

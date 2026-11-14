@@ -182,9 +182,10 @@ El número de jugadores y los controles de tiempo que admite una versión no se 
 | `mode` | `text` | No | `REALTIME` o `TURN_BASED`. No cambia una vez creada la sala (7.1) |
 | `time_control` | `jsonb` | No | Control de tiempo elegido al crear la sala (7.2). Ver la forma más abajo |
 | `max_players` | `smallint` | No | Capacidad. La plataforma la valida contra lo que declara el motor (9.9) |
+| `rematch_enabled` | `boolean` | No | Indica si la sala vuelve a `WAITING` al terminar una partida, para la revancha. En tiempo real siempre es verdadero (7.11). Por turnos lo elige el anfitrión al crear la sala y por defecto es falso (7.31) |
 | `settings` | `jsonb` | No | Opciones propias del juego, que se pasan al motor al empezar la partida. Por defecto, un objeto vacío |
 | `status` | `text` | No | `WAITING`, `IN_MATCH` o `CLOSED` |
-| `close_reason` | `text` | Sí | `OWNER_LEFT`, `IDLE` o `ADMIN`. Solo tiene valor si la sala está cerrada |
+| `close_reason` | `text` | Sí | `OWNER_LEFT`, `IDLE`, `MATCH_ENDED` o `ADMIN`. Solo tiene valor si la sala está cerrada |
 | `created_at` | `timestamptz` | No | |
 | `last_activity_at` | `timestamptz` | No | Se actualiza cuando alguien entra, sale o se marca listo, y cuando termina una partida. Sirve para el cierre por inactividad (7.14) |
 | `closed_at` | `timestamptz` | Sí | Tiene valor si y solo si la sala está cerrada |
@@ -349,7 +350,7 @@ Una sola fila. El servidor anota de forma periódica que sigue en marcha, para p
 | `games.status`, `game_versions.status` | `ACTIVE`, `INACTIVE` | ADR-008, punto 15 |
 | `rooms.mode`, `matches.mode` | `REALTIME`, `TURN_BASED` | 9.20 |
 | `rooms.status` | `WAITING`, `IN_MATCH`, `CLOSED` | 9.20 |
-| `rooms.close_reason` | `OWNER_LEFT`, `IDLE`, `ADMIN` | 7.12, 7.14 y ADR-008, punto 15 |
+| `rooms.close_reason` | `OWNER_LEFT`, `IDLE`, `MATCH_ENDED`, `ADMIN` | 7.12, 7.14, 7.31 y ADR-008, punto 15 |
 | `matches.status` | `IN_PROGRESS`, `FINISHED`, `ABORTED` | 9.20 |
 | `matches.abort_reason` | `ADMIN`, `FAILURE` | 7.20 |
 | `game_sessions.status` | `ACTIVE`, `CLOSED` | 9.20 |
@@ -367,7 +368,8 @@ Una sola fila. El servidor anota de forma periódica que sigue en marcha, para p
 |---|---|---|---|
 | | `WAITING` | Se crea la sala | |
 | `WAITING` | `IN_MATCH` | Empieza una partida | 7.9, 7.10 |
-| `IN_MATCH` | `WAITING` | La partida termina o se anula | 7.11 |
+| `IN_MATCH` | `WAITING` | La partida termina o se anula, y la sala admite revancha (`rematch_enabled`) | 7.11, 7.31 |
+| `IN_MATCH` | `CLOSED` | La partida termina o se anula, y la sala no admite revancha | 7.31 |
 | `WAITING` | `CLOSED` | El anfitrión sale, la sala lleva demasiado tiempo inactiva o la cierra un administrador | 7.12, 7.14 |
 | `IN_MATCH` | `CLOSED` | La cierra un administrador. La partida en curso se anula en la misma transacción | Recomendación R8 |
 
@@ -403,10 +405,10 @@ Cada operación de esta tabla es una sola transacción: o se guarda todo o no se
 | **Registro** | Inserta `users`, `profiles` y `players` | `email` y `username` libres | |
 | **Crear una sala** | Inserta `rooms` en `WAITING` y la fila del anfitrión en `room_players` | El jugador no supera su límite de partidas simultáneas | 7.30 |
 | **Entrar a una sala** | Inserta `room_players`. Actualiza `rooms.last_activity_at` | La sala está en `WAITING` y tiene plaza. El jugador no supera su límite de partidas simultáneas | 7.15, 7.30 |
-| **Inicio de partida** | Pasa la sala a `IN_MATCH`. Inserta `matches`, `match_players` con los asientos y `game_sessions` con el estado inicial, la versión 0 y los relojes completos | La sala está en `WAITING` y completa. En tiempo real, además, todos están listos | 7.9, 7.10 |
+| **Inicio de partida** | Pasa la sala a `IN_MATCH`. Inserta `matches`, `match_players` con los asientos y `game_sessions` con el estado inicial, la versión 0 y los relojes completos | La sala está en `WAITING` y completa. Además, todos están listos, salvo en la primera partida de una sala por turnos, que no tiene paso de "listo" | 7.9, 7.10, 7.31 |
 | **Jugada confirmada** | Actualiza `game_sessions`: snapshot, versión, relojes, asiento activo y fecha límite. Inserta una fila en `match_actions` | La sesión está `ACTIVE` y su `state_version` es el esperado. La actualización debe afectar exactamente a una fila | 8.7, 8.8 |
-| **Final de partida** | Lo anterior si el final lo produce una jugada. Además: cierra la sesión, pasa la partida a `FINISHED`, inserta `match_results` y `player_results`, actualiza `game_statistics`, devuelve la sala a `WAITING` y limpia las marcas de listo | La sesión está `ACTIVE` y su `state_version` es el esperado | 8.14, 8.15, 8.16 |
-| **Anulación** | Cierra la sesión, pasa la partida a `ABORTED` y devuelve la sala a `WAITING`. No inserta resultados ni toca estadísticas | La partida está `IN_PROGRESS` | 7.20 |
+| **Final de partida** | Lo anterior si el final lo produce una jugada. Además: cierra la sesión, pasa la partida a `FINISHED`, inserta `match_results` y `player_results`, actualiza `game_statistics`, y devuelve la sala a `WAITING` limpiando las marcas de listo o, si no admite revancha, la cierra | La sesión está `ACTIVE` y su `state_version` es el esperado | 8.14, 8.15, 8.16, 7.31 |
+| **Anulación** | Cierra la sesión, pasa la partida a `ABORTED` y devuelve la sala a `WAITING` o la cierra, igual que en el final de partida. No inserta resultados ni toca estadísticas | La partida está `IN_PROGRESS` | 7.20 |
 | **Ajuste tras una caída** | Al arrancar, desplaza `turn_started_at` y `turn_deadline_at` de todas las sesiones `ACTIVE` tanto como el servidor estuvo parado | Se calcula con `server_liveness.last_alive_at` | 7.29, 8.18 |
 
 Los finales por tiempo agotado, rendición y abandono pasan por la misma operación de final de partida. La condición sobre `state_version` evita que un vencimiento y una jugada simultáneos se apliquen los dos: el que llega segundo encuentra otra versión, se descarta y se vuelve a evaluar.
@@ -456,7 +458,7 @@ Tampoco se guarda un historial de snapshots (8.1).
 | `players.user_id` admite nulo | 9.14 |
 | `games` pierde `min_players` y `max_players` | 9.9. Pertenecen a la versión y los declara el motor |
 | `game_versions` gana `is_current` | 9.8. Resuelve el hallazgo C-06 |
-| `rooms` gana `mode`, `time_control`, `close_reason`, `last_activity_at` y `closed_at` | 7.1, 7.2, 7.12 y 7.14 |
+| `rooms` gana `mode`, `time_control`, `rematch_enabled`, `close_reason`, `last_activity_at` y `closed_at` | 7.1, 7.2, 7.12, 7.14 y 7.31 |
 | `matches` gana `mode`, `time_control` y `abort_reason`, y pierde `game_id` | La partida conserva las condiciones con las que empezó. El juego se obtiene de la versión |
 | `game_sessions` gana `active_seat`, `clocks`, `turn_started_at` y `turn_deadline_at` | 8.4 y 8.17 |
 | Estados de sala, partida y sesión de juego | ADR-009. Resuelve los hallazgos C-11 y C-13 |
@@ -477,7 +479,7 @@ Estas son las decisiones de diseño que este documento toma por su cuenta. Son *
 | R5 | Retirar los campos sin uso en el MVP que figuran en la última fila de la sección 9 | Conservarlos por si acaso | Añadir una columna más adelante es sencillo; mantener columnas sin significado definido crea dudas |
 | R6 | Revocar o cerrar una sesión de autenticación **borra su fila**. No se conserva historial de sesiones | Marcar la fila como revocada | Menos datos personales guardados. El MVP no tiene ninguna pantalla que muestre sesiones pasadas |
 | R7 | Los límites de partidas simultáneas (7.30) se cuentan como **pertenencias a salas no cerradas**, por modalidad. Cubre tanto la sala en la que se espera como la partida en curso | Contar solo partidas `IN_PROGRESS` | Precisa la regla 7.30. Contar pertenencias impide acumular salas en espera por encima del límite |
-| R8 | Cuando un administrador cierra una sala con una partida en curso, la partida se anula en la misma transacción. Cuando una partida se anula sin cerrar la sala, la sala vuelve a `WAITING` | Impedir el cierre mientras haya partida | Precisa las reglas 7.11 y 7.20, que no cubrían estos dos casos |
+| R8 | Cuando un administrador cierra una sala con una partida en curso, la partida se anula en la misma transacción. Cuando una partida se anula sin que nadie cierre la sala, la sala sigue la misma regla que al terminar una partida: vuelve a `WAITING` si admite revancha y se cierra si no | Impedir el cierre mientras haya partida | Precisa las reglas 7.11 y 7.20, que no cubrían estos dos casos |
 | R9 | La rendición no se anota en `match_actions`. Queda reflejada en el resultado, con el motivo `RESIGNATION` | Anotarla como una fila más | La rendición es una orden de la plataforma, no una jugada del motor (7.19) |
 
 ---
@@ -486,7 +488,6 @@ Estas son las decisiones de diseño que este documento toma por su cuenta. Son *
 
 | Asunto | Situación |
 |---|---|
-| **Revancha en una sala por turnos.** La regla 7.10 dice que la partida por turnos empieza sola cuando la sala se completa. La regla 7.11 dice que al terminar, la sala vuelve a `WAITING` con los mismos miembros. Leídas juntas, no queda definido cómo empieza la revancha: o bien la sala, que sigue completa, arranca otra partida de inmediato, o bien no arranca nunca | **Requiere decisión.** El modelo de datos admite cualquiera de las opciones. Se resuelve antes de escribir el protocolo de tiempo real |
 | **Nombre visible de un jugador sin cuenta.** El nombre visible está en el perfil, que pertenece a la cuenta. Un jugador sin cuenta, como un bot, no tendría de dónde tomarlo | Posterior al MVP. Se resuelve cuando se diseñen los bots |
 | **Política de borrado.** Durante el MVP se conserva todo (8.19) | Se define antes del lanzamiento público, junto con el alojamiento |
 | **Registro de acciones de administración.** Quién suspendió una cuenta o anuló una partida no queda guardado en este modelo | Fuera de la versión 1. Conviene valorarlo antes del lanzamiento público |
