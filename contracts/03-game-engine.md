@@ -2,13 +2,13 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, en revisión |
+| **Estado** | Versión 1, aceptada el 2026-11-15 por Fernando Hernandez Argueta |
 | **Contrato** | [`03-game-engine.ts`](03-game-engine.ts). Contiene solo tipos, sin lógica |
 | **Sustituye a** | El contrato de referencia preliminar |
 | **Aplica** | ADR-001 (condición 5.5), ADR-007 (acuerdos B2 y B3), ADR-009 (reglas 7.7, 7.8 y 7.16 a 7.18), ADR-010 (reglas 8.1, 8.2 y 8.5), ADR-011 (convenciones 9.5, 9.7, 9.9 y 9.19) y el modelo de datos (decisión R1) |
 | **Resuelve** | Hallazgos C-12, C-14 y C-15; vacíos G-06 y G-10 |
 
-**Cómo leer este documento.** El contrato es el archivo TypeScript. Este documento explica qué hace cada parte, cómo lo usa la plataforma y qué decisiones de diseño contiene. Las decisiones propias de este entregable están en la [sección 5](#5-puntos-a-revisar), marcadas como recomendación, y no deben darse por aprobadas hasta que se confirmen.
+**Cómo leer este documento.** El contrato es el archivo TypeScript. Este documento explica qué hace cada parte, cómo lo usa la plataforma y qué decisiones de diseño contiene. Las decisiones de diseño propias de este entregable están en la [sección 5](#5-decisiones-de-diseño-propias-de-este-entregable).
 
 El archivo vive por ahora en `contracts/`. Al iniciar el Hito 1 pasa al paquete del motor previsto en ADR-005.
 
@@ -110,11 +110,11 @@ La situación del juego tras la jugada que alinea cuatro fichas del asiento 0:
 
 ---
 
-## 5. Puntos a revisar
+## 5. Decisiones de diseño propias de este entregable
 
-Estas son las decisiones de diseño que este entregable toma por su cuenta. Son **recomendaciones pendientes de confirmación**, salvo las que indican su fecha de aceptación.
+Estas decisiones no derivan de un ADR: se tomaron al escribir el contrato. Fueron **aceptadas el 2026-11-15** por Fernando Hernandez Argueta.
 
-| ID | Recomendación | Alternativa | Motivo |
+| ID | Decisión | Alternativa descartada | Motivo |
 |---|---|---|---|
 | M1 | **El motor conoce asientos, no jugadores.** La plataforma traduce entre jugador y asiento | Pasar al motor los identificadores de jugador, como hacía el contrato preliminar | El motor queda libre de identidades y el estado guardado no contiene datos de personas. Resuelve parte del hallazgo C-15 |
 | M2 | **Una sola vía para validar una acción:** `applyAction` valida y aplica. Desaparece `validateAction` | Mantener las dos | Las dos devolvían el mismo fallo con formas distintas, y podían discrepar (C-15) |
@@ -125,8 +125,8 @@ Estas son las decisiones de diseño que este entregable toma por su cuenta. Son 
 | M7 | **La semilla la genera siempre la plataforma** y el estado del generador de azar vive dentro del estado del juego | Semilla opcional, como en el contrato preliminar | Mantiene el motor determinista también en juegos con azar, y la semilla queda guardada con el estado (G-06) |
 | M8 | **Los eventos de juego son públicos.** La información privada viaja solo en las vistas | Filtrar los eventos por asiento | Una sola regla sencilla evita filtraciones en juegos con información oculta, sin añadir una operación más al contrato |
 | M9 | **Lista cerrada de cinco códigos de rechazo**, más un motivo opcional propio de cada juego | Códigos libres por juego | La plataforma puede traducir cada código a un error del protocolo sin conocer el juego. El motivo conserva el detalle |
-| M10 | **El motor devuelve una lista de asientos activos.** En un juego por turnos contiene un solo asiento; en uno con jugadas simultáneas, varios. **Aceptada el 2026-11-15** | Un solo asiento activo | Era el único límite de la versión 1 que habría obligado a modificar motores ya escritos. Generalizarlo ahora no cuesta nada a los juegos por turnos. El modelo de datos lo refleja en su decisión R10 |
-| M11 | **El motor decide siempre qué ocurre cuando un asiento se retira** por tiempo agotado, rendición o abandono, con la operación `retireSeat`. Vale para cualquier número de jugadores. En un juego de dos, el juego termina y gana el rival (7.18). En uno de más, el juego decide si termina o sigue con los demás | Que en los juegos de dos jugadores el resultado lo construya la plataforma sin pasar por el motor, y que el motor solo intervenga en los de más de dos | Un solo camino para todos los juegos. El estado guardado queda coherente con el final de la partida. Hay juegos de dos jugadores en los que la consecuencia depende de las reglas: en ajedrez, agotar el tiempo no siempre es derrota. **Aceptada el 2026-11-15.** La regla 7.17 de ADR-009 se modificó en consecuencia |
+| M10 | **El motor devuelve una lista de asientos activos.** En un juego por turnos contiene un solo asiento; en uno con jugadas simultáneas, varios. | Un solo asiento activo | Era el único límite de la versión 1 que habría obligado a modificar motores ya escritos. Generalizarlo ahora no cuesta nada a los juegos por turnos. El modelo de datos lo refleja en su decisión R10 |
+| M11 | **El motor decide siempre qué ocurre cuando un asiento se retira** por tiempo agotado, rendición o abandono, con la operación `retireSeat`. Vale para cualquier número de jugadores. En un juego de dos, el juego termina y gana el rival (7.18). En uno de más, el juego decide si termina o sigue con los demás | Que en los juegos de dos jugadores el resultado lo construya la plataforma sin pasar por el motor, y que el motor solo intervenga en los de más de dos | Un solo camino para todos los juegos. El estado guardado queda coherente con el final de la partida. Hay juegos de dos jugadores en los que la consecuencia depende de las reglas: en ajedrez, agotar el tiempo no siempre es derrota. La regla 7.17 de ADR-009 se modificó en consecuencia |
 
 ## 6. Cambios respecto al contrato preliminar
 
