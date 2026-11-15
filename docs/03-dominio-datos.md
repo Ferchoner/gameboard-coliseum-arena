@@ -254,7 +254,7 @@ El estado vivo de una partida. Es un concepto interno del servidor: su existenci
 | `match_id` | `uuid` | No | Clave primaria y referencia a `matches` |
 | `status` | `text` | No | `ACTIVE` o `CLOSED` |
 | `state` | `jsonb` | No | El snapshot: el estado del juego tal como lo serializa el motor. Hay uno solo, que se sobrescribe con cada jugada confirmada (8.1). Es la fuente de verdad (B6, 8.3) |
-| `state_version` | `integer` | No | Contador de cambios. Empieza en 0 y aumenta en 1 con cada jugada confirmada |
+| `state_version` | `integer` | No | Contador de cambios. Empieza en 0 y aumenta en 1 cada vez que cambia el estado: con cada jugada confirmada y con cada retirada de un asiento |
 | `active_seats` | `smallint[]` | No | Asientos que pueden jugar ahora, que son aquellos cuyo reloj está corriendo. En un juego por turnos contiene un solo asiento; en uno con jugadas simultáneas, varios. Vacía si la sesión está cerrada |
 | `clocks` | `jsonb` | No | Tiempo restante de cada asiento, en milisegundos, medido en el instante `turn_started_at` (8.4) |
 | `turn_started_at` | `timestamptz` | Sí | Instante en que se midieron los relojes. Desde entonces corren los de los asientos activos (7.3) |
@@ -311,7 +311,7 @@ Una partida `FINISHED` tiene siempre resultado. Una partida `ABORTED` no lo tien
 
 Restricciones: clave primaria `(match_id, player_id)`. `(match_id, player_id)` hace referencia a `match_players`. Índice por `player_id`.
 
-Los resultados que no produce el motor tienen la misma forma (7.17). En un juego de dos jugadores, quien agota su tiempo, se rinde o abandona recibe `LOSS` y su rival recibe `WIN` (7.18).
+El resultado por asiento lo da siempre el motor, también cuando un jugador agota su tiempo, se rinde o abandona (7.17). En un juego de dos jugadores, ese jugador recibe `LOSS` y su rival recibe `WIN` (7.18).
 
 #### `game_statistics` (estadísticas básicas)
 

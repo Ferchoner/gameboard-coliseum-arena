@@ -56,7 +56,7 @@ Cambio respecto a la documentación inicial: desaparecen CREATED y STARTING. Com
 | ID | Regla |
 |---|---|
 | 7.16 | Una partida TERMINADA tiene siempre un resultado y un motivo: **fin natural** (lo determina el motor), **tiempo agotado**, **rendición** o **abandono** |
-| 7.17 | El resultado por fin natural lo construye el motor. Los otros tres los construye la capa de sesión, con la misma forma de datos. Esto resuelve el hallazgo C-12 |
+| 7.17 | **El resultado por asiento lo determina siempre el motor del juego.** En el fin natural, al aplicar la última jugada. En los otros tres casos, cuando la capa de sesión le pide retirar un asiento. La capa de sesión detecta esos tres casos y añade el motivo al resultado. Esto resuelve el hallazgo C-12. *(Modificada el 2026-11-15. La redacción inicial decía que los resultados de esos tres casos los construía la capa de sesión. Se cambió para que haya un solo camino con cualquier número de jugadores.)* |
 | 7.18 | **Tiempo agotado en un juego de dos jugadores:** pierde quien agota su tiempo y gana el otro. Para juegos de más jugadores, la consecuencia la definirá cada juego |
 | 7.19 | **Rendición:** cualquier jugador puede rendirse en cualquier momento, sea o no su turno. Es una orden de la plataforma, no una jugada del motor |
 | 7.20 | Una partida ANULADA no tiene resultado y no cuenta en estadísticas. Solo se anula por decisión de un administrador o por un fallo técnico irrecuperable |
