@@ -140,6 +140,12 @@ export interface MatchSummaryView {
     readonly username: string;
     readonly displayName: string;
   }[];
+  /** Resultado de quien recibe el mensaje. Tiene valor solo si la partida terminó. */
+  readonly yourOutcome: SeatOutcome | null;
+  /** Tiene valor solo si la partida terminó. */
+  readonly endReason: MatchEndReason | null;
+  readonly startedAt: IsoDateTime;
+  readonly endedAt: IsoDateTime | null;
 }
 
 /** Evento de juego. Además de `type`, lleva los campos que defina cada juego. */

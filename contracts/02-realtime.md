@@ -10,6 +10,8 @@
 
 **Cómo leer este documento.** Todo lo que deriva de una decisión aceptada cita su ADR o su regla. Las decisiones de diseño propias de este entregable están en la [sección 11](#11-decisiones-de-diseño-propias-de-este-entregable).
 
+**Cambio posterior a la aceptación, pendiente de confirmación.** El 2026-11-15, al escribir la API REST, `MatchSummaryView` ganó cuatro campos: `yourOutcome`, `endReason`, `startedAt` y `endedAt`. El cambio solo añade campos y permite que el aviso personal y la lista "mis partidas" de la API usen la misma forma. Es el punto A1 de [`01-rest-api.md`](01-rest-api.md).
+
 Los códigos de error de este documento son provisionales en su redacción: el catálogo único de errores, que es un entregable posterior, los reúne con los de la API y los del motor.
 
 ---
@@ -277,7 +279,7 @@ Las tres vistas están definidas campo por campo en [`02-realtime.ts`](02-realti
 |---|---|---|
 | `RoomView` | El estado completo de una sala: juego, modalidad, control de tiempo, capacidad, si admite revancha, estado, anfitrión, miembros con su marca de listo y su presencia, y la partida en curso si la hay | `ROOM_SUBSCRIBED`, `ROOM_UPDATED` |
 | `MatchView` | El estado completo de una partida desde un asiento: jugadores con su reloj y su presencia, asientos activos, versión del estado, la vista del juego para ese asiento y el resultado si terminó | `MATCH_SUBSCRIBED`, `MATCH_UPDATED` |
-| `MatchSummaryView` | El resumen de una partida: juego, modalidad, estado, si te toca y hasta cuándo, y tus rivales | `PLAYER_MATCH_UPDATED`. También la devolverá la API en "mis partidas" |
+| `MatchSummaryView` | El resumen de una partida: juego, modalidad, estado, si te toca y hasta cuándo, tus rivales y, si terminó, tu resultado y el motivo | `PLAYER_MATCH_UPDATED`. La API devuelve la misma forma en "mis partidas" |
 
 El servidor nunca envía el estado completo del juego. Envía a cada conexión lo que el motor devuelve para su asiento, de modo que un juego con información oculta no la revela.
 

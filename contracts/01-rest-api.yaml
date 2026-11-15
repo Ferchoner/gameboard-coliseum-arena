@@ -1,0 +1,2316 @@
+# API REST, versión 1. Descripción en formato OpenAPI 3.1.
+# Las decisiones de diseño y las reglas comunes están en 01-rest-api.md.
+openapi: 3.1.0
+info:
+  title: 'Plataforma de Juegos de Mesa Online: API REST'
+  version: 1.0.0
+  description: |-
+    API REST de la plataforma, versión 1. Las decisiones de diseño y las reglas comunes están en `01-rest-api.md`.
+
+    **Respuestas.** Toda respuesta con cuerpo es un objeto con `success`. Si es verdadero, el resultado va en `data`. Si es falso, el error va en `error`, con un `code` estable.
+
+    **Sesión.** La identidad viaja en una cookie de sesión que el servidor entrega al registrarse o al iniciar sesión. El cliente nunca envía un identificador de jugador como prueba de identidad.
+
+    **Errores comunes.** Además de los que indica cada operación, cualquiera puede responder `403` con `FORBIDDEN` si la petición viene de un origen no permitido, `429` con `RATE_LIMITED` y `500` con `INTERNAL_ERROR`. Toda respuesta lleva la cabecera `X-Request-Id`, que identifica la petición en los registros del servidor.
+
+    **Canal de tiempo real.** Las jugadas, la rendición y los avisos en vivo no están en esta API. Están en `02-realtime.md`.
+servers:
+- url: https://{apiHost}/api/v1
+  description: El host de la API se decide con el alojamiento.
+  variables:
+    apiHost:
+      default: api.example.com
+- url: http://localhost:3000/api/v1
+  description: Entorno local. El puerto es orientativo.
+tags:
+- name: Autenticación
+  description: Registro, inicio y cierre de sesión, y recuperación de contraseña.
+- name: Cuenta
+  description: La cuenta, el perfil y el jugador de quien ha iniciado sesión.
+- name: Jugadores
+  description: Perfil público y estadísticas de cualquier jugador.
+- name: Catálogo
+  description: Los juegos disponibles.
+- name: Salas
+  description: Crear, listar, entrar, salir y marcarse listo.
+- name: Partidas
+  description: Consultar las partidas propias. Jugar se hace por el canal de tiempo real.
+- name: Administración
+  description: Operaciones reservadas al rol de administrador.
+security:
+- sessionCookie: []
+paths:
+  /auth/register:
+    post:
+      operationId: register
+      tags:
+      - Autenticación
+      summary: Crear una cuenta
+      description: Crea la cuenta, el perfil y el jugador, e inicia sesión. No hay verificación de correo en la
+        versión 1.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Cuenta creada y sesión iniciada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Me'
+          headers:
+            Set-Cookie:
+              description: Cookie de sesión. HttpOnly, Secure y SameSite=Lax (ADR-004).
+              schema:
+                type: string
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: |-
+            Códigos posibles:
+
+            - `EMAIL_TAKEN`: ya existe una cuenta con ese correo.
+            - `USERNAME_TAKEN`: ya existe una cuenta con ese nombre de usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /auth/login:
+    post:
+      operationId: login
+      tags:
+      - Autenticación
+      summary: Iniciar sesión
+      description: Crea una sesión nueva con un identificador nuevo y la entrega en una cookie.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Sesión iniciada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Me'
+          headers:
+            Set-Cookie:
+              description: Cookie de sesión. HttpOnly, Secure y SameSite=Lax (ADR-004).
+              schema:
+                type: string
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: |-
+            Códigos posibles:
+
+            - `INVALID_CREDENTIALS`: el nombre de usuario o la contraseña no son correctos. No se indica cuál.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: |-
+            Códigos posibles:
+
+            - `ACCOUNT_SUSPENDED`: la cuenta está suspendida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /auth/logout:
+    post:
+      operationId: logout
+      tags:
+      - Autenticación
+      summary: Cerrar sesión
+      description: Invalida la sesión en el servidor, borra la cookie y cierra las conexiones de tiempo real de
+        esa sesión. Si no había sesión, responde igual.
+      security: []
+      responses:
+        '204':
+          description: Sesión cerrada.
+  /auth/password-reset/request:
+    post:
+      operationId: requestPasswordReset
+      tags:
+      - Autenticación
+      summary: Pedir la recuperación de la contraseña
+      description: Envía por correo un enlace de un solo uso. Responde lo mismo exista o no una cuenta con ese correo,
+        para no revelar qué correos están registrados.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '202':
+          description: Petición aceptada.
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /auth/password-reset/confirm:
+    post:
+      operationId: confirmPasswordReset
+      tags:
+      - Autenticación
+      summary: Fijar una contraseña nueva con el enlace de recuperación
+      description: Cambia la contraseña y cierra todas las sesiones de la cuenta.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+      responses:
+        '204':
+          description: Contraseña cambiada.
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+            - `INVALID_RESET_TOKEN`: el enlace no existe, caducó o ya se usó.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /me:
+    get:
+      operationId: getMe
+      tags:
+      - Cuenta
+      summary: Consultar la cuenta propia
+      responses:
+        '200':
+          description: La cuenta, el perfil y el jugador de quien ha iniciado sesión.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Me'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+    patch:
+      operationId: updateMe
+      tags:
+      - Cuenta
+      summary: Cambiar el perfil propio
+      description: Solo cambia los campos enviados.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMeRequest'
+      responses:
+        '200':
+          description: Perfil actualizado.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Me'
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /me/password:
+    put:
+      operationId: changePassword
+      tags:
+      - Cuenta
+      summary: Cambiar la contraseña
+      description: Cierra las demás sesiones de la cuenta. La sesión actual sigue abierta.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Contraseña cambiada.
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+            - `INVALID_CURRENT_PASSWORD`: la contraseña actual no es correcta.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /me/matches:
+    get:
+      operationId: listMyMatches
+      tags:
+      - Partidas
+      summary: Listar las partidas propias
+      description: Con `status=IN_PROGRESS` es la lista de "mis partidas en curso", que indica en cuáles te toca.
+        Con `status=FINISHED` es el historial. Las más recientes van primero.
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/MatchStatus'
+        description: Por defecto, `IN_PROGRESS`.
+      - name: gameSlug
+        in: query
+        required: false
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Una página de partidas.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    type: object
+                    required:
+                    - items
+                    - nextCursor
+                    additionalProperties: false
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MatchSummary'
+                      nextCursor:
+                        type:
+                        - string
+                        - 'null'
+                        description: Valor para pedir la página siguiente. Nulo si no hay más.
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /players/{username}:
+    get:
+      operationId: getPlayer
+      tags:
+      - Jugadores
+      summary: Consultar el perfil público de un jugador
+      parameters:
+      - $ref: '#/components/parameters/Username'
+      responses:
+        '200':
+          description: El perfil público.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/PublicPlayer'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `PLAYER_NOT_FOUND`: no existe ningún jugador con ese nombre de usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /players/{username}/statistics:
+    get:
+      operationId: getPlayerStatistics
+      tags:
+      - Jugadores
+      summary: Consultar las estadísticas de un jugador
+      description: Una entrada por cada juego en el que ha terminado alguna partida.
+      parameters:
+      - $ref: '#/components/parameters/Username'
+      responses:
+        '200':
+          description: Las estadísticas por juego.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    type: object
+                    required:
+                    - items
+                    additionalProperties: false
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PlayerGameStatistics'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `PLAYER_NOT_FOUND`: no existe ningún jugador con ese nombre de usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /games:
+    get:
+      operationId: listGames
+      tags:
+      - Catálogo
+      summary: Listar los juegos
+      description: Devuelve los juegos activos. No requiere sesión.
+      security: []
+      responses:
+        '200':
+          description: Los juegos activos.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    type: object
+                    required:
+                    - items
+                    additionalProperties: false
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Game'
+  /games/{gameSlug}:
+    get:
+      operationId: getGame
+      tags:
+      - Catálogo
+      summary: Consultar un juego
+      description: No requiere sesión.
+      security: []
+      parameters:
+      - $ref: '#/components/parameters/GameSlug'
+      responses:
+        '200':
+          description: El juego.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Game'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `GAME_NOT_FOUND`: el juego no existe o no está activo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /rooms:
+    get:
+      operationId: listRooms
+      tags:
+      - Salas
+      summary: Listar las salas en espera
+      description: Devuelve las salas en `WAITING`. Las más recientes van primero.
+      parameters:
+      - name: gameSlug
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: mode
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/MatchMode'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Una página de salas.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    type: object
+                    required:
+                    - items
+                    - nextCursor
+                    additionalProperties: false
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RoomSummary'
+                      nextCursor:
+                        type:
+                        - string
+                        - 'null'
+                        description: Valor para pedir la página siguiente. Nulo si no hay más.
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+    post:
+      operationId: createRoom
+      tags:
+      - Salas
+      summary: Crear una sala
+      description: Quien la crea es su anfitrión y su primer miembro. La modalidad y el control de tiempo no se
+        pueden cambiar después.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoomRequest'
+      responses:
+        '201':
+          description: Sala creada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/RoomView'
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+            - `UNSUPPORTED_ROOM_OPTIONS`: el juego no admite esa modalidad, ese control de tiempo o esa capacidad.
+            - `INVALID_SETTINGS`: el motor del juego rechazó las opciones de `settings`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `GAME_NOT_FOUND`: el juego no existe o no está activo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: |-
+            Códigos posibles:
+
+            - `MATCH_LIMIT_REACHED`: el jugador ya tiene el máximo de partidas simultáneas de esa modalidad: una en tiempo real o veinte por turnos, contando las salas en las que espera.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /rooms/{roomId}:
+    get:
+      operationId: getRoom
+      tags:
+      - Salas
+      summary: Consultar una sala
+      description: Cualquier jugador con sesión puede consultar una sala. Para recibir sus cambios en vivo hay que
+        ser miembro y suscribirse por el canal de tiempo real.
+      parameters:
+      - $ref: '#/components/parameters/RoomId'
+      responses:
+        '200':
+          description: La sala.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/RoomView'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `ROOM_NOT_FOUND`: la sala no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /rooms/{roomId}/members/me:
+    put:
+      operationId: joinRoom
+      tags:
+      - Salas
+      summary: Entrar a una sala
+      description: Si quien llama ya es miembro, responde con la sala sin cambiar nada. En una sala por turnos,
+        si con esta entrada la sala se completa, la partida empieza en la misma operación y la sala se devuelve
+        ya en `IN_MATCH`.
+      parameters:
+      - $ref: '#/components/parameters/RoomId'
+      responses:
+        '200':
+          description: La sala, con quien llama como miembro.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/RoomView'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `ROOM_NOT_FOUND`: la sala no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: |-
+            Códigos posibles:
+
+            - `ROOM_NOT_WAITING`: la sala tiene una partida en curso o está cerrada.
+            - `ROOM_FULL`: la sala no tiene plazas libres.
+            - `MATCH_LIMIT_REACHED`: el jugador ya tiene el máximo de partidas simultáneas de esa modalidad: una en tiempo real o veinte por turnos, contando las salas en las que espera.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: leaveRoom
+      tags:
+      - Salas
+      summary: Salir de una sala
+      description: Si quien sale es el anfitrión, la sala se cierra. Si quien llama no es miembro, responde igual.
+      parameters:
+      - $ref: '#/components/parameters/RoomId'
+      responses:
+        '204':
+          description: Ya no es miembro de la sala.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `ROOM_NOT_FOUND`: la sala no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: |-
+            Códigos posibles:
+
+            - `ROOM_IN_MATCH`: hay una partida en curso. Para dejarla hay que rendirse.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /rooms/{roomId}/members/me/ready:
+    put:
+      operationId: setReady
+      tags:
+      - Salas
+      summary: Marcarse como listo o dejar de estarlo
+      description: Si con esta marca la sala queda completa y con todos listos, la partida empieza en la misma operación
+        y la sala se devuelve ya en `IN_MATCH`.
+      parameters:
+      - $ref: '#/components/parameters/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetReadyRequest'
+      responses:
+        '200':
+          description: La sala, con la marca aplicada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/RoomView'
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: |-
+            Códigos posibles:
+
+            - `PLAYER_NOT_IN_ROOM`: quien llama no es miembro de la sala.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `ROOM_NOT_FOUND`: la sala no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: |-
+            Códigos posibles:
+
+            - `ROOM_NOT_WAITING`: la sala tiene una partida en curso o está cerrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /matches/{matchId}:
+    get:
+      operationId: getMatch
+      tags:
+      - Partidas
+      summary: Consultar una partida
+      description: Devuelve la partida desde el asiento de quien la pide. Sirve para ver una partida terminada o
+        para mostrar una en curso antes de suscribirse por el canal de tiempo real. Las jugadas no se envían por
+        la API.
+      parameters:
+      - $ref: '#/components/parameters/MatchId'
+      responses:
+        '200':
+          description: La partida.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/MatchView'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: |-
+            Códigos posibles:
+
+            - `PLAYER_NOT_IN_MATCH`: quien llama no es participante de la partida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `MATCH_NOT_FOUND`: la partida no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags:
+      - Administración
+      summary: Buscar cuentas
+      parameters:
+      - name: username
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Empieza por este texto.
+      - name: email
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Coincide exactamente.
+      - name: status
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/UserStatus'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Una página de cuentas.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    type: object
+                    required:
+                    - items
+                    - nextCursor
+                    additionalProperties: false
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AdminUser'
+                      nextCursor:
+                        type:
+                        - string
+                        - 'null'
+                        description: Valor para pedir la página siguiente. Nulo si no hay más.
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/AdminOnly'
+  /admin/users/{userId}/status:
+    put:
+      operationId: adminSetUserStatus
+      tags:
+      - Administración
+      summary: Suspender o reactivar una cuenta
+      description: Al suspender una cuenta se cierran todas sus sesiones y sus conexiones de tiempo real, con efecto
+        inmediato.
+      parameters:
+      - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetUserStatusRequest'
+      responses:
+        '200':
+          description: La cuenta, con su estado nuevo.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/AdminUser'
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/AdminOnly'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `USER_NOT_FOUND`: la cuenta no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: |-
+            Códigos posibles:
+
+            - `CANNOT_CHANGE_OWN_STATUS`: un administrador no puede suspender su propia cuenta.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/rooms/{roomId}/close:
+    post:
+      operationId: adminCloseRoom
+      tags:
+      - Administración
+      summary: Cerrar una sala
+      description: Si la sala tiene una partida en curso, la partida se anula en la misma operación. Si la sala
+        ya estaba cerrada, responde igual.
+      parameters:
+      - $ref: '#/components/parameters/RoomId'
+      responses:
+        '204':
+          description: Sala cerrada.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/AdminOnly'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `ROOM_NOT_FOUND`: la sala no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/matches/{matchId}/abort:
+    post:
+      operationId: adminAbortMatch
+      tags:
+      - Administración
+      summary: Anular una partida
+      description: Una partida anulada no tiene resultado y no cuenta en las estadísticas. Si la partida ya estaba
+        anulada, responde igual.
+      parameters:
+      - $ref: '#/components/parameters/MatchId'
+      responses:
+        '204':
+          description: Partida anulada.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/AdminOnly'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `MATCH_NOT_FOUND`: la partida no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: |-
+            Códigos posibles:
+
+            - `MATCH_NOT_IN_PROGRESS`: la partida ya terminó.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/games:
+    get:
+      operationId: adminListGames
+      tags:
+      - Administración
+      summary: Listar todos los juegos y sus versiones
+      description: Incluye los juegos y las versiones inactivos.
+      responses:
+        '200':
+          description: Los juegos, con sus versiones.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    type: object
+                    required:
+                    - items
+                    additionalProperties: false
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AdminGame'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/AdminOnly'
+  /admin/games/{gameSlug}/status:
+    put:
+      operationId: adminSetGameStatus
+      tags:
+      - Administración
+      summary: Activar o desactivar un juego
+      description: Desactivar un juego lo retira del catálogo e impide crear salas nuevas. Las partidas en curso
+        continúan.
+      parameters:
+      - $ref: '#/components/parameters/GameSlug'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetCatalogStatusRequest'
+      responses:
+        '200':
+          description: El juego, con su estado nuevo.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/AdminGame'
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/AdminOnly'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `GAME_NOT_FOUND`: el juego no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/games/{gameSlug}/versions/{gameVersion}/status:
+    put:
+      operationId: adminSetGameVersionStatus
+      tags:
+      - Administración
+      summary: Activar o desactivar una versión de un juego
+      description: Desactivar una versión solo impide empezar partidas nuevas con ella. Las partidas en curso continúan
+        con su versión.
+      parameters:
+      - $ref: '#/components/parameters/GameSlug'
+      - $ref: '#/components/parameters/GameVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetCatalogStatusRequest'
+      responses:
+        '200':
+          description: El juego, con sus versiones.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/AdminGame'
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/AdminOnly'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `GAME_NOT_FOUND`: el juego no existe.
+            - `GAME_VERSION_NOT_FOUND`: la versión no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: |-
+            Códigos posibles:
+
+            - `GAME_VERSION_IS_CURRENT`: no se puede desactivar la versión vigente. Hay que elegir antes otra como vigente.
+            - `ENGINE_NOT_REGISTERED`: no se puede activar una versión cuyo motor no está en el servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/games/{gameSlug}/current-version:
+    put:
+      operationId: adminSetCurrentGameVersion
+      tags:
+      - Administración
+      summary: Elegir la versión vigente de un juego
+      description: La versión vigente es la que toman las partidas nuevas.
+      parameters:
+      - $ref: '#/components/parameters/GameSlug'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetCurrentVersionRequest'
+      responses:
+        '200':
+          description: El juego, con sus versiones.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                additionalProperties: false
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/AdminGame'
+        '400':
+          description: |-
+            Códigos posibles:
+
+            - `VALIDATION_ERROR`: algún campo falta o no cumple su formato. `details.fields` indica cuáles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/AdminOnly'
+        '404':
+          description: |-
+            Códigos posibles:
+
+            - `GAME_NOT_FOUND`: el juego no existe.
+            - `GAME_VERSION_NOT_FOUND`: la versión no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: |-
+            Códigos posibles:
+
+            - `GAME_VERSION_NOT_ACTIVE`: la versión no está activa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: session
+      description: Identificador opaco de la sesión de autenticación. El nombre de la cookie es configurable.
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema:
+        type: string
+      description: El `nextCursor` de la página anterior. Sin él se devuelve la primera página.
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 20
+      description: Número máximo de elementos por página.
+    RoomId:
+      name: roomId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    MatchId:
+      name: matchId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Username:
+      name: username
+      in: path
+      required: true
+      schema:
+        type: string
+    GameSlug:
+      name: gameSlug
+      in: path
+      required: true
+      schema:
+        type: string
+    GameVersion:
+      name: gameVersion
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    Unauthenticated:
+      description: |-
+        Códigos posibles:
+
+        - `UNAUTHENTICATED`: no hay sesión, o la sesión caducó o fue cerrada.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    AdminOnly:
+      description: |-
+        Códigos posibles:
+
+        - `FORBIDDEN`: la cuenta no tiene el rol de administrador.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    RateLimited:
+      description: |-
+        Códigos posibles:
+
+        - `RATE_LIMITED`: demasiadas peticiones en poco tiempo.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+      headers:
+        Retry-After:
+          description: Segundos que conviene esperar antes de reintentar.
+          schema:
+            type: integer
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+      - success
+      - error
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          const: false
+        error:
+          type: object
+          required:
+          - code
+          - message
+          additionalProperties: false
+          properties:
+            code:
+              type: string
+              description: Código estable, en inglés. Es lo que debe leer el cliente.
+              examples:
+              - ROOM_NOT_FOUND
+            message:
+              type: string
+              description: Texto para quien desarrolla. No está pensado para mostrarse al usuario.
+            details:
+              type: object
+              additionalProperties: true
+              description: Datos adicionales, según el código.
+      description: Forma de toda respuesta de error.
+    MatchMode:
+      type: string
+      enum:
+      - REALTIME
+      - TURN_BASED
+    TimeControl:
+      type: object
+      required:
+      - type
+      - totalMs
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum:
+          - TOTAL_PER_PLAYER
+        totalMs:
+          type: integer
+          minimum: 1
+          description: Tiempo total por jugador, en milisegundos.
+      description: Control de tiempo de una partida.
+    RoomStatus:
+      type: string
+      enum:
+      - WAITING
+      - IN_MATCH
+      - CLOSED
+    RoomCloseReason:
+      type: string
+      enum:
+      - OWNER_LEFT
+      - IDLE
+      - MATCH_ENDED
+      - ADMIN
+    MatchStatus:
+      type: string
+      enum:
+      - IN_PROGRESS
+      - FINISHED
+      - ABORTED
+    MatchAbortReason:
+      type: string
+      enum:
+      - ADMIN
+      - FAILURE
+    MatchEndReason:
+      type: string
+      enum:
+      - COMPLETED
+      - TIMEOUT
+      - RESIGNATION
+      - ABANDONMENT
+    SeatOutcome:
+      type: string
+      enum:
+      - WIN
+      - LOSS
+      - DRAW
+    UserRole:
+      type: string
+      enum:
+      - USER
+      - ADMIN
+    UserStatus:
+      type: string
+      enum:
+      - ACTIVE
+      - SUSPENDED
+    CatalogStatus:
+      type: string
+      enum:
+      - ACTIVE
+      - INACTIVE
+    Me:
+      type: object
+      required:
+      - userId
+      - playerId
+      - email
+      - username
+      - displayName
+      - avatarUrl
+      - biography
+      - role
+      - createdAt
+      additionalProperties: false
+      properties:
+        userId:
+          type: string
+          format: uuid
+        playerId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: ^[A-Za-z0-9_]+$
+          description: Único sin distinguir mayúsculas de minúsculas. Sirve para iniciar sesión y como identificador
+            público.
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 30
+          description: El nombre que se muestra. No es único.
+        avatarUrl:
+          type:
+          - string
+          - 'null'
+          format: uri
+        biography:
+          type:
+          - string
+          - 'null'
+          maxLength: 280
+        role:
+          $ref: '#/components/schemas/UserRole'
+        createdAt:
+          type: string
+          format: date-time
+      description: 'La persona que ha iniciado sesión: su cuenta, su perfil y su jugador.'
+    PlayerRef:
+      type: object
+      required:
+      - playerId
+      - username
+      - displayName
+      additionalProperties: false
+      properties:
+        playerId:
+          type: string
+          format: uuid
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: ^[A-Za-z0-9_]+$
+          description: Único sin distinguir mayúsculas de minúsculas. Sirve para iniciar sesión y como identificador
+            público.
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 30
+          description: El nombre que se muestra. No es único.
+      description: Referencia breve a un jugador.
+    PublicPlayer:
+      type: object
+      required:
+      - playerId
+      - username
+      - displayName
+      - avatarUrl
+      - biography
+      additionalProperties: false
+      properties:
+        playerId:
+          type: string
+          format: uuid
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: ^[A-Za-z0-9_]+$
+          description: Único sin distinguir mayúsculas de minúsculas. Sirve para iniciar sesión y como identificador
+            público.
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 30
+          description: El nombre que se muestra. No es único.
+        avatarUrl:
+          type:
+          - string
+          - 'null'
+          format: uri
+        biography:
+          type:
+          - string
+          - 'null'
+          maxLength: 280
+      description: Perfil público de un jugador.
+    PlayerGameStatistics:
+      type: object
+      required:
+      - gameSlug
+      - played
+      - wins
+      - losses
+      - draws
+      additionalProperties: false
+      properties:
+        gameSlug:
+          type: string
+          description: Nombre corto y estable del juego.
+          examples:
+          - four-in-a-row
+        played:
+          type: integer
+          minimum: 0
+        wins:
+          type: integer
+          minimum: 0
+        losses:
+          type: integer
+          minimum: 0
+        draws:
+          type: integer
+          minimum: 0
+      description: Estadísticas básicas de un jugador en un juego.
+    Game:
+      type: object
+      required:
+      - gameSlug
+      - name
+      - description
+      - gameVersion
+      - minPlayers
+      - maxPlayers
+      - timeControls
+      additionalProperties: false
+      properties:
+        gameSlug:
+          type: string
+          description: Nombre corto y estable del juego.
+          examples:
+          - four-in-a-row
+        name:
+          type: string
+          examples:
+          - Cuatro en raya
+        description:
+          type:
+          - string
+          - 'null'
+        gameVersion:
+          type: string
+          description: Versión vigente, que es la que toman las partidas nuevas.
+          examples:
+          - 1.0.0
+        minPlayers:
+          type: integer
+          minimum: 1
+        maxPlayers:
+          type: integer
+          minimum: 1
+        timeControls:
+          type: object
+          required:
+          - REALTIME
+          - TURN_BASED
+          additionalProperties: false
+          properties:
+            REALTIME:
+              type: array
+              items:
+                $ref: '#/components/schemas/TimeControl'
+            TURN_BASED:
+              type: array
+              items:
+                $ref: '#/components/schemas/TimeControl'
+          description: Controles de tiempo que el juego admite en cada modalidad. Una lista vacía significa que
+            no admite esa modalidad.
+      description: Un juego del catálogo, con lo que declara el motor de su versión vigente.
+    RoomSummary:
+      type: object
+      required:
+      - roomId
+      - gameSlug
+      - mode
+      - timeControl
+      - maxPlayers
+      - memberCount
+      - rematchEnabled
+      - status
+      - owner
+      - createdAt
+      additionalProperties: false
+      properties:
+        roomId:
+          type: string
+          format: uuid
+        gameSlug:
+          type: string
+          description: Nombre corto y estable del juego.
+          examples:
+          - four-in-a-row
+        mode:
+          $ref: '#/components/schemas/MatchMode'
+        timeControl:
+          $ref: '#/components/schemas/TimeControl'
+        maxPlayers:
+          type: integer
+        memberCount:
+          type: integer
+        rematchEnabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/RoomStatus'
+        owner:
+          $ref: '#/components/schemas/PlayerRef'
+        createdAt:
+          type: string
+          format: date-time
+      description: Una sala en la lista de salas.
+    RoomMember:
+      type: object
+      required:
+      - playerId
+      - username
+      - displayName
+      - ready
+      - connected
+      - joinedAt
+      additionalProperties: false
+      properties:
+        playerId:
+          type: string
+          format: uuid
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: ^[A-Za-z0-9_]+$
+          description: Único sin distinguir mayúsculas de minúsculas. Sirve para iniciar sesión y como identificador
+            público.
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 30
+          description: El nombre que se muestra. No es único.
+        ready:
+          type: boolean
+        connected:
+          type: boolean
+          description: Tiene al menos una conexión de tiempo real abierta.
+        joinedAt:
+          type: string
+          format: date-time
+    RoomView:
+      type: object
+      required:
+      - roomId
+      - gameSlug
+      - mode
+      - timeControl
+      - maxPlayers
+      - rematchEnabled
+      - settings
+      - status
+      - closeReason
+      - ownerPlayerId
+      - members
+      - currentMatchId
+      additionalProperties: false
+      properties:
+        roomId:
+          type: string
+          format: uuid
+        gameSlug:
+          type: string
+          description: Nombre corto y estable del juego.
+          examples:
+          - four-in-a-row
+        mode:
+          $ref: '#/components/schemas/MatchMode'
+        timeControl:
+          $ref: '#/components/schemas/TimeControl'
+        maxPlayers:
+          type: integer
+        rematchEnabled:
+          type: boolean
+        settings:
+          type: object
+          additionalProperties: true
+          description: Opciones propias del juego.
+        status:
+          $ref: '#/components/schemas/RoomStatus'
+        closeReason:
+          oneOf:
+          - $ref: '#/components/schemas/RoomCloseReason'
+          - type: 'null'
+        ownerPlayerId:
+          type: string
+          format: uuid
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoomMember'
+        currentMatchId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: La partida en curso, si la sala está en `IN_MATCH`.
+      description: Estado completo de una sala. Tiene la misma forma que en el protocolo de tiempo real.
+    MatchPlayer:
+      type: object
+      required:
+      - seat
+      - playerId
+      - username
+      - displayName
+      - connected
+      - clockRemainingMs
+      - abandonAt
+      additionalProperties: false
+      properties:
+        seat:
+          type: integer
+          minimum: 0
+        playerId:
+          type: string
+          format: uuid
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: ^[A-Za-z0-9_]+$
+          description: Único sin distinguir mayúsculas de minúsculas. Sirve para iniciar sesión y como identificador
+            público.
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 30
+          description: El nombre que se muestra. No es único.
+        connected:
+          type: boolean
+        clockRemainingMs:
+          type: integer
+          description: Tiempo que le queda, medido al generar la respuesta.
+        abandonAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Instante en que perderá por abandono si no vuelve a conectarse. Solo en tiempo real.
+    MatchResult:
+      type: object
+      required:
+      - reason
+      - seats
+      additionalProperties: false
+      properties:
+        reason:
+          $ref: '#/components/schemas/MatchEndReason'
+        seats:
+          type: array
+          items:
+            type: object
+            required:
+            - seat
+            - outcome
+            additionalProperties: false
+            properties:
+              seat:
+                type: integer
+                minimum: 0
+              outcome:
+                $ref: '#/components/schemas/SeatOutcome'
+              score:
+                type: integer
+    MatchView:
+      type: object
+      required:
+      - matchId
+      - roomId
+      - gameSlug
+      - gameVersion
+      - mode
+      - timeControl
+      - status
+      - stateVersion
+      - yourSeat
+      - players
+      - activeSeats
+      - turnDeadlineAt
+      - view
+      - result
+      - abortReason
+      - startedAt
+      - endedAt
+      additionalProperties: false
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        roomId:
+          type: string
+          format: uuid
+        gameSlug:
+          type: string
+          description: Nombre corto y estable del juego.
+          examples:
+          - four-in-a-row
+        gameVersion:
+          type: string
+          description: Versión semántica de las reglas.
+          examples:
+          - 1.0.0
+        mode:
+          $ref: '#/components/schemas/MatchMode'
+        timeControl:
+          $ref: '#/components/schemas/TimeControl'
+        status:
+          $ref: '#/components/schemas/MatchStatus'
+        stateVersion:
+          type: integer
+          minimum: 0
+          description: Contador de cambios del estado.
+        yourSeat:
+          type: integer
+          minimum: 0
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchPlayer'
+        activeSeats:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+          description: Asientos que pueden jugar ahora.
+        turnDeadlineAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        view:
+          description: Lo que este asiento puede ver del juego. Su forma la define cada juego.
+        result:
+          oneOf:
+          - $ref: '#/components/schemas/MatchResult'
+          - type: 'null'
+        abortReason:
+          oneOf:
+          - $ref: '#/components/schemas/MatchAbortReason'
+          - type: 'null'
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      description: Estado completo de una partida desde el asiento de quien la pide. Tiene la misma forma que en
+        el protocolo de tiempo real.
+    MatchSummary:
+      type: object
+      required:
+      - matchId
+      - roomId
+      - gameSlug
+      - mode
+      - status
+      - yourTurn
+      - turnDeadlineAt
+      - opponents
+      - yourOutcome
+      - endReason
+      - startedAt
+      - endedAt
+      additionalProperties: false
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        roomId:
+          type: string
+          format: uuid
+        gameSlug:
+          type: string
+          description: Nombre corto y estable del juego.
+          examples:
+          - four-in-a-row
+        mode:
+          $ref: '#/components/schemas/MatchMode'
+        status:
+          $ref: '#/components/schemas/MatchStatus'
+        yourTurn:
+          type: boolean
+          description: Quien pide la lista puede jugar ahora.
+        turnDeadlineAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        opponents:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerRef'
+        yourOutcome:
+          oneOf:
+          - $ref: '#/components/schemas/SeatOutcome'
+          - type: 'null'
+          description: Tiene valor solo si la partida terminó.
+        endReason:
+          oneOf:
+          - $ref: '#/components/schemas/MatchEndReason'
+          - type: 'null'
+          description: Tiene valor solo si la partida terminó.
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      description: Resumen de una partida. Tiene la misma forma que en el aviso personal del protocolo de tiempo
+        real.
+    AdminUser:
+      type: object
+      required:
+      - userId
+      - playerId
+      - email
+      - username
+      - displayName
+      - role
+      - status
+      - createdAt
+      additionalProperties: false
+      properties:
+        userId:
+          type: string
+          format: uuid
+        playerId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: ^[A-Za-z0-9_]+$
+          description: Único sin distinguir mayúsculas de minúsculas. Sirve para iniciar sesión y como identificador
+            público.
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 30
+          description: El nombre que se muestra. No es único.
+        role:
+          $ref: '#/components/schemas/UserRole'
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        createdAt:
+          type: string
+          format: date-time
+    AdminGameVersion:
+      type: object
+      required:
+      - gameVersion
+      - status
+      - isCurrent
+      - engineRegistered
+      - releasedAt
+      additionalProperties: false
+      properties:
+        gameVersion:
+          type: string
+          description: Versión semántica de las reglas.
+          examples:
+          - 1.0.0
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+        isCurrent:
+          type: boolean
+        engineRegistered:
+          type: boolean
+          description: El servidor en marcha tiene el motor de esta versión.
+        releasedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+    AdminGame:
+      type: object
+      required:
+      - gameSlug
+      - name
+      - status
+      - versions
+      additionalProperties: false
+      properties:
+        gameSlug:
+          type: string
+          description: Nombre corto y estable del juego.
+          examples:
+          - four-in-a-row
+        name:
+          type: string
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminGameVersion'
+    RegisterRequest:
+      type: object
+      required:
+      - email
+      - username
+      - password
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: ^[A-Za-z0-9_]+$
+          description: Único sin distinguir mayúsculas de minúsculas. Sirve para iniciar sesión y como identificador
+            público.
+        password:
+          type: string
+          minLength: 10
+          maxLength: 128
+          format: password
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 30
+          description: Si falta, se usa el nombre de usuario.
+    LoginRequest:
+      type: object
+      required:
+      - username
+      - password
+      additionalProperties: false
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+    PasswordResetRequest:
+      type: object
+      required:
+      - email
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+    PasswordResetConfirmRequest:
+      type: object
+      required:
+      - token
+      - newPassword
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+        newPassword:
+          type: string
+          minLength: 10
+          maxLength: 128
+          format: password
+    ChangePasswordRequest:
+      type: object
+      required:
+      - currentPassword
+      - newPassword
+      additionalProperties: false
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          minLength: 10
+          maxLength: 128
+          format: password
+    UpdateMeRequest:
+      type: object
+      required: []
+      additionalProperties: false
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 30
+          description: El nombre que se muestra. No es único.
+        biography:
+          type:
+          - string
+          - 'null'
+          maxLength: 280
+      minProperties: 1
+    CreateRoomRequest:
+      type: object
+      required:
+      - gameSlug
+      - mode
+      - timeControl
+      - maxPlayers
+      additionalProperties: false
+      properties:
+        gameSlug:
+          type: string
+          description: Nombre corto y estable del juego.
+          examples:
+          - four-in-a-row
+        mode:
+          $ref: '#/components/schemas/MatchMode'
+        timeControl:
+          $ref: '#/components/schemas/TimeControl'
+        maxPlayers:
+          type: integer
+          minimum: 1
+          description: Capacidad. Debe estar entre el mínimo y el máximo del juego.
+        rematchEnabled:
+          type: boolean
+          default: false
+          description: 'Solo para salas por turnos: si la sala vuelve a espera al terminar la partida. En tiempo
+            real se ignora, porque la sala siempre vuelve a espera.'
+        settings:
+          type: object
+          additionalProperties: true
+          default: {}
+          description: Opciones propias del juego. Las valida el motor.
+    SetReadyRequest:
+      type: object
+      required:
+      - ready
+      additionalProperties: false
+      properties:
+        ready:
+          type: boolean
+    SetUserStatusRequest:
+      type: object
+      required:
+      - status
+      additionalProperties: false
+      properties:
+        status:
+          $ref: '#/components/schemas/UserStatus'
+    SetCatalogStatusRequest:
+      type: object
+      required:
+      - status
+      additionalProperties: false
+      properties:
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+    SetCurrentVersionRequest:
+      type: object
+      required:
+      - gameVersion
+      additionalProperties: false
+      properties:
+        gameVersion:
+          type: string
+          description: Versión semántica de las reglas.
+          examples:
+          - 1.0.0
