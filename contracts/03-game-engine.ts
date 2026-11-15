@@ -144,14 +144,22 @@ export type GameStatus =
       readonly results: readonly SeatResult[];
     };
 
+/**
+ * Motivo por el que la plataforma retira un asiento de un juego en curso.
+ * Los tres los detecta la capa de sesión, no el motor: el reloj agotado, la
+ * orden de rendición y la desconexión prolongada (ADR-009, reglas 7.5, 7.19
+ * y 7.26).
+ */
+export type SeatRetirementReason = 'TIMEOUT' | 'RESIGNATION' | 'ABANDONMENT';
+
 /** Motivo por el que termina una partida (ADR-009, regla 7.16). */
-export type MatchEndReason = 'COMPLETED' | 'TIMEOUT' | 'RESIGNATION' | 'ABANDONMENT';
+export type MatchEndReason = 'COMPLETED' | SeatRetirementReason;
 
 /**
- * Resultado de una partida. El motor NO lo construye: lo construye la capa
- * de sesión. Con `COMPLETED`, copia los resultados que da el motor. Con los
- * otros tres motivos, los decide la plataforma (ADR-009, reglas 7.17 y 7.18).
- * Se define aquí para que los dos caminos compartan la misma forma.
+ * Resultado de una partida. Lo construye la capa de sesión con los
+ * resultados por asiento que da el motor en `getStatus`, y le añade el
+ * motivo: `COMPLETED` si el juego terminó con una acción, o el motivo de la
+ * retirada si terminó al retirar un asiento.
  */
 export interface MatchResult {
   readonly reason: MatchEndReason;
@@ -186,6 +194,13 @@ export interface GameSetup<TSettings> {
  */
 export interface GameEvent {
   readonly type: string;
+}
+
+/** Resultado de retirar un asiento. */
+export interface Retirement<TState, TEvent extends GameEvent> {
+  /** El estado nuevo, en el que el asiento retirado ya no participa. */
+  readonly state: TState;
+  readonly events: readonly TEvent[];
 }
 
 /** Resultado de aplicar una acción aceptada. */
@@ -244,6 +259,24 @@ export interface GameEngine<TSettings, TState, TAction, TEvent extends GameEvent
     seat: Seat,
     input: unknown,
   ): EngineResponse<Transition<TState, TAction, TEvent>>;
+
+  /**
+   * Retira un asiento del juego por tiempo agotado, rendición o abandono.
+   * El juego decide la consecuencia según sus reglas: puede terminar, o
+   * puede continuar con los demás asientos. La plataforma lo sabe llamando
+   * después a `getStatus`. Un asiento retirado no vuelve a estar activo.
+   *
+   * En un juego de dos jugadores, el juego termina: pierde el asiento
+   * retirado y gana el otro (ADR-009, regla 7.18).
+   *
+   * La plataforma solo la llama con un juego en curso y un asiento que
+   * sigue participando, así que no admite rechazo.
+   */
+  retireSeat(
+    state: TState,
+    seat: Seat,
+    reason: SeatRetirementReason,
+  ): Retirement<TState, TEvent>;
 
   /**
    * Lo que un asiento puede ver del estado. Con `null`, lo que puede ver

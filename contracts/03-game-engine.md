@@ -20,7 +20,7 @@ El motor de un juego contiene sus reglas y nada más. Recibe un estado y una acc
 
 Las seis reglas que debe cumplir están en la cabecera del contrato: puro y determinista, aislado, inmutable, con estado serializable, sin identidades y sin tiempo.
 
-## 2. Las seis operaciones
+## 2. Las siete operaciones
 
 | Operación | Qué hace | Cuándo la llama la plataforma |
 |---|---|---|
@@ -29,6 +29,7 @@ Las seis reglas que debe cumplir están en la cabecera del contrato: puro y dete
 | `restoreState` | Comprueba que un snapshot guardado es un estado válido | Al cargar en memoria una sesión de juego desde la base de datos |
 | `getStatus` | Dice qué asientos pueden jugar ahora o, si el juego terminó, el resultado de cada asiento | Tras crear el estado y tras cada jugada |
 | `applyAction` | Valida y aplica una acción. Devuelve el estado nuevo, la acción aceptada y los eventos de juego, o un rechazo | Cuando llega una jugada |
+| `retireSeat` | Retira un asiento por tiempo agotado, rendición o abandono. El juego decide si termina o continúa con los demás | Cuando la capa de sesión detecta uno de esos tres casos |
 | `getView` | Devuelve lo que un asiento puede ver del estado | Antes de enviar el estado a cada cliente |
 
 Además, cada motor declara su nombre corto, su versión y sus **metadatos**: mínimo y máximo de jugadores, y los controles de tiempo que admite en cada modalidad.
@@ -59,11 +60,16 @@ Además, cada motor declara su nombre corto, su versión y sus **metadatos**: m�
 
 Al cargar una sesión de juego desde la base de datos, la plataforma llama a `restoreState` con el snapshot. Si el motor lo rechaza, la partida no puede continuar y se anula por fallo técnico (7.20).
 
-### Finales que no produce el motor
+### Retirar un asiento
 
-El tiempo agotado, la rendición y el abandono los detecta la capa de sesión. El motor no interviene: la plataforma construye el resultado con la misma forma, `MatchResult`, que usa para el fin natural (7.17).
+El tiempo agotado, la rendición y el abandono los detecta la capa de sesión, no el motor. Cuando ocurre uno:
 
-En un juego de dos jugadores, quien agota su tiempo, se rinde o abandona recibe `LOSS` y su rival `WIN` (7.18).
+1. La plataforma llama a `retireSeat` con el asiento y el motivo.
+2. Llama a `getStatus` sobre el estado nuevo.
+3. Si el juego terminó, guarda el final de la partida con ese motivo y con los resultados por asiento que da el motor.
+4. Si el juego continúa, guarda el estado nuevo y sigue la partida con los demás asientos.
+
+En un juego de dos jugadores siempre ocurre lo primero: pierde el asiento retirado y gana su rival (7.18). En un juego de más jugadores, cada juego decide según sus reglas.
 
 ## 4. Ejemplo ilustrativo: Cuatro en raya
 
@@ -120,13 +126,13 @@ Estas son las decisiones de diseño que este entregable toma por su cuenta. Son 
 | M8 | **Los eventos de juego son públicos.** La información privada viaja solo en las vistas | Filtrar los eventos por asiento | Una sola regla sencilla evita filtraciones en juegos con información oculta, sin añadir una operación más al contrato |
 | M9 | **Lista cerrada de cinco códigos de rechazo**, más un motivo opcional propio de cada juego | Códigos libres por juego | La plataforma puede traducir cada código a un error del protocolo sin conocer el juego. El motivo conserva el detalle |
 | M10 | **El motor devuelve una lista de asientos activos.** En un juego por turnos contiene un solo asiento; en uno con jugadas simultáneas, varios. **Aceptada el 2026-11-15** | Un solo asiento activo | Era el único límite de la versión 1 que habría obligado a modificar motores ya escritos. Generalizarlo ahora no cuesta nada a los juegos por turnos. El modelo de datos lo refleja en su decisión R10 |
-| M11 | **Los finales por tiempo agotado, rendición y abandono solo están definidos para juegos de dos jugadores.** Un juego de más jugadores necesitará ampliar el contrato para decir qué ocurre con el resto | Definirlo ahora para cualquier número de jugadores | La regla 7.18 lo deja a cada juego, y todavía no hay ningún juego de más de dos jugadores con el que validarlo |
+| M11 | **El motor decide qué ocurre cuando un asiento se retira** por tiempo agotado, rendición o abandono, con la operación `retireSeat`. Vale para cualquier número de jugadores. En un juego de dos, el juego termina y gana el rival (7.18). En uno de más, el juego decide si termina o sigue con los demás | Que en los juegos de dos jugadores el resultado lo construya la plataforma sin pasar por el motor, y que el motor solo intervenga en los de más de dos | Un solo camino para todos los juegos. El estado guardado queda coherente con el final de la partida. Hay juegos de dos jugadores en los que la consecuencia depende de las reglas: en ajedrez, agotar el tiempo no siempre es derrota. **Modifica la redacción de la regla 7.17 de ADR-009**, que hoy dice que esos resultados los construye la capa de sesión |
 
 ## 6. Cambios respecto al contrato preliminar
 
 | Antes | Ahora | Motivo |
 |---|---|---|
-| 9 operaciones | 6 operaciones | M2, M3, M4 y M5 |
+| 9 operaciones | 7 operaciones | M2, M3, M4, M5 y M11 |
 | `gameId` | `gameSlug` | 9.5 |
 | Identificadores de jugador | Asientos | M1 |
 | El resultado incluía estado, lista de ganadores, motivo y el valor `OTHER` | El motor da un resultado por asiento: `WIN`, `LOSS` o `DRAW`. El motivo lo pone la capa de sesión | 7.16 y 7.17. Resuelve el hallazgo C-12 |
@@ -143,5 +149,6 @@ La nota de la documentación inicial que decía que el motor incluía `initializ
 |---|---|
 | **Valores concretos del control de tiempo en Cuatro en raya.** La regla 7.2 fija hasta 30 minutos en tiempo real, y 12, 24 o 36 horas por turnos. Falta decidir qué opciones de tiempo real se ofrecen | Se decide al implementar el juego |
 | **Juegos con jugadas simultáneas.** El contrato y el modelo de datos ya los admiten. Falta precisar cómo se aplica la regla 8.11 cuando dos asientos juegan sobre la misma versión del estado: tal como está, la segunda jugada se rechaza como obsoleta y hay que reenviarla | Se precisa cuando llegue el primer juego de ese tipo |
+| **Jugador retirado en una partida que continúa.** El contrato ya lo admite. Faltan las reglas de la plataforma para ese caso, que solo se da con más de dos jugadores: cuándo puede salir de la sala, cuándo deja de contar para sus límites de partidas, cuándo se anotan sus estadísticas y cómo se marca en el modelo de datos | Se define cuando llegue el primer juego de más de dos jugadores |
 | **Uso del motor en el frontend** para mostrar jugadas válidas sin duplicar reglas | Se decide al iniciar el Hito 1 (ADR-005). El contrato no lo impide: el motor no depende de nada del servidor |
 | **Comprobación automática de las seis reglas**, en especial el aislamiento y el determinismo | La herramienta se elige al iniciar el Hito 1 (ADR-001) |
