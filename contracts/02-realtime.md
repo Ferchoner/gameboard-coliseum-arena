@@ -2,13 +2,13 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, en revisión |
+| **Estado** | Versión 1, aceptada el 2026-11-15 por Fernando Hernandez Argueta |
 | **Tipos** | [`02-realtime.ts`](02-realtime.ts). Contiene solo tipos, sin lógica |
 | **Sustituye a** | El contrato de tiempo real preliminar |
 | **Aplica** | ADR-003 (WebSocket nativo), ADR-004 (sesión con cookie), ADR-008 (alcance del MVP), ADR-009 (reglas de dominio), ADR-010 (reglas 8.9, 8.11 y 8.12) y ADR-011 (convenciones 9.10 y 9.16 a 9.18) |
 | **Resuelve** | Hallazgos C-03 (parte de tiempo real), C-04, C-11 y C-16; pendiente P4 (semántica del protocolo); efecto R-4 (aviso de turno) |
 
-**Cómo leer este documento.** Todo lo que deriva de una decisión aceptada cita su ADR o su regla. Las decisiones de diseño propias de este entregable están en la [sección 11](#11-puntos-a-revisar), marcadas como recomendación, y no deben darse por aprobadas hasta que se confirmen.
+**Cómo leer este documento.** Todo lo que deriva de una decisión aceptada cita su ADR o su regla. Las decisiones de diseño propias de este entregable están en la [sección 11](#11-decisiones-de-diseño-propias-de-este-entregable).
 
 Los códigos de error de este documento son provisionales en su redacción: el catálogo único de errores, que es un entregable posterior, los reúne con los de la API y los del motor.
 
@@ -357,11 +357,11 @@ Valores iniciales. Todos son configurables y se ajustarán con datos reales.
 
 ---
 
-## 11. Puntos a revisar
+## 11. Decisiones de diseño propias de este entregable
 
-Estas son las decisiones de diseño que este entregable toma por su cuenta. Son **recomendaciones pendientes de confirmación**. Las cuatro primeras son las que más pesan.
+Estas decisiones no derivan de un ADR: se tomaron al escribir el protocolo. Fueron **aceptadas el 2026-11-15** por Fernando Hernandez Argueta.
 
-| ID | Recomendación | Alternativa | Motivo |
+| ID | Decisión | Alternativa descartada | Motivo |
 |---|---|---|---|
 | T1 | **La API cambia las salas y el WebSocket lleva la partida.** Crear, entrar, salir y marcarse listo son operaciones de la API. Por WebSocket solo viajan las suscripciones y las dos órdenes de una partida: jugar y rendirse | Marcarse listo por WebSocket, como en el contrato preliminar | Cada operación existe en un solo canal. Las operaciones de sala aprovechan lo que la API ya resuelve: errores, límites y reintentos |
 | T2 | **Las jugadas se envían solo por WebSocket**, también en las partidas por turnos | Permitir además enviarlas por la API | Una sola vía que programar y probar. Quien tiene la aplicación abierta tiene la conexión abierta |
