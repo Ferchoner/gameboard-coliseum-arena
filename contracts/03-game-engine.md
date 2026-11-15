@@ -27,7 +27,7 @@ Las seis reglas que debe cumplir están en la cabecera del contrato: puro y dete
 | `parseSettings` | Valida las opciones del juego y las devuelve con su tipo | Al crear una sala |
 | `createInitialState` | Crea el estado inicial a partir del número de asientos, las opciones y la semilla | Al empezar una partida |
 | `restoreState` | Comprueba que un snapshot guardado es un estado válido | Al cargar en memoria una sesión de juego desde la base de datos |
-| `getStatus` | Dice a qué asiento le toca o, si el juego terminó, el resultado de cada asiento | Tras crear el estado y tras cada jugada |
+| `getStatus` | Dice qué asientos pueden jugar ahora o, si el juego terminó, el resultado de cada asiento | Tras crear el estado y tras cada jugada |
 | `applyAction` | Valida y aplica una acción. Devuelve el estado nuevo, la acción aceptada y los eventos de juego, o un rechazo | Cuando llega una jugada |
 | `getView` | Devuelve lo que un asiento puede ver del estado | Antes de enviar el estado a cada cliente |
 
@@ -44,8 +44,8 @@ Además, cada motor declara su nombre corto, su versión y sus **metadatos**: m�
 ### Empezar una partida
 
 1. La plataforma asigna los asientos (9.19) y genera la semilla.
-2. Llama a `createInitialState` y después a `getStatus` para saber a qué asiento le toca primero.
-3. Guarda el estado, la versión 0, los relojes y el asiento activo, en la transacción de inicio de partida del modelo de datos.
+2. Llama a `createInitialState` y después a `getStatus` para saber qué asientos pueden jugar primero.
+3. Guarda el estado, la versión 0, los relojes y los asientos activos, en la transacción de inicio de partida del modelo de datos.
 
 ### Una jugada
 
@@ -106,20 +106,20 @@ La situación del juego tras la jugada que alinea cuatro fichas del asiento 0:
 
 ## 5. Puntos a revisar
 
-Estas son las decisiones de diseño que este entregable toma por su cuenta. Son **recomendaciones pendientes de confirmación**.
+Estas son las decisiones de diseño que este entregable toma por su cuenta. Son **recomendaciones pendientes de confirmación**, salvo las que indican su fecha de aceptación.
 
 | ID | Recomendación | Alternativa | Motivo |
 |---|---|---|---|
 | M1 | **El motor conoce asientos, no jugadores.** La plataforma traduce entre jugador y asiento | Pasar al motor los identificadores de jugador, como hacía el contrato preliminar | El motor queda libre de identidades y el estado guardado no contiene datos de personas. Resuelve parte del hallazgo C-15 |
 | M2 | **Una sola vía para validar una acción:** `applyAction` valida y aplica. Desaparece `validateAction` | Mantener las dos | Las dos devolvían el mismo fallo con formas distintas, y podían discrepar (C-15) |
-| M3 | **`getStatus` es la única fuente** para saber a quién le toca, si el juego terminó y con qué resultado. Sustituye a `currentTurn`, `isFinished`, `getResult` y al resultado dentro de `applyAction` | Mantener las cuatro | Cada dato tenía varias fuentes que podían no coincidir (C-15) |
+| M3 | **`getStatus` es la única fuente** para saber quién puede jugar, si el juego terminó y con qué resultado. Sustituye a `currentTurn`, `isFinished`, `getResult` y al resultado dentro de `applyAction` | Mantener las cuatro | Cada dato tenía varias fuentes que podían no coincidir (C-15) |
 | M4 | **El estado es un valor JSON plano y opaco para la plataforma.** Desaparecen el envoltorio común de estado y `serializeState`. `restoreState` valida el snapshot | Mantener un envoltorio con fase, jugadores y metadatos | El envoltorio repetía datos que la plataforma ya guarda en sus tablas. Si el estado ya es JSON, serializarlo no requiere ninguna operación |
 | M5 | **Desaparece `getAvailableActions`.** Lo que el cliente necesita saber para jugar va en la vista | Mantenerla | En juegos con muchas acciones posibles es costosa, y ninguna parte de la plataforma la usa. Puede añadirse cuando haya bots |
 | M6 | **`parseSettings` valida las opciones del juego** al crear la sala | Dejar las opciones sin validar | Las opciones eran un valor sin tipo que nadie comprobaba (C-15, G-10) |
 | M7 | **La semilla la genera siempre la plataforma** y el estado del generador de azar vive dentro del estado del juego | Semilla opcional, como en el contrato preliminar | Mantiene el motor determinista también en juegos con azar, y la semilla queda guardada con el estado (G-06) |
 | M8 | **Los eventos de juego son públicos.** La información privada viaja solo en las vistas | Filtrar los eventos por asiento | Una sola regla sencilla evita filtraciones en juegos con información oculta, sin añadir una operación más al contrato |
 | M9 | **Lista cerrada de cinco códigos de rechazo**, más un motivo opcional propio de cada juego | Códigos libres por juego | La plataforma puede traducir cada código a un error del protocolo sin conocer el juego. El motivo conserva el detalle |
-| M10 | **Un solo asiento activo a la vez.** Los juegos con jugadas simultáneas quedan fuera de la versión 1 | Lista de asientos activos | Coincide con el modelo de datos aceptado, que guarda un solo asiento activo y un solo reloj en marcha |
+| M10 | **El motor devuelve una lista de asientos activos.** En un juego por turnos contiene un solo asiento; en uno con jugadas simultáneas, varios. **Aceptada el 2026-11-15** | Un solo asiento activo | Era el único límite de la versión 1 que habría obligado a modificar motores ya escritos. Generalizarlo ahora no cuesta nada a los juegos por turnos. El modelo de datos lo refleja en su decisión R10 |
 | M11 | **Los finales por tiempo agotado, rendición y abandono solo están definidos para juegos de dos jugadores.** Un juego de más jugadores necesitará ampliar el contrato para decir qué ocurre con el resto | Definirlo ahora para cualquier número de jugadores | La regla 7.18 lo deja a cada juego, y todavía no hay ningún juego de más de dos jugadores con el que validarlo |
 
 ## 6. Cambios respecto al contrato preliminar
@@ -142,5 +142,6 @@ La nota de la documentación inicial que decía que el motor incluía `initializ
 | Asunto | Situación |
 |---|---|
 | **Valores concretos del control de tiempo en Cuatro en raya.** La regla 7.2 fija hasta 30 minutos en tiempo real, y 12, 24 o 36 horas por turnos. Falta decidir qué opciones de tiempo real se ofrecen | Se decide al implementar el juego |
+| **Juegos con jugadas simultáneas.** El contrato y el modelo de datos ya los admiten. Falta precisar cómo se aplica la regla 8.11 cuando dos asientos juegan sobre la misma versión del estado: tal como está, la segunda jugada se rechaza como obsoleta y hay que reenviarla | Se precisa cuando llegue el primer juego de ese tipo |
 | **Uso del motor en el frontend** para mostrar jugadas válidas sin duplicar reglas | Se decide al iniciar el Hito 1 (ADR-005). El contrato no lo impide: el motor no depende de nada del servidor |
 | **Comprobación automática de las seis reglas**, en especial el aislamiento y el determinismo | La herramienta se elige al iniciar el Hito 1 (ADR-001) |

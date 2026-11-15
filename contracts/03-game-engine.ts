@@ -18,7 +18,7 @@
  *    funciones. La plataforma lo guarda tal cual (ADR-010, regla 8.1).
  * 5. Sin identidades. El motor conoce asientos, no jugadores ni cuentas.
  * 6. Sin tiempo. El reloj lo gestiona la capa de sesión (ADR-009, regla 7.8).
- *    El motor solo indica a qué asiento le toca.
+ *    El motor solo indica qué asientos pueden jugar.
  */
 
 // ---------------------------------------------------------------------------
@@ -82,7 +82,7 @@ export interface GameMetadata {
  *
  * - `INVALID_SETTINGS`: las opciones del juego no son válidas.
  * - `INVALID_ACTION`: la acción está mal formada o las reglas no la permiten.
- * - `NOT_YOUR_TURN`: no le toca al asiento que la envía.
+ * - `NOT_YOUR_TURN`: el asiento que la envía no puede jugar ahora.
  * - `GAME_ALREADY_FINISHED`: el juego ya terminó.
  * - `INVALID_GAME_STATE`: el snapshot no es un estado válido de este motor.
  */
@@ -126,13 +126,17 @@ export interface SeatResult {
 
 /**
  * Situación del juego en un estado dado. Es la única fuente para saber a
- * quién le toca, si el juego terminó y con qué resultado.
+ * quién puede jugar, si el juego terminó y con qué resultado.
  */
 export type GameStatus =
   | {
       readonly finished: false;
-      /** Asiento al que le toca. Su reloj es el que corre. */
-      readonly activeSeat: Seat;
+      /**
+       * Asientos que pueden jugar ahora. Sus relojes son los que corren.
+       * Nunca está vacía. En un juego por turnos contiene un solo asiento;
+       * en un juego con jugadas simultáneas, varios.
+       */
+      readonly activeSeats: readonly Seat[];
     }
   | {
       readonly finished: true;
@@ -227,7 +231,7 @@ export interface GameEngine<TSettings, TState, TAction, TEvent extends GameEvent
    */
   restoreState(snapshot: unknown): EngineResponse<TState>;
 
-  /** A quién le toca o, si el juego terminó, con qué resultado. */
+  /** Quién puede jugar ahora o, si el juego terminó, con qué resultado. */
   getStatus(state: TState): GameStatus;
 
   /**

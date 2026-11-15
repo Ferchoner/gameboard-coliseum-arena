@@ -255,10 +255,10 @@ El estado vivo de una partida. Es un concepto interno del servidor: su existenci
 | `status` | `text` | No | `ACTIVE` o `CLOSED` |
 | `state` | `jsonb` | No | El snapshot: el estado del juego tal como lo serializa el motor. Hay uno solo, que se sobrescribe con cada jugada confirmada (8.1). Es la fuente de verdad (B6, 8.3) |
 | `state_version` | `integer` | No | Contador de cambios. Empieza en 0 y aumenta en 1 con cada jugada confirmada |
-| `active_seat` | `smallint` | Sí | Asiento cuyo reloj está corriendo, que es el del jugador al que le toca. Nulo si la sesión está cerrada |
+| `active_seats` | `smallint[]` | No | Asientos que pueden jugar ahora, que son aquellos cuyo reloj está corriendo. En un juego por turnos contiene un solo asiento; en uno con jugadas simultáneas, varios. Vacía si la sesión está cerrada |
 | `clocks` | `jsonb` | No | Tiempo restante de cada asiento, en milisegundos, medido en el instante `turn_started_at` (8.4) |
-| `turn_started_at` | `timestamptz` | Sí | Instante en que empezó a correr el reloj del asiento activo (7.3) |
-| `turn_deadline_at` | `timestamptz` | Sí | Instante en que se agota el reloj del asiento activo si no juega. Es `turn_started_at` más su tiempo restante |
+| `turn_started_at` | `timestamptz` | Sí | Instante en que se midieron los relojes. Desde entonces corren los de los asientos activos (7.3) |
+| `turn_deadline_at` | `timestamptz` | Sí | Instante en que se agota el primer reloj de los asientos activos si nadie juega. Es `turn_started_at` más el menor de sus tiempos restantes |
 | `created_at` | `timestamptz` | No | |
 | `updated_at` | `timestamptz` | No | |
 
@@ -270,7 +270,7 @@ Forma de `clocks`, con el asiento como clave:
 { "0": 600000, "1": 583250 }
 ```
 
-El tiempo que le queda en un momento dado al asiento activo es su valor guardado menos el tiempo transcurrido desde `turn_started_at`. Los demás asientos conservan su valor guardado. El tiempo lo mide siempre el servidor (7.4).
+El tiempo que le queda en un momento dado a un asiento activo es su valor guardado menos el tiempo transcurrido desde `turn_started_at`. Los demás asientos conservan su valor guardado. Con cada jugada confirmada se descuenta a cada asiento activo el tiempo transcurrido, y `turn_started_at` pasa a ser el instante de la confirmación. El tiempo lo mide siempre el servidor (7.4).
 
 #### `match_actions` (registro de jugadas)
 
@@ -406,7 +406,7 @@ Cada operación de esta tabla es una sola transacción: o se guarda todo o no se
 | **Crear una sala** | Inserta `rooms` en `WAITING` y la fila del anfitrión en `room_players` | El jugador no supera su límite de partidas simultáneas | 7.30 |
 | **Entrar a una sala** | Inserta `room_players`. Actualiza `rooms.last_activity_at` | La sala está en `WAITING` y tiene plaza. El jugador no supera su límite de partidas simultáneas | 7.15, 7.30 |
 | **Inicio de partida** | Pasa la sala a `IN_MATCH`. Inserta `matches`, `match_players` con los asientos y `game_sessions` con el estado inicial, la versión 0 y los relojes completos | La sala está en `WAITING` y completa. Además, todos están listos, salvo en la primera partida de una sala por turnos, que no tiene paso de "listo" | 7.9, 7.10, 7.31 |
-| **Jugada confirmada** | Actualiza `game_sessions`: snapshot, versión, relojes, asiento activo y fecha límite. Inserta una fila en `match_actions` | La sesión está `ACTIVE` y su `state_version` es el esperado. La actualización debe afectar exactamente a una fila | 8.7, 8.8 |
+| **Jugada confirmada** | Actualiza `game_sessions`: snapshot, versión, relojes, asientos activos y fecha límite. Inserta una fila en `match_actions` | La sesión está `ACTIVE` y su `state_version` es el esperado. La actualización debe afectar exactamente a una fila | 8.7, 8.8 |
 | **Final de partida** | Lo anterior si el final lo produce una jugada. Además: cierra la sesión, pasa la partida a `FINISHED`, inserta `match_results` y `player_results`, actualiza `game_statistics`, y devuelve la sala a `WAITING` limpiando las marcas de listo o, si no admite revancha, la cierra | La sesión está `ACTIVE` y su `state_version` es el esperado | 8.14, 8.15, 8.16, 7.31 |
 | **Anulación** | Cierra la sesión, pasa la partida a `ABORTED` y devuelve la sala a `WAITING` o la cierra, igual que en el final de partida. No inserta resultados ni toca estadísticas | La partida está `IN_PROGRESS` | 7.20 |
 | **Ajuste tras una caída** | Al arrancar, desplaza `turn_started_at` y `turn_deadline_at` de todas las sesiones `ACTIVE` tanto como el servidor estuvo parado | Se calcula con `server_liveness.last_alive_at` | 7.29, 8.18 |
@@ -460,7 +460,7 @@ Tampoco se guarda un historial de snapshots (8.1).
 | `game_versions` gana `is_current` | 9.8. Resuelve el hallazgo C-06 |
 | `rooms` gana `mode`, `time_control`, `rematch_enabled`, `close_reason`, `last_activity_at` y `closed_at` | 7.1, 7.2, 7.12, 7.14 y 7.31 |
 | `matches` gana `mode`, `time_control` y `abort_reason`, y pierde `game_id` | La partida conserva las condiciones con las que empezó. El juego se obtiene de la versión |
-| `game_sessions` gana `active_seat`, `clocks`, `turn_started_at` y `turn_deadline_at` | 8.4 y 8.17 |
+| `game_sessions` gana `active_seats`, `clocks`, `turn_started_at` y `turn_deadline_at` | 8.4, 8.17 y decisión R10 |
 | Estados de sala, partida y sesión de juego | ADR-009. Resuelve los hallazgos C-11 y C-13 |
 | Se retiran `profiles.preferences`, `players.status`, `rooms.visibility`, `room_players.role`, `room_players.status`, `match_players.team`, `match_players.status`, `match_results.status`, `match_results.completed_at` y `game_sessions.last_activity_at` | Ninguna capacidad del MVP los usa, o repiten un dato que ya está en otra tabla. Ver la decisión R5 |
 
@@ -468,7 +468,7 @@ Tampoco se guarda un historial de snapshots (8.1).
 
 ## 10. Decisiones de diseño propias de este documento
 
-Estas decisiones no derivan de un ADR: se tomaron al escribir el modelo. Fueron **aceptadas el 2026-11-14** por Fernando Hernandez Argueta.
+Estas decisiones no derivan de un ADR: se tomaron al escribir el modelo. Fueron **aceptadas el 2026-11-14** por Fernando Hernandez Argueta. La R10 se añadió y se aceptó el 2026-11-15.
 
 | ID | Decisión | Alternativa descartada | Motivo |
 |---|---|---|---|
@@ -481,6 +481,7 @@ Estas decisiones no derivan de un ADR: se tomaron al escribir el modelo. Fueron 
 | R7 | Los límites de partidas simultáneas (7.30) se cuentan como **pertenencias a salas no cerradas**, por modalidad. Cubre tanto la sala en la que se espera como la partida en curso | Contar solo partidas `IN_PROGRESS` | Precisa la regla 7.30. Contar pertenencias impide acumular salas en espera por encima del límite |
 | R8 | Cuando un administrador cierra una sala con una partida en curso, la partida se anula en la misma transacción. Cuando una partida se anula sin que nadie cierre la sala, la sala sigue la misma regla que al terminar una partida: vuelve a `WAITING` si admite revancha y se cierra si no | Impedir el cierre mientras haya partida | Precisa las reglas 7.11 y 7.20, que no cubrían estos dos casos |
 | R9 | La rendición no se anota en `match_actions`. Queda reflejada en el resultado, con el motivo `RESIGNATION` | Anotarla como una fila más | La rendición es una orden de la plataforma, no una jugada del motor (7.19) |
+| R10 | `game_sessions` guarda una **lista de asientos activos**, no un solo asiento | Un solo asiento activo | Deja el modelo preparado para juegos con jugadas simultáneas. Un juego por turnos guarda una lista de un elemento, así que no le supone ningún coste. Coincide con el contrato del motor |
 
 ---
 
