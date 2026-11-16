@@ -4,8 +4,11 @@ import type { AppConfig } from './config/config.js';
 import { ConfigModule } from './config/config.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { BroadcastModule } from './modules/broadcast/broadcast.module.js';
 import { GamesModule } from './modules/games/games.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { RealtimeModule } from './modules/realtime/realtime.module.js';
+import { RoomsModule } from './modules/rooms/rooms.module.js';
 
 /**
  * El backend es un monolito modular: un módulo por área, cada uno dueño de
@@ -20,8 +23,11 @@ export class AppModule {
         ConfigModule.forRoot(config),
         CommonModule,
         DatabaseModule,
+        BroadcastModule,
         AuthModule,
         GamesModule,
+        RoomsModule,
+        RealtimeModule,
         HealthModule,
       ],
     };

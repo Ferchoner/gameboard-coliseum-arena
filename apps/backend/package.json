@@ -19,6 +19,8 @@
     "@nestjs/common": "12.5.0",
     "@nestjs/core": "12.5.0",
     "@nestjs/platform-express": "12.5.0",
+    "@nestjs/platform-ws": "12.5.0",
+    "@nestjs/websockets": "12.5.0",
     "drizzle-orm": "1.0.0-rc.5",
     "pg": "8.23.1",
     "reflect-metadata": "0.2.2",
@@ -31,12 +33,14 @@
     "@types/node": "catalog:",
     "@types/pg": "8.23.1",
     "@types/supertest": "7.2.1",
+    "@types/ws": "8.18.2",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
     "drizzle-kit": "1.0.0-rc.5",
     "supertest": "7.3.2",
     "typescript": "catalog:",
     "vitest": "catalog:",
+    "ws": "8.22.1",
     "yaml": "2.9.1"
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { DatabaseService, type DbExecutor } from '../../database/database.service.js';
 import { profiles } from './profiles.schema.js';
 
@@ -27,5 +27,16 @@ export class ProfilesRepository {
       .where(eq(profiles.userId, userId))
       .limit(1);
     return row ?? null;
+  }
+
+  async findByUserIds(
+    userIds: readonly string[],
+    executor: DbExecutor = this.database.db,
+  ): Promise<ProfileRow[]> {
+    if (userIds.length === 0) return [];
+    return executor
+      .select()
+      .from(profiles)
+      .where(inArray(profiles.userId, [...userIds]));
   }
 }

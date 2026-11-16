@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
-import { DatabaseService, type DbExecutor } from '../../database/database.service.js';
+import { eq, inArray } from 'drizzle-orm';
+import {
+  DatabaseService,
+  type DbExecutor,
+  type Transaction,
+} from '../../database/database.service.js';
 import { players } from './players.schema.js';
 
 export type PlayerRow = typeof players.$inferSelect;
@@ -23,5 +27,26 @@ export class PlayersRepository {
   ): Promise<PlayerRow | null> {
     const [row] = await executor.select().from(players).where(eq(players.userId, userId)).limit(1);
     return row ?? null;
+  }
+
+  async findByIds(
+    ids: readonly string[],
+    executor: DbExecutor = this.database.db,
+  ): Promise<PlayerRow[]> {
+    if (ids.length === 0) return [];
+    return executor
+      .select()
+      .from(players)
+      .where(inArray(players.id, [...ids]));
+  }
+
+  /** Bloquea la fila del jugador hasta que termine la transacción. */
+  async lockById(id: string, tx: Transaction): Promise<boolean> {
+    const rows = await tx
+      .select({ id: players.id })
+      .from(players)
+      .where(eq(players.id, id))
+      .for('update');
+    return rows.length > 0;
   }
 }

@@ -1,11 +1,24 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { navigateTo } from '#imports';
+import { useRealtime } from '../composables/useRealtime';
 import { useSession } from '../composables/useSession';
 import { es } from '../i18n/es';
 import { failureText } from '../utils/errors';
 
 const { session, me, signOut } = useSession();
+const { state: connection } = useRealtime();
+
+/** Lo que hay que contar de la conexión de tiempo real, si hay algo que contar. */
+const connectionNotice = computed(() => {
+  if (!me.value) return null;
+  if (connection.value.status === 'reconnecting') return es.realtime.reconnecting;
+  // El fin de la sesión lo cuenta la propia sesión, que lleva a la página de entrada.
+  if (connection.value.status === 'stopped' && connection.value.reason !== 'SESSION_ENDED') {
+    return es.realtime.stopped[connection.value.reason];
+  }
+  return null;
+});
 
 const signingOut = ref(false);
 const notice = ref<string | null>(null);
@@ -31,6 +44,7 @@ async function onSignOut(): Promise<void> {
 
       <nav class="site-nav" :aria-label="es.app.name">
         <template v-if="me">
+          <NuxtLink class="nav-link" to="/salas">{{ es.nav.rooms }}</NuxtLink>
           <span class="who">
             <span class="visually-hidden">{{ es.nav.signedInAs }}</span>
             {{ me.displayName }}
@@ -50,6 +64,8 @@ async function onSignOut(): Promise<void> {
     <p v-else-if="session.status === 'unavailable'" class="notice error" role="alert">
       {{ es.client.sessionUnknown }} {{ failureText(session.failure) }}
     </p>
+
+    <p v-if="connectionNotice" class="notice warning" role="status">{{ connectionNotice }}</p>
 
     <main class="content">
       <slot />

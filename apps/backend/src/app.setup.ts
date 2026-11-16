@@ -5,6 +5,8 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module.js';
 import { REQUEST_ID_HEADER, requestContext } from './common/http/request-context.js';
 import type { AppConfig } from './config/config.js';
+import { RealtimeHandshake } from './modules/realtime/realtime-handshake.js';
+import { RealtimeWsAdapter } from './modules/realtime/realtime-ws.adapter.js';
 
 const LOG_LEVELS: readonly LogLevel[] = ['error', 'warn', 'log', 'debug'];
 
@@ -25,7 +27,8 @@ export const APP_CREATE_OPTIONS = { bodyParser: false } as const;
 /**
  * Configura todo lo que afecta a cómo responde la aplicación: el orden de
  * los pasos de entrada, las cabeceras de seguridad, CORS, la protección
- * contra peticiones de otro origen y el tamaño máximo del cuerpo. Lo usan
+ * contra peticiones de otro origen, el tamaño máximo del cuerpo y el
+ * canal de tiempo real. Lo usan
  * el arranque real y las pruebas, para que prueben lo mismo que se ejecuta.
  *
  * Orden en que se comprueba una petición (matriz de permisos, sección 7):
@@ -66,6 +69,12 @@ export function configureApp(app: NestExpressApplication, config: AppConfig): vo
 
   // 5. Cuerpo JSON, con un tamaño máximo.
   app.useBodyParser('json', { limit: config.http.maxBodyBytes });
+
+  // 6. Canal de tiempo real: el origen y la sesión se comprueban al abrir la
+  //    conexión, y un mensaje demasiado grande la cierra (ADR-013, decisión H4).
+  app.useWebSocketAdapter(
+    new RealtimeWsAdapter(app, app.get(RealtimeHandshake), config.realtime.maxMessageBytes),
+  );
 
   app.enableShutdownHooks();
 }

@@ -95,6 +95,7 @@ Las flechas indican quién usa a quién.
 | `realtime` | Conexiones WebSocket, suscripciones en memoria, presencia y difusión. Es el único módulo que conoce el transporte | Ninguna |
 | `statistics` | Contadores por jugador y juego | `game_statistics` |
 | `admin` | Operaciones de administración. No tiene datos propios: usa los demás módulos | Ninguna |
+| `broadcast` | La interfaz neutral por la que los módulos avisan de lo que cambió y preguntan quién está conectado, sin conocer el WebSocket. `realtime` la implementa (ADR-013, decisión H5) | Ninguna |
 | `database`, `config`, `common` | Infraestructura compartida y acotada: conexión, configuración, sobre de respuesta y errores | Ninguna |
 
 `game-engine` no es un módulo del backend: es un paquete aparte que el backend usa (ADR-005). Contiene el contrato del motor y los motores concretos.
@@ -170,6 +171,19 @@ Estos puntos quedaron aplazados a propósito en sus ADR, para decidirlos con las
 | Tipos escritos más de una vez | Se definen una sola vez. `contracts` toma del motor los que comparten | S2 |
 | Comprobación de salud del servidor | `GET /health`, fuera de la API versionada | S19 |
 
+### Lo que se decidió al iniciar el Hito 2
+
+Se decidió el 2026-11-16 en [ADR-013](adr/0013-decisiones-del-hito-2.md).
+
+| Asunto | Decisión | Dónde |
+|---|---|---|
+| Quién depende de quién entre `rooms` y `matches` | `rooms` define una interfaz pequeña, el iniciador de partidas, y `matches` la implementa. `matches` conoce a `rooms`, y no al revés. Hasta el Hito 3 nadie la implementa y una sala completa se queda en espera | H1 y H2 |
+| Cómo avisan los módulos sin conocer el WebSocket | A través de una interfaz neutral de difusión y presencia, el módulo `broadcast`, que `realtime` implementa. `rooms` y `auth` no importan `realtime`; `realtime` sí usa a `rooms` y a `auth` | H5 |
+| Cuándo se envía un aviso | La transacción lleva una lista de avisos pendientes. Se envían al confirmarse y se descartan si se revierte | H6 |
+| Capacidad y límite de partidas simultáneas | Bloqueo de fila: primero la del jugador y después la de la sala, siempre en ese orden | H7 |
+| Tareas periódicas | Temporizadores propios en el módulo dueño de cada tarea, sin librería | H8 |
+| Servidor WebSocket | El adaptador oficial de NestJS sobre `ws`, con la sesión y el origen comprobados antes de aceptar la conexión | H4 |
+
 ---
 
 ## 9. Decisiones propias de este documento
@@ -191,6 +205,5 @@ Lo que este documento añade por su cuenta. Fueron **aceptadas el 2026-11-16** p
 
 | Asunto | Situación |
 |---|---|
-| **Quién llama a quién entre `rooms` y `matches`.** `rooms` tiene que arrancar la partida cuando la sala se completa, y el final de la partida tiene que devolver la sala a la espera. Son dos módulos que se necesitan en los dos sentidos | Se resuelve al iniciar el Hito 2. La opción preferente es que `rooms` defina una interfaz pequeña para "empezar partida" y `matches` la implemente, de modo que la dependencia vaya en un solo sentido |
 | **Alojamiento, copias de seguridad y supervisión** | Aplazado por decisión de quien decide. Tendrá su propio ADR |
 | **Paso a varias instancias.** Hoy la serialización de jugadas, las suscripciones y los temporizadores viven en la memoria de un proceso | Fuera del MVP. La interfaz única de difusión y la revisión periódica de relojes son los dos puntos preparados para ello |

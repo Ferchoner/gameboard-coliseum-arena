@@ -27,6 +27,18 @@ export class SessionsRepository {
     return row ?? null;
   }
 
+  async findById(
+    id: string,
+    executor: DbExecutor = this.database.db,
+  ): Promise<AuthSessionRow | null> {
+    const [row] = await executor
+      .select()
+      .from(authSessions)
+      .where(eq(authSessions.id, id))
+      .limit(1);
+    return row ?? null;
+  }
+
   async renew(
     id: string,
     lastUsedAt: Date,
@@ -44,19 +56,24 @@ export class SessionsRepository {
     await executor.delete(authSessions).where(eq(authSessions.id, id));
   }
 
+  /** Borra la sesión de ese identificador. Devuelve su `id`, o `null` si no existía. */
   async deleteByTokenHash(
     tokenHash: string,
     executor: DbExecutor = this.database.db,
-  ): Promise<void> {
-    await executor.delete(authSessions).where(eq(authSessions.tokenHash, tokenHash));
+  ): Promise<string | null> {
+    const [deleted] = await executor
+      .delete(authSessions)
+      .where(eq(authSessions.tokenHash, tokenHash))
+      .returning({ id: authSessions.id });
+    return deleted?.id ?? null;
   }
 
-  /** Borra las sesiones caducadas. Devuelve cuántas eran. */
-  async deleteExpired(now: Date, executor: DbExecutor = this.database.db): Promise<number> {
+  /** Borra las sesiones caducadas. Devuelve sus `id`. */
+  async deleteExpired(now: Date, executor: DbExecutor = this.database.db): Promise<string[]> {
     const deleted = await executor
       .delete(authSessions)
       .where(lt(authSessions.expiresAt, now))
       .returning({ id: authSessions.id });
-    return deleted.length;
+    return deleted.map((row) => row.id);
   }
 }

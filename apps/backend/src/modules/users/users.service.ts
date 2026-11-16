@@ -83,6 +83,12 @@ export class UsersService {
     return row ? toUser(row) : null;
   }
 
+  /** El nombre de usuario de cada cuenta, por su identificador. */
+  async findUsernames(ids: readonly string[], executor?: DbExecutor): Promise<Map<string, string>> {
+    const rows = await this.repository.findByIds(ids, executor);
+    return new Map(rows.map((row) => [row.id, row.username]));
+  }
+
   async findByUsername(username: string): Promise<User | null> {
     const row = await this.repository.findByUsername(username);
     return row ? toUser(row) : null;

@@ -116,6 +116,48 @@ module.exports = {
       to: { path: '^apps/backend/src/database/schema\\.ts$' },
     },
     {
+      name: 'websocket-solo-en-realtime',
+      severity: 'error',
+      comment:
+        'El módulo `realtime` es el único que conoce el transporte. Ningún otro importa las ' +
+        'librerías de WebSocket (arquitectura, regla 6; ADR-003).',
+      from: {
+        path: '^apps/backend/src/',
+        pathNot: ['^apps/backend/src/modules/realtime/', TESTS],
+      },
+      to: { path: 'node_modules/(@nestjs/websockets|@nestjs/platform-ws|ws)/' },
+    },
+    {
+      name: 'nadie-depende-de-realtime',
+      severity: 'error',
+      comment:
+        'Los módulos avisan de sus cambios y preguntan por la presencia a través de `broadcast`, ' +
+        'sin importar `realtime` (ADR-013, decisión H5). Solo el arranque de la aplicación lo monta.',
+      from: {
+        path: '^apps/backend/src/(modules|common|config|database)/',
+        pathNot: '^apps/backend/src/modules/realtime/',
+      },
+      to: { path: '^apps/backend/src/modules/realtime/' },
+    },
+    {
+      name: 'broadcast-es-neutral',
+      severity: 'error',
+      comment:
+        'La interfaz de difusión y presencia no conoce a ningún módulo de negocio: por eso todos ' +
+        'pueden depender de ella sin crear ciclos (ADR-013, decisión H5).',
+      from: { path: '^apps/backend/src/modules/broadcast/' },
+      to: { path: '^apps/backend/src/modules/', pathNot: '^apps/backend/src/modules/broadcast/' },
+    },
+    {
+      name: 'rooms-no-conoce-matches',
+      severity: 'error',
+      comment:
+        '`rooms` define la interfaz con la que pide el inicio de una partida y `matches` la ' +
+        'implementa. La dependencia va en un solo sentido (ADR-013, decisión H1).',
+      from: { path: '^apps/backend/src/modules/rooms/' },
+      to: { path: '^apps/backend/src/modules/matches/' },
+    },
+    {
       name: 'infraestructura-no-depende-de-modulos',
       severity: 'error',
       comment: 'La infraestructura compartida no conoce los módulos de negocio.',

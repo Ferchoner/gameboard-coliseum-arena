@@ -8,4 +8,5 @@ export { authSessions } from '../modules/auth/auth.schema.js';
 export { gameVersions, games } from '../modules/games/games.schema.js';
 export { players } from '../modules/players/players.schema.js';
 export { profiles } from '../modules/profiles/profiles.schema.js';
+export { roomPlayers, rooms } from '../modules/rooms/rooms.schema.js';
 export { users } from '../modules/users/users.schema.js';

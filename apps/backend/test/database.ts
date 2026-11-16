@@ -8,7 +8,16 @@ export const TEST_DATABASE_URL =
   process.env['TEST_DATABASE_URL'] ??
   'postgres://gameboard:gameboard@localhost:5432/gameboard_test';
 
-const TABLES = ['auth_sessions', 'players', 'profiles', 'users', 'game_versions', 'games'];
+const TABLES = [
+  'room_players',
+  'rooms',
+  'auth_sessions',
+  'players',
+  'profiles',
+  'users',
+  'game_versions',
+  'games',
+];
 
 /** Deja vacías todas las tablas. */
 export async function resetDatabase(): Promise<void> {

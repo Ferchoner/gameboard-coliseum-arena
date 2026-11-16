@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { DatabaseService, type DbExecutor } from '../../database/database.service.js';
 import { users } from './users.schema.js';
 
@@ -20,6 +20,17 @@ export class UsersRepository {
   async findById(id: string, executor: DbExecutor = this.database.db): Promise<UserRow | null> {
     const [row] = await executor.select().from(users).where(eq(users.id, id)).limit(1);
     return row ?? null;
+  }
+
+  async findByIds(
+    ids: readonly string[],
+    executor: DbExecutor = this.database.db,
+  ): Promise<UserRow[]> {
+    if (ids.length === 0) return [];
+    return executor
+      .select()
+      .from(users)
+      .where(inArray(users.id, [...ids]));
   }
 
   /** Busca sin distinguir mayúsculas de minúsculas, igual que el índice único. */

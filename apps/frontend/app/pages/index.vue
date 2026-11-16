@@ -1,29 +1,14 @@
 <script setup lang="ts">
-import { MATCH_MODES, type Game, type ItemList } from '@gameboard/contracts';
-import { onMounted, ref } from 'vue';
-import { useApi } from '../composables/useApi';
+import { MATCH_MODES } from '@gameboard/contracts';
+import { onMounted } from 'vue';
+import { useCatalog } from '../composables/useCatalog';
 import { useSession } from '../composables/useSession';
 import { es } from '../i18n/es';
-import type { Failure } from '../utils/api';
 import { failureText } from '../utils/errors';
 import { formatDuration, formatPlayers } from '../utils/format';
 
-type Catalog =
-  | { readonly status: 'loading' }
-  | { readonly status: 'ready'; readonly games: readonly Game[] }
-  | { readonly status: 'failed'; readonly failure: Failure };
-
-const api = useApi();
 const { session, me } = useSession();
-const catalog = ref<Catalog>({ status: 'loading' });
-
-async function load(): Promise<void> {
-  catalog.value = { status: 'loading' };
-  const result = await api.get<ItemList<Game>>('/games');
-  catalog.value = result.ok
-    ? { status: 'ready', games: result.data.items }
-    : { status: 'failed', failure: result.failure };
-}
+const { catalog, load } = useCatalog();
 
 // El catálogo puede cambiar sin que se vuelva a construir el sitio: se pide en el navegador.
 onMounted(load);
@@ -33,7 +18,10 @@ onMounted(load);
   <section class="intro">
     <h1>{{ es.app.name }}</h1>
     <p>{{ es.app.tagline }}</p>
-    <p v-if="me" class="muted">{{ es.home.welcome(me.displayName) }}</p>
+    <p v-if="me" class="muted">
+      {{ es.home.welcome(me.displayName) }}
+      <NuxtLink to="/salas">{{ es.home.goToRooms }}</NuxtLink>
+    </p>
     <p v-else-if="session.status === 'anonymous'" class="muted">{{ es.home.guest }}</p>
   </section>
 

@@ -50,6 +50,9 @@ export class SessionGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // El canal de tiempo real comprueba la sesión al abrir la conexión, no en cada mensaje.
+    if (context.getType() !== 'http') return true;
+
     const isPublic = this.reflector.getAllAndOverride<boolean | undefined>(IS_PUBLIC, [
       context.getHandler(),
       context.getClass(),
