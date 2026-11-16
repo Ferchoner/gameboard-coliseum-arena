@@ -161,4 +161,4 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 - Toda propuesta se presenta con sus alternativas, sus consecuencias y una recomendación.
 - Una decisión aceptada no se reescribe. Si cambia, se anota el cambio con su fecha en el documento que la contiene, o se añade un ADR que la sustituye.
 - No se añade ninguna dependencia, no se cambia ningún contrato y no se implementa nada fuera del alcance sin aprobación previa.
-- No se escribe código de un hito hasta recibir su autorización explícita. Los Hitos 1, 2 y 3 están autorizados desde el 2026-11-16. El Hito 4 y los siguientes no lo están.
+- No se escribe código de un hito hasta recibir su autorización explícita. Los Hitos 1 a 4 están autorizados, todos desde el 2026-11-16. El Hito 5 y los siguientes no lo están.
