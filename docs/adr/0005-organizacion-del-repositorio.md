@@ -44,7 +44,7 @@ Cada paquete es un proyecto independiente, con sus propias dependencias y su pro
 
 ## 5. Estructura propuesta
 
-Los nombres de carpeta son una **propuesta pendiente de confirmación**. La decisión aceptada es la separación en cuatro paquetes, no sus nombres.
+Los nombres de carpeta eran una propuesta. **Confirmados el 2026-11-16** (ADR-012, decisión S1).
 
 | Carpeta | Contenido | Puede depender de |
 |---|---|---|
@@ -56,10 +56,12 @@ Los nombres de carpeta son una **propuesta pendiente de confirmación**. La deci
 
 **Regla de dependencias propuesta:** las flechas van solo de `apps/` hacia `packages/`. Ningún paquete de `packages/` depende de una aplicación, y `game-engine` no depende de `contracts`.
 
+**Cambio del 2026-11-16 (ADR-012, decisión S2):** la regla se acepta con una excepción. `packages/contracts` puede depender de `packages/game-engine`, solo para los tipos y las listas de valores que comparten. Así esos tipos se definen una sola vez. `game-engine` sigue sin depender de nada del proyecto. En la tabla de arriba, donde dice que `packages/contracts` no depende de nada del proyecto, vale esta excepción.
+
 **Quedan fuera de este ADR, para el inicio del Hito 1:**
-- Gestor de paquetes y herramienta de orquestación de tareas.
+- Gestor de paquetes y herramienta de orquestación de tareas. Decidido en ADR-012, decisión S3.
 - Si el frontend usará el paquete del motor para mostrar jugadas válidas sin duplicar reglas. El servidor seguiría siendo la única autoridad.
-- Herramienta que verifica la regla de dependencias.
+- Herramienta que verifica la regla de dependencias. Decidida en ADR-012, decisión S4.
 
 ## 6. Referencias
 

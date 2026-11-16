@@ -75,11 +75,11 @@ Aceptadas el 2026-11-14 junto con la decisión principal.
 | 5.6 | Renovación deslizante con tope absoluto. Valores iniciales: 30 días de inactividad y 90 días de tope | Compatible con partidas por turnos de varios días. Valores revisables |
 | 5.7 | Identificador nuevo en cada inicio de sesión; el cierre de sesión invalida la sesión en el servidor | Evita la fijación de sesión |
 | 5.8 | Al revocar o caducar una sesión se cierran sus conexiones WebSocket; las conexiones largas revalidan la sesión de forma periódica | Sin esto una conexión abierta sobreviviría a la revocación |
-| 5.9 | Contraseñas con Argon2id, usando el soporte incorporado de Node.js si está estable en la versión elegida | Evita una dependencia nativa. Hay que confirmar su estado en Node.js 26 |
+| 5.9 | Contraseñas con Argon2id, usando el soporte incorporado de Node.js si está estable en la versión elegida | Evita una dependencia nativa. Hay que confirmar su estado en Node.js 26. **Confirmado el 2026-11-16:** está estable y se usa (ADR-012, decisión S15) |
 
 **Quedan fuera de este ADR:**
-- Alcance de la cookie. Como el frontend se renderiza en el navegador (ADR-006), su servidor no necesita recibirla. **Propuesta pendiente de confirmación:** ligarla únicamente al host de la API, que es el alcance más restringido.
-- Implementar la gestión de sesiones dentro del módulo `auth` o apoyarse en una librería. Se decide al iniciar el Hito 1; la opción preferente es la implementación propia, dado que el alcance es una tabla y una cookie.
+- Alcance de la cookie. Como el frontend se renderiza en el navegador (ADR-006), su servidor no necesita recibirla. La propuesta era ligarla únicamente al host de la API, que es el alcance más restringido. **Confirmada el 2026-11-16** (ADR-012, decisión S13).
+- Implementar la gestión de sesiones dentro del módulo `auth` o apoyarse en una librería. Se decide al iniciar el Hito 1; la opción preferente es la implementación propia, dado que el alcance es una tabla y una cookie. **Decidido el 2026-11-16:** implementación propia (ADR-012, decisión S12).
 - Verificación de email, recuperación de contraseña y acceso con cuentas externas: ver ADR-008.
 - Límites de frecuencia en inicio de sesión y registro: se definen en el contrato de la API.
 

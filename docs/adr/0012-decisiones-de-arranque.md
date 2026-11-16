@@ -2,9 +2,9 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | **Propuesta.** Ninguna de estas decisiones está aceptada |
+| **Estado** | Aceptada, con un cambio en S14 |
 | **Fecha** | 2026-11-16 |
-| **Decide** | Fernando Hernandez Argueta |
+| **Decidida por** | Fernando Hernandez Argueta |
 | **Cierra** | Los puntos aplazados al inicio del Hito 1 (`docs/02-arquitectura.md`, sección 8) y las dos propuestas sin confirmar de ADR-004 y ADR-005 |
 | **Depende de** | ADR-001 a ADR-007 |
 
@@ -19,7 +19,7 @@ Todas las versiones citadas se comprobaron el 2026-11-16 en el registro de npm y
 - Cada decisión tiene un identificador (S1 a S25), sus alternativas y una recomendación.
 - Las decisiones S1 a S15 tienen consecuencias que cuesta deshacer o afectan a un ADR. Van explicadas una a una.
 - Las decisiones S16 a S25 son menores y fáciles de cambiar. Van en una tabla.
-- **Nada de esto está aprobado.** Se puede aceptar todo, o aceptar con cambios.
+- **Las 25 se aceptaron el 2026-11-16 tal como se recomendaban, con un cambio:** en S14 se añade un modo con HTTPS al entorno local.
 
 ## 3. Resumen
 
@@ -38,7 +38,7 @@ Todas las versiones citadas se comprobaron el 2026-11-16 en el registro de npm y
 | S11 | Pruebas que tocan la base de datos | Contra un PostgreSQL real |
 | S12 | Gestión de sesiones | Propia, dentro del módulo `auth` |
 | S13 | Alcance de la cookie | Solo el host de la API |
-| S14 | Entorno local | Frontend y API en dos puertos de `localhost` |
+| S14 | Entorno local | Frontend y API en dos puertos de `localhost`, con un segundo modo en HTTPS |
 | S15 | Hash de contraseñas | El Argon2id incorporado en Node.js |
 | S16 a S25 | Decisiones menores | [Sección 8](#8-decisiones-menores) |
 
@@ -231,7 +231,16 @@ ADR-004 pide que en local el frontend y la API estén en dos orígenes del mismo
 | Dos subdominios de `localhost` (`app.localhost` y `api.localhost`) | Se parece más a producción a la vista | El navegador los trata como sitios distintos y no enviaría la cookie. No reproduce producción |
 | Dominio local con HTTPS y certificado propio | Es lo más fiel | Hay que instalar un certificado y tocar la configuración del sistema en cada ordenador |
 
-**Recomendación:** dos puertos de `localhost`. El puerto 3000 para la API es el que ya figura en el archivo OpenAPI. La prueba con HTTPS y Safari sigue en el Hito 7, con un despliegue real.
+**Recomendación:** dos puertos de `localhost`. El puerto 3000 para la API es el que ya figura en el archivo OpenAPI.
+
+**Decisión (2026-11-16): la opción recomendada, más un modo con HTTPS.** El entorno local tiene dos modos, con el mismo código y distinta configuración:
+
+| Modo | API | Frontend | Cookie |
+|---|---|---|---|
+| HTTP | `http://localhost:3000` | `http://localhost:3001` | `session`, sin `Secure` |
+| HTTPS | `https://localhost:3443` | `https://localhost:3444` | `__Host-session`, con `Secure`, como en producción |
+
+El modo HTTPS usa un certificado local que genera un script del repositorio. Sirve para probar en local la cookie con `Secure` y su prefijo, que el modo HTTP no puede probar. La prueba en Safari con un despliegue real sigue en el Hito 7.
 
 ### S15. Hash de contraseñas
 
@@ -294,11 +303,11 @@ No se han probado todavía porque exigen tener el proyecto montado. Si alguno fa
 | Dirección de la dependencia entre los módulos `rooms` y `matches` | Hito 2 |
 | Librería de componentes del frontend y uso del motor en el navegador | Hito 3 |
 | Límites de frecuencia de la API | Hito 7, como fija el backlog |
-| Alojamiento, HTTPS local y prueba en Safari | Aplazado |
+| Alojamiento y prueba en Safari con un despliegue real | Aplazado |
 
 ## 12. Efecto sobre los documentos
 
-Estos cambios se hacen solo si las decisiones se aceptan.
+Hechos al aceptarse las decisiones.
 
 | Documento | Cambio |
 |---|---|

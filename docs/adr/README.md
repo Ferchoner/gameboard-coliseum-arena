@@ -17,7 +17,7 @@ Cada archivo de esta carpeta recoge una decisión de arquitectura aceptada, con 
 | [ADR-009](0009-reglas-de-dominio.md) | Reglas de dominio de salas, partidas y relojes | Aceptada |
 | [ADR-010](0010-persistencia-de-partida.md) | Persistencia de partida | Aceptada |
 | [ADR-011](0011-convenciones-y-glosario.md) | Convenciones de nombres, identificadores y glosario | Aceptada |
-| [ADR-012](0012-decisiones-de-arranque.md) | Decisiones de arranque del Hito 1 | **Propuesta** |
+| [ADR-012](0012-decisiones-de-arranque.md) | Decisiones de arranque del Hito 1 | Aceptada |
 
 ## Decisiones aplazadas
 
@@ -25,12 +25,7 @@ El alojamiento del backend, el de PostgreSQL, las copias de seguridad, la superv
 
 ## Propuestas pendientes de confirmación
 
-Figuran dentro de los ADR, marcadas como propuesta. No son decisiones.
-
-| Propuesta | Dónde |
-|---|---|
-| Ligar la cookie de sesión únicamente al host de la API | ADR-004, sección 5 |
-| Nombres de las carpetas de los espacios de trabajo | ADR-005, sección 5 |
+No queda ninguna dentro de los ADR. Las dos que había, el alcance de la cookie de sesión (ADR-004) y los nombres de las carpetas (ADR-005), se confirmaron el 2026-11-16 en ADR-012, decisiones S13 y S1.
 
 ## Convenciones
 

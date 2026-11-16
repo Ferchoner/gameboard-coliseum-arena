@@ -34,7 +34,7 @@ El significado de cada código de error está en el [catálogo único de errores
 | Asunto | Regla | Origen |
 |---|---|---|
 | Cookie | `HttpOnly`, `Secure` y `SameSite=Lax`. Su valor es un identificador opaco | ADR-004, condiciones 5.1 y 5.2 |
-| Alcance de la cookie | **Propuesta pendiente de confirmación:** ligada solo al host de la API | ADR-004, sección 5 |
+| Alcance de la cookie | Ligada solo al host de la API. En producción se llama `__Host-session`; en local sin HTTPS, `session` | ADR-012, decisión S13 |
 | Duración | 30 días de inactividad, con un tope de 90 días | ADR-004, condición 5.6 |
 | CORS | Solo se admite el origen exacto del frontend, con credenciales. El frontend envía sus peticiones con las credenciales incluidas | ADR-004, condición 5.4 |
 | CSRF | El servidor rechaza con `403` y el código `ORIGIN_NOT_ALLOWED` las peticiones que cambian algo y no vienen del origen del frontend | ADR-004, condición 5.3 |
@@ -220,7 +220,7 @@ Al superarlos, la API responde `429` con el código `RATE_LIMITED` y la cabecera
 | Salas privadas, invitaciones y espectadores | Posteriores al MVP (ADR-008, punto 21) |
 | Crear juegos y versiones | No se hace por la API. Un juego y sus versiones se dan de alta al desplegar su motor |
 | Conceder el rol de administrador | No se hace por la API. Se asigna directamente en la base de datos |
-| Comprobación de salud del servidor | Se define al iniciar el Hito 1 |
+| Comprobación de salud del servidor | `GET /health`, fuera de `/api/v1` y sin el sobre de respuesta. Responde `200` si el servidor y la base de datos contestan y `503` si no. Es una operación de servicio, no parte de la API para clientes (ADR-012, decisión S19) |
 
 ---
 

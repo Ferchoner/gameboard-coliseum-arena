@@ -33,12 +33,12 @@ Los diagramas de arquitectura están en [`docs/02-arquitectura.md`](../docs/02-a
 
 ### Hito 1. Base de la plataforma
 
-- [ ] Tomar las decisiones de arranque aplazadas en los ADR (lista en `docs/02-arquitectura.md`, sección 8). Propuestas en [ADR-012](../docs/adr/0012-decisiones-de-arranque.md), pendientes de aceptación.
+- [x] Tomar las decisiones de arranque aplazadas en los ADR. Aceptadas el 2026-11-16 en [ADR-012](../docs/adr/0012-decisiones-de-arranque.md).
 - [ ] Repositorio con espacios de trabajo: backend, frontend, contratos y motor (ADR-005).
 - [ ] Comprobación automática de que el motor no depende de nada del servidor (ADR-001, condición 5.5).
 - [ ] Tipos de la API, del protocolo y del catálogo de errores en el paquete de contratos.
 - [ ] Base del backend: configuración, conexión a PostgreSQL, migraciones, registro de actividad, comprobación de salud, sobre de respuesta y errores del catálogo.
-- [ ] Entorno local con el frontend y la API en dos orígenes del mismo sitio, como en producción (ADR-004).
+- [ ] Entorno local con el frontend y la API en dos orígenes del mismo sitio, como en producción (ADR-004), con un modo en HTTP y otro en HTTPS (ADR-012, decisión S14).
 - [ ] Cuenta, perfil y jugador. Registro, inicio y cierre de sesión con cookie. CORS, CSRF y lista de orígenes.
 - [ ] Catálogo de juegos y versiones, con el registro de motores.
 - [ ] Frontend mínimo: registro, inicio de sesión y catálogo.
