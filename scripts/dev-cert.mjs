@@ -11,6 +11,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import process from 'node:process';
 import { CERT_DIR, CERT_FILE, KEY_FILE } from './dev-paths.mjs';
 
@@ -19,6 +20,20 @@ const force = process.argv.includes('--force');
 function has(command) {
   const result = spawnSync(command, ['-help'], { stdio: 'ignore' });
   return result.error === undefined;
+}
+
+/** `openssl`, que en Windows no suele estar a mano pero viene con Git. */
+function findOpenssl() {
+  const candidates = [
+    'openssl',
+    ...[process.env.ProgramFiles, process.env['ProgramFiles(x86)'], process.env.LOCALAPPDATA]
+      .filter(Boolean)
+      .flatMap((base) => [
+        join(base, 'Git', 'usr', 'bin', 'openssl.exe'),
+        join(base, 'Programs', 'Git', 'usr', 'bin', 'openssl.exe'),
+      ]),
+  ];
+  return candidates.find(has);
 }
 
 function run(command, args) {
@@ -35,13 +50,14 @@ if (existsSync(CERT_FILE) && existsSync(KEY_FILE) && !force) {
 }
 
 mkdirSync(CERT_DIR, { recursive: true });
+const openssl = findOpenssl();
 
 if (has('mkcert')) {
   run('mkcert', ['-cert-file', CERT_FILE, '-key-file', KEY_FILE, 'localhost', '127.0.0.1', '::1']);
   console.log('\nCertificado creado con mkcert.');
   console.log('Si el navegador avisa de que no es de confianza, ejecuta una vez: mkcert -install');
-} else if (has('openssl')) {
-  run('openssl', [
+} else if (openssl) {
+  run(openssl, [
     'req',
     '-x509',
     '-newkey',
@@ -74,5 +90,6 @@ if (has('mkcert')) {
 } else {
   console.error('Hace falta mkcert (recomendado) u openssl para crear el certificado.');
   console.error('mkcert: https://github.com/FiloSottile/mkcert');
+  console.error('En Windows: winget install FiloSottile.mkcert, o choco install mkcert');
   process.exit(1);
 }

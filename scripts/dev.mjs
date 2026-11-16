@@ -67,13 +67,23 @@ const frontendEnv = {
   DEV_TLS_KEY_FILE: secure ? KEY_FILE : '',
 };
 
-// En Windows, pnpm es un archivo `.cmd` y necesita el intérprete de órdenes.
-const shell = process.platform === 'win32';
+const windows = process.platform === 'win32';
+
+/**
+ * Cómo se llama a pnpm. En Windows es un archivo `.cmd` y necesita el
+ * intérprete de órdenes, que recibe la orden entera en un solo texto.
+ */
+function pnpm(args) {
+  return windows
+    ? { command: `pnpm ${args.join(' ')}`, args: [], shell: true }
+    : { command: 'pnpm', args, shell: false };
+}
 
 /** Ejecuta un paso de preparación y se detiene si falla. */
 function prepare(title, args, env = process.env) {
   console.log(`\n> ${title}`);
-  const result = spawnSync('pnpm', args, { cwd: ROOT, env, stdio: 'inherit', shell });
+  const { command, args: commandArgs, shell } = pnpm(args);
+  const result = spawnSync(command, commandArgs, { cwd: ROOT, env, stdio: 'inherit', shell });
   if (result.status !== 0) {
     console.error(`\nNo se pudo completar: ${title}.`);
     process.exit(result.status ?? 1);
@@ -97,16 +107,27 @@ prepare(
 const children = [];
 let stopping = false;
 
+/** Detiene un proceso con todos los que haya arrancado. */
+function kill(child) {
+  if (windows && child.pid !== undefined) {
+    // En Windows, la señal solo llega al intérprete de órdenes, no a lo que este arrancó.
+    spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+  } else {
+    child.kill('SIGTERM');
+  }
+}
+
 function stop(code) {
   if (stopping) return;
   stopping = true;
-  for (const child of children) child.kill('SIGTERM');
+  for (const child of children) kill(child);
   process.exitCode = code;
 }
 
 /** Arranca un proceso que sigue en marcha y antepone su nombre a cada línea que escribe. */
 function run(label, args, env = process.env) {
-  const child = spawn('pnpm', args, {
+  const { command, args: commandArgs, shell } = pnpm(args);
+  const child = spawn(command, commandArgs, {
     cwd: ROOT,
     env: { ...env, FORCE_COLOR: '1' },
     stdio: ['ignore', 'pipe', 'pipe'],

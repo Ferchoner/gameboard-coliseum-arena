@@ -20,7 +20,7 @@ Una plataforma web para jugar juegos de mesa en línea contra otras personas, en
 
 ## Cómo ejecutarlo en local
 
-Hace falta [Node.js](https://nodejs.org/) 26.13 o posterior de la línea 26, [pnpm](https://pnpm.io/) 12 y [Docker](https://www.docker.com/) para la base de datos.
+Hace falta [Node.js](https://nodejs.org/) 26.13 o posterior de la línea 26, [pnpm](https://pnpm.io/) 12 y [Docker](https://www.docker.com/) para la base de datos. Funciona en Windows, macOS y Linux.
 
 ```sh
 pnpm install     # instala las dependencias de los cuatro paquetes
@@ -39,7 +39,7 @@ pnpm dev:cert    # una sola vez: crea un certificado para localhost en .certs/
 pnpm dev:https   # frontend en https://localhost:3444 y API en https://localhost:3443
 ```
 
-`pnpm dev:cert` usa [mkcert](https://github.com/FiloSottile/mkcert) si está instalado, y entonces el navegador confía en el certificado. Si no lo está, crea con `openssl` un certificado firmado por sí mismo. En ese caso hay que abrir una vez <https://localhost:3443/health> y <https://localhost:3444> y aceptar el aviso del navegador en las dos direcciones. Si no se acepta el de la API, el frontend no puede hablar con ella.
+`pnpm dev:cert` usa [mkcert](https://github.com/FiloSottile/mkcert) si está instalado, y entonces el navegador confía en el certificado. En Windows se instala con `winget install FiloSottile.mkcert` o con `choco install mkcert`. Si no lo está, crea con `openssl` un certificado firmado por sí mismo. En ese caso hay que abrir una vez <https://localhost:3443/health> y <https://localhost:3444> y aceptar el aviso del navegador en las dos direcciones. Si no se acepta el de la API, el frontend no puede hablar con ella.
 
 ### Configuración
 
