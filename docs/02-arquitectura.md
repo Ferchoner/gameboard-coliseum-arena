@@ -138,35 +138,37 @@ Nada de esto es fuente de verdad.
 
 ## 7. Organización del repositorio
 
-Un solo repositorio con espacios de trabajo (ADR-005). Los nombres de carpeta son una **propuesta pendiente de confirmación** desde ese ADR.
+Un solo repositorio con espacios de trabajo (ADR-005). Los nombres de carpeta y la regla de dependencias se confirmaron el 2026-11-16 (ADR-012, decisiones S1 y S2).
 
 | Carpeta | Contenido | Puede depender de |
 |---|---|---|
 | `apps/backend` | El backend, con los módulos de la sección 4 | `packages/contracts`, `packages/game-engine` |
 | `apps/frontend` | La aplicación Nuxt | `packages/contracts` |
-| `packages/contracts` | Tipos de la API y del protocolo, y el catálogo de errores | Nada del proyecto |
-| `packages/game-engine` | Contrato del motor y motores concretos | Nada del proyecto |
+| `packages/contracts` | Tipos y esquemas de la API y del protocolo, y el catálogo de errores | `packages/game-engine`, solo para los tipos y las listas de valores que comparten |
+| `packages/game-engine` | Contrato del motor y motores concretos | Nada |
 | `docs/`, `contracts/`, `planning/` | Documentación, contratos escritos y plan | |
 
-Hoy los contratos están en `contracts/`, como documentos. Al iniciar el Hito 1 sus tipos pasan a los dos paquetes y los documentos se quedan como explicación.
+Los tipos del protocolo y del contrato del motor viven en los dos paquetes. En `contracts/` quedan los documentos que los explican y el archivo OpenAPI de la API, que sigue siendo el contrato de la API (ADR-012, decisión S7).
+
+La regla de dependencias se comprueba de forma automática con dependency-cruiser en cada pull request (ADR-012, decisión S4).
 
 ---
 
-## 8. Lo que se decide al iniciar el Hito 1
+## 8. Lo que se decidió al iniciar el Hito 1
 
-Estos puntos quedaron aplazados a propósito en sus ADR, para decidirlos con las versiones del momento.
+Estos puntos quedaron aplazados a propósito en sus ADR, para decidirlos con las versiones del momento. Se decidieron el 2026-11-16 en [ADR-012](adr/0012-decisiones-de-arranque.md).
 
-| Asunto | Origen |
-|---|---|
-| Gestor de paquetes y herramienta para orquestar tareas | ADR-005 |
-| Herramienta que comprueba el aislamiento del motor y la regla de dependencias | ADR-001, ADR-005 |
-| Librería de validación de datos de entrada | ADR-001 |
-| Versión exacta de Drizzle, controlador de PostgreSQL y tamaño del conjunto de conexiones | ADR-002 |
-| Gestión de sesiones propia o con librería. La preferencia es propia | ADR-004 |
-| Confirmar que el Argon2id incorporado en Node.js 26 está estable | ADR-004, condición 5.9 |
-| Si el frontend usa el paquete del motor para mostrar las jugadas válidas | ADR-005 |
-| Tipos que hoy están escritos más de una vez, en la API, en el protocolo y en el motor. Pasan a definirse una sola vez | Notas de la API, sección 8 |
-| Comprobación de salud del servidor | Notas de la API, sección 5 |
+| Asunto | Decisión | Dónde |
+|---|---|---|
+| Gestor de paquetes y herramienta para orquestar tareas | pnpm, sin herramienta de orquestación | S3 |
+| Herramienta que comprueba el aislamiento del motor y la regla de dependencias | dependency-cruiser | S4 |
+| Librería de validación de datos de entrada | Zod, con los esquemas en el paquete de contratos | S6 |
+| Versión de Drizzle, controlador de PostgreSQL y conjunto de conexiones | `1.0.0-rc.5`, `pg` y 10 conexiones | S8 y S9 |
+| Gestión de sesiones | Propia, en el módulo `auth` | S12 |
+| Argon2id incorporado en Node.js 26 | Está estable y se usa | S15 |
+| Si el frontend usa el paquete del motor para mostrar las jugadas válidas | Se decide en el Hito 3 | S25 |
+| Tipos escritos más de una vez | Se definen una sola vez. `contracts` toma del motor los que comparten | S2 |
+| Comprobación de salud del servidor | `GET /health`, fuera de la API versionada | S19 |
 
 ---
 

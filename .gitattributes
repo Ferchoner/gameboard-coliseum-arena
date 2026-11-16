@@ -1,0 +1,2 @@
+# Fin de línea LF en todos los sistemas, también en Windows: es el que comprueba Prettier.
+* text=auto eol=lf

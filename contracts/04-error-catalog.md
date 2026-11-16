@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta |
-| **Reúne** | Los códigos de [`01-rest-api.yaml`](01-rest-api.yaml), [`02-realtime.ts`](02-realtime.ts) y [`03-game-engine.ts`](03-game-engine.ts) |
+| **Reúne** | Los códigos de [`01-rest-api.yaml`](01-rest-api.yaml), [`realtime.ts`](../packages/contracts/src/realtime.ts) y [`contract.ts`](../packages/game-engine/src/contract.ts) |
 | **Aplica** | ADR-011 (convención 9.1), ADR-009 (reglas de dominio), ADR-010 (reglas 8.11 y 8.12) |
 | **Resuelve** | Vacío G-04 (catálogo de errores unificado) |
 
@@ -241,6 +241,6 @@ El vencimiento de un reloj, el plazo de abandono, el cierre de salas inactivas y
 
 | Asunto | Estado |
 |---|---|
-| **Textos en español para cada código.** El catálogo define los códigos, no las frases que ve el usuario | Se escriben con el frontend, en el Hito 1 |
-| **Una sola fuente para los códigos.** Hoy la lista vive en este documento y en los contratos | En el Hito 1 pasa al paquete de contratos (ADR-005), del que la leerán el backend y el frontend |
+| **Textos en español para cada código.** El catálogo define los códigos, no las frases que ve el usuario | Cerrado en el Hito 1. Están en [`apps/frontend/app/i18n/es.ts`](../apps/frontend/app/i18n/es.ts), y una prueba comprueba que hay uno por cada código que llega al cliente |
+| **Una sola fuente para los códigos.** La lista vivía en este documento y en los contratos | Cerrado en el Hito 1. El código la lee de [`packages/contracts/src/errors.ts`](../packages/contracts/src/errors.ts), y una prueba comprueba que coincide con este documento y con el archivo OpenAPI |
 | **Códigos del registro de acciones de administración**, si llega a existir | Depende de un asunto abierto del modelo de datos |

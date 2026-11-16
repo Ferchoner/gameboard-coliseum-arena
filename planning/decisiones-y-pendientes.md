@@ -13,7 +13,7 @@ Este documento es un índice. No decide nada: dice dónde está cada decisión y
 
 ### Arquitectura
 
-Las once están en [`docs/adr/`](../docs/adr/README.md), aceptadas el 2026-11-14.
+Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron el 2026-11-14, y la duodécima, el 2026-11-16.
 
 | ADR | Decisión |
 |---|---|
@@ -28,6 +28,7 @@ Las once están en [`docs/adr/`](../docs/adr/README.md), aceptadas el 2026-11-14
 | ADR-009 | Reglas de dominio de salas, partidas y relojes |
 | ADR-010 | Persistencia de partida |
 | ADR-011 | Convenciones de nombres y glosario |
+| ADR-012 | Decisiones de arranque del Hito 1 (S1 a S25): herramientas, versiones, validación, sesiones y entorno local |
 
 ### Contratos y modelo, versión 1
 
@@ -75,8 +76,6 @@ No son decisiones. No deben tratarse como aprobadas.
 
 | Propuesta | Dónde |
 |---|---|
-| Ligar la cookie de sesión solo al host de la API | ADR-004, sección 5 |
-| Nombres de las carpetas de los espacios de trabajo | ADR-005, sección 5 |
 | B1: reparto del resto del MVP en hitos. Se decide al terminar el corte vertical | [`backlog-mvp.md`](backlog-mvp.md) |
 
 ---
@@ -102,15 +101,18 @@ Reunidos de todos los documentos, por el momento en que toca resolverlos.
 
 ### Al iniciar el Hito 1
 
-La lista completa está en [`docs/02-arquitectura.md`](../docs/02-arquitectura.md), sección 8: gestor de paquetes, herramienta de comprobación de dependencias, librería de validación, versión de Drizzle, gestión de sesiones, estado de Argon2id en Node.js 26, uso del motor en el frontend, tipos duplicados y comprobación de salud.
+Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-012](../docs/adr/0012-decisiones-de-arranque.md). Con ellas se confirmaron también las dos propuestas que quedaban en ADR-004 y ADR-005.
 
 ### Durante la implementación
 
 | Asunto | Cuándo | Dónde está anotado |
 |---|---|---|
 | Quién llama a quién entre los módulos de salas y de partidas | Al iniciar el Hito 2 | `docs/02-arquitectura.md`, sección 10 |
+| Paso de Drizzle a la versión 1.0 definitiva, cuando se publique. Hoy se usa la candidata `1.0.0-rc.5` | Cuando salga | ADR-012, decisión S8 |
+| Paso a TypeScript 7, cuando las herramientas lo admitan | Cuando salga la 7.1 | ADR-012, decisión S5 |
+| Librería de componentes del frontend y uso del motor en el navegador | Al iniciar el Hito 3 | ADR-012, decisiones S24 y S25 |
 | Qué controles de tiempo ofrece Cuatro en raya en tiempo real | Al implementar el juego | Notas del motor, sección 7 |
-| Textos en español para cada código de error | Con el frontend | Catálogo de errores, sección 14 |
+| Generar al construir el contenido del catálogo, y no solo la portada. Exige que la API esté disponible al construir. Hoy la portada se genera y la lista de juegos se pide en el navegador | Con el alojamiento | ADR-006; `apps/frontend/nuxt.config.ts` |
 | Valores definitivos de los límites de frecuencia y de tamaño | Tras el corte vertical, con datos reales | Protocolo, sección 12; notas de la API, sección 4 |
 
 ### Antes de publicar
@@ -146,4 +148,4 @@ La lista completa está en [`docs/02-arquitectura.md`](../docs/02-arquitectura.m
 - Toda propuesta se presenta con sus alternativas, sus consecuencias y una recomendación.
 - Una decisión aceptada no se reescribe. Si cambia, se anota el cambio con su fecha en el documento que la contiene, o se añade un ADR que la sustituye.
 - No se añade ninguna dependencia, no se cambia ningún contrato y no se implementa nada fuera del alcance sin aprobación previa.
-- No se escribe código de implementación hasta recibir la autorización explícita.
+- No se escribe código de un hito hasta recibir su autorización explícita. El Hito 1 está autorizado desde el 2026-11-16.

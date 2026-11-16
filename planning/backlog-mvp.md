@@ -8,7 +8,7 @@
 
 **Cómo leer este documento.** El contenido de cada hito sale del alcance aceptado en ADR-008. Lo que este documento propone por su cuenta es **cómo se reparte el resto del MVP en los hitos 4 a 7**. Es una propuesta sin confirmar: el 2026-11-16 se decidió dejarla así y resolverla al terminar el corte vertical ([sección final](#propuesta-pendiente)).
 
-Ninguna tarea de los hitos 1 a 7 puede empezar sin la autorización explícita para implementar.
+El Hito 1 está autorizado desde el 2026-11-16. Ninguna tarea de los hitos 2 a 7 puede empezar sin una autorización explícita.
 
 ---
 
@@ -23,7 +23,7 @@ Ninguna tarea de los hitos 1 a 7 puede empezar sin la autorización explícita p
 - [x] Catálogo único de errores y matriz de permisos.
 - [x] Documentos de arquitectura, backlog y README al día.
 - [x] Revisión de cierre del Hito 0, en [`cierre-hito-0.md`](cierre-hito-0.md).
-- [ ] Autorización para implementar.
+- [x] Autorización para implementar. Concedida el 2026-11-16 solo para el Hito 1.
 
 Los diagramas de arquitectura están en [`docs/02-arquitectura.md`](../docs/02-arquitectura.md), y el de entidades, en [`docs/03-dominio-datos.md`](../docs/03-dominio-datos.md).
 
@@ -33,15 +33,17 @@ Los diagramas de arquitectura están en [`docs/02-arquitectura.md`](../docs/02-a
 
 ### Hito 1. Base de la plataforma
 
-- [ ] Tomar las decisiones de arranque aplazadas en los ADR (lista en `docs/02-arquitectura.md`, sección 8).
-- [ ] Repositorio con espacios de trabajo: backend, frontend, contratos y motor (ADR-005).
-- [ ] Comprobación automática de que el motor no depende de nada del servidor (ADR-001, condición 5.5).
-- [ ] Tipos de la API, del protocolo y del catálogo de errores en el paquete de contratos.
-- [ ] Base del backend: configuración, conexión a PostgreSQL, migraciones, registro de actividad, comprobación de salud, sobre de respuesta y errores del catálogo.
-- [ ] Entorno local con el frontend y la API en dos orígenes del mismo sitio, como en producción (ADR-004).
-- [ ] Cuenta, perfil y jugador. Registro, inicio y cierre de sesión con cookie. CORS, CSRF y lista de orígenes.
-- [ ] Catálogo de juegos y versiones, con el registro de motores.
-- [ ] Frontend mínimo: registro, inicio de sesión y catálogo.
+- [x] Tomar las decisiones de arranque aplazadas en los ADR. Aceptadas el 2026-11-16 en [ADR-012](../docs/adr/0012-decisiones-de-arranque.md).
+- [x] Repositorio con espacios de trabajo: backend, frontend, contratos y motor (ADR-005).
+- [x] Comprobación automática de que el motor no depende de nada del servidor (ADR-001, condición 5.5).
+- [x] Tipos de la API, del protocolo y del catálogo de errores en el paquete de contratos.
+- [x] Base del backend: configuración, conexión a PostgreSQL, migraciones, registro de actividad, comprobación de salud, sobre de respuesta y errores del catálogo.
+- [x] Entorno local con el frontend y la API en dos orígenes del mismo sitio, como en producción (ADR-004), con un modo en HTTP y otro en HTTPS (ADR-012, decisión S14).
+- [x] Cuenta, perfil y jugador. Registro, inicio y cierre de sesión con cookie. CORS, CSRF y lista de orígenes.
+- [x] Catálogo de juegos y versiones, con el registro de motores.
+- [x] Frontend mínimo: registro, inicio de sesión y catálogo.
+
+Implementado en noviembre de 2026. El catálogo está vacío hasta el Hito 3, que trae el primer motor de juego.
 
 ### Hito 2. Salas y tiempo real
 

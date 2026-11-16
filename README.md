@@ -2,17 +2,60 @@
 
 Una plataforma web para jugar juegos de mesa en línea contra otras personas, en tiempo real o por turnos. El primer juego es Cuatro en raya.
 
-**Estado:** la arquitectura está decidida y los contratos están en su versión 1. **La implementación no ha empezado**: este repositorio contiene solo documentación y contratos. No se escribe código hasta que se autorice de forma explícita.
+**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **Hito 1**, la base de la plataforma: cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo. Todavía no hay salas, partidas ni ningún juego: el catálogo está vacío hasta el Hito 3. Cada hito se implementa solo cuando se autoriza de forma explícita.
 
 ## Qué hay aquí
 
 | Carpeta | Contenido |
 |---|---|
 | [`docs/`](docs/) | Visión, arquitectura, modelo de datos y flujos |
-| [`docs/adr/`](docs/adr/README.md) | Las once decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
+| [`docs/adr/`](docs/adr/README.md) | Las doce decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
 | [`docs/auditoria/`](docs/auditoria/README.md) | El análisis que precedió a las decisiones. Es histórico y no se mantiene al día |
 | [`contracts/`](contracts/) | La API, el protocolo de tiempo real, el contrato del motor de juego, el catálogo de errores y la matriz de permisos |
 | [`planning/`](planning/) | El backlog por hitos y el registro de lo decidido y lo abierto |
+| [`apps/backend/`](apps/backend/) | El servidor: la API y, más adelante, el canal de tiempo real |
+| [`apps/frontend/`](apps/frontend/) | La aplicación web |
+| [`packages/contracts/`](packages/contracts/) | Tipos y esquemas de la API y del protocolo, y catálogo de errores. Lo usan el backend y el frontend |
+| [`packages/game-engine/`](packages/game-engine/) | El contrato de los motores de juego y su registro. No depende de nada |
+
+## Cómo ejecutarlo en local
+
+Hace falta [Node.js](https://nodejs.org/) 26.13 o posterior de la línea 26, [pnpm](https://pnpm.io/) 12 y [Docker](https://www.docker.com/) para la base de datos. Funciona en Windows, macOS y Linux.
+
+```sh
+pnpm install     # instala las dependencias de los cuatro paquetes
+pnpm db:up       # arranca PostgreSQL 18 en Docker
+pnpm dev         # compila, aplica las migraciones y arranca la API y el frontend
+```
+
+Con eso, el frontend queda en <http://localhost:3001> y la API en <http://localhost:3000>. Son dos orígenes del mismo sitio, igual que en producción (ADR-004). Al cambiar un archivo, lo afectado se vuelve a compilar y se reinicia solo.
+
+### Modo HTTPS
+
+El mismo código se puede probar con HTTPS, que es como funcionará publicado: la cookie de sesión lleva `Secure` y el prefijo `__Host-`.
+
+```sh
+pnpm dev:cert    # una sola vez: crea un certificado para localhost en .certs/
+pnpm dev:https   # frontend en https://localhost:3444 y API en https://localhost:3443
+```
+
+`pnpm dev:cert` usa [mkcert](https://github.com/FiloSottile/mkcert) si está instalado, y entonces el navegador confía en el certificado. En Windows se instala con `winget install FiloSottile.mkcert` o con `choco install mkcert`. Si no lo está, crea con `openssl` un certificado firmado por sí mismo. En ese caso hay que abrir una vez <https://localhost:3443/health> y <https://localhost:3444> y aceptar el aviso del navegador en las dos direcciones. Si no se acepta el de la API, el frontend no puede hablar con ella.
+
+### Configuración
+
+Nada es obligatorio en local. Para cambiar la base de datos o el registro de actividad, copia [`apps/backend/.env.example`](apps/backend/.env.example) como `apps/backend/.env`. Los puertos y los orígenes los fija el modo elegido.
+
+### Órdenes
+
+| Orden | Qué hace |
+|---|---|
+| `pnpm dev`, `pnpm dev:https` | Arranca el entorno local en HTTP o en HTTPS |
+| `pnpm db:up`, `pnpm db:down` | Arranca o detiene la base de datos |
+| `pnpm db:migrate` | Aplica las migraciones pendientes |
+| `pnpm test` | Ejecuta las pruebas. Las del backend usan la base de datos `gameboard_test`, que `pnpm db:up` crea |
+| `pnpm check` | Todo lo que se comprueba en cada pull request: formato, análisis, reglas de dependencias, compilación, tipos y pruebas |
+| `pnpm build` | Compila los paquetes y el backend, y genera el frontend como archivos estáticos en `apps/frontend/.output/public` |
+| `pnpm format` | Da formato al código |
 
 ## Orden de lectura
 
@@ -21,8 +64,8 @@ Una plataforma web para jugar juegos de mesa en línea contra otras personas, en
 3. [`docs/03-dominio-datos.md`](docs/03-dominio-datos.md): modelo de datos.
 4. [`docs/04-flujos-y-persistencia.md`](docs/04-flujos-y-persistencia.md): una partida de principio a fin.
 5. [`contracts/01-rest-api.md`](contracts/01-rest-api.md) y [`contracts/01-rest-api.yaml`](contracts/01-rest-api.yaml): API REST.
-6. [`contracts/02-realtime.md`](contracts/02-realtime.md) y [`contracts/02-realtime.ts`](contracts/02-realtime.ts): protocolo de tiempo real.
-7. [`contracts/03-game-engine.md`](contracts/03-game-engine.md) y [`contracts/03-game-engine.ts`](contracts/03-game-engine.ts): contrato del motor de juego.
+6. [`contracts/02-realtime.md`](contracts/02-realtime.md) y [`packages/contracts/src/realtime.ts`](packages/contracts/src/realtime.ts): protocolo de tiempo real.
+7. [`contracts/03-game-engine.md`](contracts/03-game-engine.md) y [`packages/game-engine/src/contract.ts`](packages/game-engine/src/contract.ts): contrato del motor de juego.
 8. [`contracts/04-error-catalog.md`](contracts/04-error-catalog.md): catálogo de errores.
 9. [`contracts/05-permissions.md`](contracts/05-permissions.md): matriz de permisos.
 10. [`planning/decisiones-y-pendientes.md`](planning/decisiones-y-pendientes.md): qué está decidido y qué sigue abierto.
@@ -46,12 +89,12 @@ Para saber por qué se decidió algo, el ADR correspondiente está en [`docs/adr
 ## Qué no está decidido
 
 - El alojamiento, las copias de seguridad y la supervisión. Están aplazados y de momento se trabaja en local.
-- Algunas propuestas que figuran en los documentos como pendientes de confirmación.
+- El reparto del resto del MVP en hitos, que es una propuesta hasta que termine el corte vertical.
 
 La lista completa está en [`planning/decisiones-y-pendientes.md`](planning/decisiones-y-pendientes.md).
 
 ## Avisos
 
-- Los archivos TypeScript de `contracts/` contienen solo tipos. No son una implementación.
+- La carpeta `contracts/` contiene los contratos escritos. Sus tipos están en `packages/contracts` y `packages/game-engine`, y hay pruebas que comprueban que el código y los contratos coinciden.
 - El proyecto es independiente de cualquier otro. No comparte repositorios, bases de datos ni servicios.
 - Si un documento discrepa de un ADR o de un contrato, valen el ADR y el contrato.

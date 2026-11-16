@@ -1,0 +1,15 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Versiones únicas para las dependencias que usa más de un paquete.
+catalog:
+  typescript: 6.0.3
+  vitest: 5.1.0
+  zod: 4.6.7
+  '@types/node': 26.6.6
+
+# Paquetes con permiso para ejecutar sus scripts de instalación.
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
