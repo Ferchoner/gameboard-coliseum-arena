@@ -10,7 +10,7 @@
 
 **Cómo leer este documento.** Todo lo que deriva de una decisión aceptada cita su ADR o su regla. Las decisiones de diseño propias de este entregable están en la [sección 11](#11-decisiones-de-diseño-propias-de-este-entregable).
 
-**Cambio posterior a la aceptación, pendiente de confirmación.** El 2026-11-15, al escribir la API REST, `MatchSummaryView` ganó cuatro campos: `yourOutcome`, `endReason`, `startedAt` y `endedAt`. El cambio solo añade campos y permite que el aviso personal y la lista "mis partidas" de la API usen la misma forma. Es el punto A1 de [`01-rest-api.md`](01-rest-api.md).
+**Cambio posterior a la aceptación, aceptado el 2026-11-16.** Al escribir la API REST, `MatchSummaryView` ganó cuatro campos: `yourOutcome`, `endReason`, `startedAt` y `endedAt`. El cambio solo añade campos y permite que el aviso personal y la lista "mis partidas" de la API usen la misma forma. Es el punto A1 de [`01-rest-api.md`](01-rest-api.md).
 
 Los códigos de error de este documento son provisionales en su redacción: el catálogo único de errores, que es un entregable posterior, los reúne con los de la API y los del motor.
 

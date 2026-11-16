@@ -2,13 +2,13 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, en revisión |
+| **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta |
 | **Contrato** | [`01-rest-api.yaml`](01-rest-api.yaml), en formato OpenAPI 3.1 |
 | **Sustituye a** | El contrato REST preliminar |
 | **Aplica** | ADR-004 (sesión con cookie), ADR-008 (alcance del MVP), ADR-009 (reglas de dominio), ADR-011 (convenciones), el modelo de datos y el protocolo de tiempo real (decisiones T1 y T2) |
 | **Resuelve** | Hallazgos C-01, C-02, C-03, C-04 y C-05 en la parte de la API |
 
-**Cómo leer este documento.** El contrato es el archivo OpenAPI, que define cada operación con sus datos de entrada, de salida y sus errores. Este documento resume las operaciones, explica las reglas comunes y reúne las decisiones de diseño propias del entregable en la [sección 7](#7-puntos-a-revisar), marcadas como recomendación. No deben darse por aprobadas hasta que se confirmen.
+**Cómo leer este documento.** El contrato es el archivo OpenAPI, que define cada operación con sus datos de entrada, de salida y sus errores. Este documento resume las operaciones, explica las reglas comunes y reúne las decisiones de diseño propias del entregable en la [sección 7](#7-decisiones-de-diseño-propias-de-este-entregable).
 
 Los códigos de error son provisionales en su redacción: el catálogo único de errores, que es el entregable siguiente, los reúne con los del protocolo y los del motor. El detalle de quién puede hacer cada operación irá en la matriz de permisos.
 
@@ -239,13 +239,13 @@ Al superarlos, la API responde `429` con el código `RATE_LIMITED` y la cabecera
 
 ---
 
-## 7. Puntos a revisar
+## 7. Decisiones de diseño propias de este entregable
 
-Estas son las decisiones de diseño que este entregable toma por su cuenta. Son **recomendaciones pendientes de confirmación**. Las cinco primeras son las que más pesan.
+Estas decisiones no derivan de un ADR: se tomaron al escribir la API. Fueron **aceptadas el 2026-11-16** por Fernando Hernandez Argueta.
 
-| ID | Recomendación | Alternativa | Motivo |
+| ID | Decisión | Alternativa descartada | Motivo |
 |---|---|---|---|
-| A1 | **Cambia un contrato ya aceptado.** El resumen de partida gana cuatro campos: tu resultado, el motivo del final, y las fechas de inicio y de final. Ya los añadí también al aviso personal del protocolo de tiempo real, para que los dos usen la misma forma | Dos formas distintas: una para el aviso y otra para el historial | Con una sola forma, el cliente trata igual una partida venga de la lista o de un aviso. El cambio solo añade campos |
+| A1 | **Cambia un contrato ya aceptado.** El resumen de partida gana cuatro campos: tu resultado, el motivo del final, y las fechas de inicio y de final. Se añadieron también al aviso personal del protocolo de tiempo real, para que los dos usen la misma forma | Dos formas distintas: una para el aviso y otra para el historial | Con una sola forma, el cliente trata igual una partida venga de la lista o de un aviso. El cambio solo añade campos |
 | A2 | **Entrar y salir de una sala son `PUT` y `DELETE` sobre la pertenencia propia**, no acciones `POST` | `POST /rooms/{roomId}/join` y `/leave`, como en el contrato preliminar | Si la red falla y el cliente repite la petición, el resultado es el mismo. Con `POST`, repetir podría dar un error |
 | A3 | **Una sola ruta, `/me`, para la cuenta propia** | Las tres del contrato preliminar | Cuenta, perfil y jugador son tres tablas, pero para quien usa la aplicación son una sola cosa |
 | A4 | **El perfil público y las estadísticas de cualquier jugador son visibles para quien tenga sesión** | Que cada uno vea solo las suyas | Ver el historial del rival es lo habitual en este tipo de sitios. No expone ni el correo ni datos de la cuenta |
