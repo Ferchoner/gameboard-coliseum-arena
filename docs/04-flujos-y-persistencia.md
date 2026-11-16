@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, en revisión |
+| **Estado** | Versión 1 |
 | **Sustituye a** | El documento inicial de corte vertical y persistencia |
 | **Recoge** | ADR-009 (reglas de dominio), ADR-010 (persistencia de partida), el modelo de datos y los contratos |
 

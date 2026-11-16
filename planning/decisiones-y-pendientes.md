@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, en revisión |
+| **Estado** | Versión 1 |
 | **Sustituye a** | El registro inicial de decisiones y preguntas abiertas |
 
 Este documento es un índice. No decide nada: dice dónde está cada decisión y qué sigue abierto. Si discrepa de un ADR o de un contrato, valen ellos.
@@ -39,6 +39,7 @@ Las once están en [`docs/adr/`](../docs/adr/README.md), aceptadas el 2026-11-14
 | [API REST](../contracts/01-rest-api.md) | 2026-11-16 | A1 a A17 |
 | [Catálogo de errores](../contracts/04-error-catalog.md) | 2026-11-16 | E1 a E8 y los ajustes J1 a J5 |
 | [Matriz de permisos](../contracts/05-permissions.md) | 2026-11-16 | P1 a P7 |
+| [Arquitectura lógica y módulos](../docs/02-arquitectura.md) | 2026-11-16 | D1 a D6 |
 
 ---
 
@@ -76,8 +77,7 @@ No son decisiones. No deben tratarse como aprobadas.
 |---|---|
 | Ligar la cookie de sesión solo al host de la API | ADR-004, sección 5 |
 | Nombres de las carpetas de los espacios de trabajo | ADR-005, sección 5 |
-| D1 a D6: nombre y lista de módulos, dueño de cada tabla, transacciones entre módulos y envío de correo | [`docs/02-arquitectura.md`](../docs/02-arquitectura.md), sección 9 |
-| B1: reparto del resto del MVP en hitos | [`backlog-mvp.md`](backlog-mvp.md) |
+| B1: reparto del resto del MVP en hitos. Se decide al terminar el corte vertical | [`backlog-mvp.md`](backlog-mvp.md) |
 
 ---
 

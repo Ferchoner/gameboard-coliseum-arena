@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, en revisión |
+| **Estado** | Versión 1 |
 | **Sustituye a** | El documento de visión inicial |
 | **Recoge** | ADR-006 (frontend), ADR-007 (línea base) y ADR-008 (alcance del MVP) |
 

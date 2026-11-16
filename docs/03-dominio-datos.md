@@ -402,7 +402,7 @@ Cada operación de esta tabla es una sola transacción: o se guarda todo o no se
 
 | Operación | Qué escribe | Condición | Regla |
 |---|---|---|---|
-| **Registro** | Inserta `users`, `profiles` y `players` | `email` y `username` libres | |
+| **Registro** | Inserta `users`, `profiles` y `players`. Inserta además la fila de `auth_sessions`, porque registrarse inicia la sesión (decisión A6 de la API) | `email` y `username` libres | |
 | **Crear una sala** | Inserta `rooms` en `WAITING` y la fila del anfitrión en `room_players` | El jugador no supera su límite de partidas simultáneas | 7.30 |
 | **Entrar a una sala** | Inserta `room_players`. Actualiza `rooms.last_activity_at` | La sala está en `WAITING` y tiene plaza. El jugador no supera su límite de partidas simultáneas | 7.15, 7.30 |
 | **Inicio de partida** | Pasa la sala a `IN_MATCH`. Inserta `matches`, `match_players` con los asientos y `game_sessions` con el estado inicial, la versión 0 y los relojes completos | La sala está en `WAITING` y completa. Además, todos están listos, salvo en la primera partida de una sala por turnos, que no tiene paso de "listo" | 7.9, 7.10, 7.31 |

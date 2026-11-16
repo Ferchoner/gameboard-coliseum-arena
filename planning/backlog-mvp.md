@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, en revisión |
+| **Estado** | Versión 1. Los hitos 0 a 3 siguen el alcance aceptado. El reparto de los hitos 4 a 7 es una propuesta |
 | **Sustituye a** | El backlog inicial |
 | **Recoge** | ADR-008 (alcance del MVP) y los contratos, versión 1 |
 
-**Cómo leer este documento.** El contenido de cada hito sale del alcance aceptado en ADR-008. Lo que este documento propone por su cuenta es **cómo se reparte el resto del MVP en los hitos 4 a 7**, que es una recomendación pendiente de confirmación ([sección final](#punto-a-revisar)).
+**Cómo leer este documento.** El contenido de cada hito sale del alcance aceptado en ADR-008. Lo que este documento propone por su cuenta es **cómo se reparte el resto del MVP en los hitos 4 a 7**. Es una propuesta sin confirmar: el 2026-11-16 se decidió dejarla así y resolverla al terminar el corte vertical ([sección final](#propuesta-pendiente)).
 
 Ninguna tarea de los hitos 1 a 7 puede empezar sin la autorización explícita para implementar.
 
@@ -21,8 +21,9 @@ Ninguna tarea de los hitos 1 a 7 puede empezar sin la autorización explícita p
 - [x] Protocolo de tiempo real, versión 1.
 - [x] API REST, versión 1, en formato OpenAPI.
 - [x] Catálogo único de errores y matriz de permisos.
-- [ ] Documentos de arquitectura, backlog y README al día. En revisión.
-- [ ] Revisión de cierre del Hito 0 y autorización para implementar.
+- [x] Documentos de arquitectura, backlog y README al día.
+- [x] Revisión de cierre del Hito 0, en [`cierre-hito-0.md`](cierre-hito-0.md).
+- [ ] Autorización para implementar.
 
 Los diagramas de arquitectura están en [`docs/02-arquitectura.md`](../docs/02-arquitectura.md), y el de entidades, en [`docs/03-dominio-datos.md`](../docs/03-dominio-datos.md).
 
@@ -128,7 +129,9 @@ Notificaciones push, puntuación y clasificación, panel visual de administraci�
 
 ---
 
-## Punto a revisar
+## Propuesta pendiente
+
+No es una decisión. Se resuelve al terminar el corte vertical.
 
 | ID | Recomendación | Alternativa | Motivo |
 |---|---|---|---|

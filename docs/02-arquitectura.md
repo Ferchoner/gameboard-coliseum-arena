@@ -2,12 +2,12 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, en revisión |
+| **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta |
 | **Sustituye a** | El documento de arquitectura inicial |
 | **Recoge** | ADR-001 a ADR-007, el modelo de datos y los cinco contratos |
 | **Resuelve** | Hallazgo C-19 (el diagrama dibujaba la base de datos debajo del motor) |
 
-**Cómo leer este documento.** Casi todo resume decisiones ya aceptadas y cita su origen. Lo que este documento añade por su cuenta está en la [sección 9](#9-puntos-a-revisar), como recomendación pendiente de confirmación.
+**Cómo leer este documento.** Casi todo resume decisiones ya aceptadas y cita su origen. Lo que este documento añade por su cuenta está en la [sección 9](#9-decisiones-propias-de-este-documento).
 
 ---
 
@@ -170,11 +170,11 @@ Estos puntos quedaron aplazados a propósito en sus ADR, para decidirlos con las
 
 ---
 
-## 9. Puntos a revisar
+## 9. Decisiones propias de este documento
 
-Lo que este documento añade por su cuenta. Son **recomendaciones pendientes de confirmación**.
+Lo que este documento añade por su cuenta. Fueron **aceptadas el 2026-11-16** por Fernando Hernandez Argueta.
 
-| ID | Recomendación | Alternativa | Motivo |
+| ID | Decisión | Alternativa descartada | Motivo |
 |---|---|---|---|
 | D1 | **El módulo `sessions` pasa a llamarse `game-sessions`** | Mantener `sessions` | El glosario pide no usar "sesión" a secas, porque también existe la sesión de autenticación (ADR-011, sección 6) |
 | D2 | **Se retira el módulo `rankings`** de la lista | Dejarlo vacío | La puntuación y la clasificación son posteriores al MVP (ADR-008, punto 14). El módulo se crea cuando haga falta |

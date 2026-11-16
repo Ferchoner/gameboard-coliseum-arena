@@ -27,6 +27,7 @@ Una plataforma web para jugar juegos de mesa en línea contra otras personas, en
 9. [`contracts/05-permissions.md`](contracts/05-permissions.md): matriz de permisos.
 10. [`planning/decisiones-y-pendientes.md`](planning/decisiones-y-pendientes.md): qué está decidido y qué sigue abierto.
 11. [`planning/backlog-mvp.md`](planning/backlog-mvp.md): hitos.
+12. [`planning/cierre-hito-0.md`](planning/cierre-hito-0.md): comprobación de que la arquitectura quedó cerrada.
 
 Para saber por qué se decidió algo, el ADR correspondiente está en [`docs/adr/`](docs/adr/README.md).
 
