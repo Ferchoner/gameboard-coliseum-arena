@@ -16,6 +16,10 @@
     "./testing": {
       "types": "./dist/testing/fake-engine.d.ts",
       "default": "./dist/testing/fake-engine.js"
+    },
+    "./four-in-a-row": {
+      "types": "./dist/games/four-in-a-row/types.d.ts",
+      "default": "./dist/games/four-in-a-row/types.js"
     }
   },
   "files": [
