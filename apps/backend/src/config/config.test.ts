@@ -52,4 +52,11 @@ describe('configuración', () => {
       loadConfig({ ...base, TLS_CERT_FILE: 'cert.pem', TLS_KEY_FILE: 'key.pem' }).http.tls,
     ).toEqual({ certFile: 'cert.pem', keyFile: 'key.pem' });
   });
+
+  it('trata una variable vacía como si no estuviera', () => {
+    const config = loadConfig({ ...base, PORT: '', TLS_CERT_FILE: '', TLS_KEY_FILE: '' });
+
+    expect(config.http.port).toBe(3000);
+    expect(config.http.tls).toBeNull();
+  });
 });

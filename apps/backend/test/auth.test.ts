@@ -220,12 +220,10 @@ describe('cuentas y sesiones', () => {
         .set('Origin', FRONTEND_ORIGIN)
         .send(newAccount());
 
-      const response = await luis
-        .get(`${API}/me`)
-        .query({
-          userId: anaRegistered.body.data.userId,
-          playerId: anaRegistered.body.data.playerId,
-        });
+      const response = await luis.get(`${API}/me`).query({
+        userId: anaRegistered.body.data.userId,
+        playerId: anaRegistered.body.data.playerId,
+      });
 
       expect(response.body.data.userId).toBe(luisRegistered.body.data.userId);
     });

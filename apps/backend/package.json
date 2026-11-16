@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "build:watch": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node --env-file-if-exists=.env dist/main.js",
-    "dev": "node scripts/dev.mjs",
+    "start:watch": "node --watch --env-file-if-exists=.env dist/main.js",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file-if-exists=.env dist/database/migrate.js"

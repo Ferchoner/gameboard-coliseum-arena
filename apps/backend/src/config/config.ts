@@ -102,7 +102,9 @@ export class InvalidConfigError extends Error {
 }
 
 export function loadConfig(env: Record<string, string | undefined> = process.env): AppConfig {
-  const parsed = envSchema.safeParse(env);
+  // Una variable vacía cuenta como ausente, como en `VARIABLE=` dentro de un archivo `.env`.
+  const defined = Object.fromEntries(Object.entries(env).filter(([, value]) => value !== ''));
+  const parsed = envSchema.safeParse(defined);
   if (!parsed.success) {
     throw new InvalidConfigError(
       parsed.error.issues.map((issue) => `${issue.path.join('.') || 'entorno'}: ${issue.message}`),

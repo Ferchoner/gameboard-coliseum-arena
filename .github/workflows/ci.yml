@@ -1,0 +1,69 @@
+# Comprobaciones de cada pull request (ADR-012, decisión S23).
+name: Comprobaciones
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Formato, análisis, dependencias, tipos y pruebas
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: gameboard
+          POSTGRES_PASSWORD: gameboard
+          POSTGRES_DB: gameboard_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gameboard -d gameboard_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+
+    env:
+      TEST_DATABASE_URL: postgres://gameboard:gameboard@localhost:5432/gameboard_test
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Formato
+        run: pnpm format:check
+
+      - name: Análisis del código
+        run: pnpm lint
+
+      - name: Reglas de dependencias entre paquetes y módulos
+        run: pnpm deps:check
+
+      - name: Compilar
+        run: pnpm build
+
+      - name: Tipos
+        run: pnpm typecheck
+
+      - name: Pruebas
+        run: pnpm test

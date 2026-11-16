@@ -1,0 +1,21 @@
+# Base de datos para el entorno local. `pnpm db:up` la arranca y `pnpm db:down` la detiene.
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: gameboard
+      POSTGRES_PASSWORD: gameboard
+      POSTGRES_DB: gameboard
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./docker/postgres/create-test-database.sql:/docker-entrypoint-initdb.d/create-test-database.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U gameboard -d gameboard']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  postgres-data:

@@ -8,7 +8,6 @@ coverage/
 .env
 .env.*
 !.env.example
-!.env.https.example
 .certs/
 .DS_Store
 *.log

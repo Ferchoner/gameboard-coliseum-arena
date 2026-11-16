@@ -10,6 +10,6 @@ catalog:
   '@types/node': 26.6.6
 
 # Paquetes con permiso para ejecutar sus scripts de instalación.
-onlyBuiltDependencies:
-  - esbuild
-  - '@parcel/watcher'
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
