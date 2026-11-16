@@ -50,6 +50,7 @@ Tomadas por quien decide fuera de un ADR. No cambian ningún contrato.
 
 | Fecha | Asunto | Decisión | Se aplica en |
 |---|---|---|---|
+| 2026-11-16 | Reparto del resto del MVP en hitos (B1) | Cuatro hitos, en este orden: reconexión y recuperación, modalidad por turnos, cuenta y administración, y preparación para publicar | [`backlog-mvp.md`](backlog-mvp.md) |
 | 2026-11-16 | Alta de juegos y versiones nuevos en el catálogo | Un juego o una versión nuevos llegan con su motor, mediante una migración, y quedan **inactivos**. Desde administración se activan, se desactivan y se elige la versión vigente. El alta no se hace por la API, como ya decía A5. Precisa K5 de ADR-014, que solo decidía el alta de Cuatro en raya, el primer juego, que entró ya activo | Cada juego o versión nuevos, y la administración del Hito 6 |
 
 ---
@@ -84,9 +85,7 @@ Las inconsistencias que el registro inicial pedía normalizar están resueltas. 
 
 No son decisiones. No deben tratarse como aprobadas.
 
-| Propuesta | Dónde |
-|---|---|
-| B1: reparto del resto del MVP en hitos. El corte vertical terminó el 2026-11-16 con el Hito 3, así que toca decidirlo | [`backlog-mvp.md`](backlog-mvp.md) |
+Ninguna. B1, el reparto del resto del MVP en hitos, se aceptó el 2026-11-16.
 
 ---
 

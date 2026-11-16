@@ -2,13 +2,13 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1. Los hitos 0 a 3 siguen el alcance aceptado. El reparto de los hitos 4 a 7 es una propuesta |
+| **Estado** | Versión 1. Los hitos 0 a 3 siguen el alcance aceptado. El reparto de los hitos 4 a 7 se aceptó el 2026-11-16 (B1) |
 | **Sustituye a** | El backlog inicial |
 | **Recoge** | ADR-008 (alcance del MVP) y los contratos, versión 1 |
 
-**Cómo leer este documento.** El contenido de cada hito sale del alcance aceptado en ADR-008. Lo que este documento propone por su cuenta es **cómo se reparte el resto del MVP en los hitos 4 a 7**. Es una propuesta sin confirmar: el 2026-11-16 se decidió dejarla así y resolverla al terminar el corte vertical ([sección final](#propuesta-pendiente)).
+**Cómo leer este documento.** El contenido de cada hito sale del alcance aceptado en ADR-008. Lo que este documento decide por su cuenta es **cómo se reparte el resto del MVP en los hitos 4 a 7** (B1, [sección final](#reparto-del-resto-del-mvp)). Se propuso al cerrar el Hito 0 y se aceptó el 2026-11-16, al terminar el corte vertical.
 
-El Hito 1 está autorizado desde el 2026-11-16. Ninguna tarea de los hitos 2 a 7 puede empezar sin una autorización explícita.
+Los hitos 1 a 4 están autorizados, todos el 2026-11-16. Ninguna tarea de los hitos 5 a 7 puede empezar sin una autorización explícita.
 
 ---
 
@@ -143,10 +143,10 @@ Notificaciones push, puntuación y clasificación, panel visual de administraci�
 
 ---
 
-## Propuesta pendiente
+## Reparto del resto del MVP
 
-No es una decisión. Se resuelve al terminar el corte vertical.
+**Aceptado el 2026-11-16** por quien decide, al terminar el corte vertical, tal como se recomendaba.
 
-| ID | Recomendación | Alternativa | Motivo |
+| ID | Decisión | Alternativa | Motivo |
 |---|---|---|---|
 | B1 | **El resto del MVP se reparte en cuatro hitos, en este orden:** reconexión y recuperación, modalidad por turnos, cuenta y administración, y preparación para publicar | Otro orden, o un solo hito con todo | La modalidad por turnos se apoya en la recuperación desde la base de datos, así que va después de ella (ADR-008, punto 8). Lo que depende del alojamiento va al final porque esa decisión está aplazada |

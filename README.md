@@ -2,7 +2,7 @@
 
 Una plataforma web para jugar juegos de mesa en línea contra otras personas, en tiempo real o por turnos. El primer juego es Cuatro en raya.
 
-**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **corte vertical** completo: el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo); el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo), y el **Hito 3**, Cuatro en raya en tiempo real (la partida empieza sola cuando todos están listos, con tablero, relojes, rendición, resultado, historial y revancha). Falta el resto del MVP: recuperación ante cortes y reinicios, modalidad por turnos, cuenta, estadísticas y administración. Cada hito se implementa solo cuando se autoriza de forma explícita.
+**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **corte vertical** completo: el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo); el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo), y el **Hito 3**, Cuatro en raya en tiempo real (la partida empieza sola cuando todos están listos, con tablero, relojes, rendición, resultado, historial y revancha). Falta el resto del MVP: recuperación ante cortes y reinicios, modalidad por turnos, cuenta, estadísticas y administración. El reparto del resto del MVP en hitos se aceptó al terminar el corte vertical, y el Hito 4 está autorizado: primero se presentan sus decisiones abiertas. Cada hito se implementa solo cuando se autoriza de forma explícita.
 
 ## Qué hay aquí
 
@@ -91,7 +91,6 @@ Para saber por qué se decidió algo, el ADR correspondiente está en [`docs/adr
 ## Qué no está decidido
 
 - El alojamiento, las copias de seguridad y la supervisión. Están aplazados y de momento se trabaja en local.
-- El reparto del resto del MVP en hitos, que es una propuesta hasta que termine el corte vertical.
 
 La lista completa está en [`planning/decisiones-y-pendientes.md`](planning/decisiones-y-pendientes.md).
 
