@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Estado** | Versión 1, aceptada el 2026-11-15 por Fernando Hernandez Argueta |
-| **Contrato** | [`03-game-engine.ts`](03-game-engine.ts). Contiene solo tipos, sin lógica |
+| **Contrato** | [`packages/game-engine/src/contract.ts`](../packages/game-engine/src/contract.ts). Contiene solo tipos, sin lógica. Hasta el Hito 1 era `contracts/03-game-engine.ts` |
 | **Sustituye a** | El contrato de referencia preliminar |
 | **Aplica** | ADR-001 (condición 5.5), ADR-007 (acuerdos B2 y B3), ADR-009 (reglas 7.7, 7.8 y 7.16 a 7.18), ADR-010 (reglas 8.1, 8.2 y 8.5), ADR-011 (convenciones 9.5, 9.7, 9.9 y 9.19) y el modelo de datos (decisión R1) |
 | **Resuelve** | Hallazgos C-12, C-14 y C-15; vacíos G-06 y G-10 |

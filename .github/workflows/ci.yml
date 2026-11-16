@@ -56,11 +56,11 @@ jobs:
       - name: Análisis del código
         run: pnpm lint
 
-      - name: Reglas de dependencias entre paquetes y módulos
-        run: pnpm deps:check
-
       - name: Compilar
         run: pnpm build
+
+      - name: Reglas de dependencias entre paquetes y módulos
+        run: pnpm deps:check
 
       - name: Tipos
         run: pnpm typecheck

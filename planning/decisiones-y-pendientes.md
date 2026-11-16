@@ -112,7 +112,7 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 | Paso a TypeScript 7, cuando las herramientas lo admitan | Cuando salga la 7.1 | ADR-012, decisión S5 |
 | Librería de componentes del frontend y uso del motor en el navegador | Al iniciar el Hito 3 | ADR-012, decisiones S24 y S25 |
 | Qué controles de tiempo ofrece Cuatro en raya en tiempo real | Al implementar el juego | Notas del motor, sección 7 |
-| Textos en español para cada código de error | Con el frontend | Catálogo de errores, sección 14 |
+| Generar al construir el contenido del catálogo, y no solo la portada. Exige que la API esté disponible al construir. Hoy la portada se genera y la lista de juegos se pide en el navegador | Con el alojamiento | ADR-006; `apps/frontend/nuxt.config.ts` |
 | Valores definitivos de los límites de frecuencia y de tamaño | Tras el corte vertical, con datos reales | Protocolo, sección 12; notas de la API, sección 4 |
 
 ### Antes de publicar

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Estado** | Versión 1, aceptada el 2026-11-15 por Fernando Hernandez Argueta |
-| **Tipos** | [`02-realtime.ts`](02-realtime.ts). Contiene solo tipos, sin lógica |
+| **Tipos** | [`packages/contracts/src/realtime.ts`](../packages/contracts/src/realtime.ts). Contiene solo tipos, sin lógica. Hasta el Hito 1 era `contracts/02-realtime.ts` |
 | **Sustituye a** | El contrato de tiempo real preliminar |
 | **Aplica** | ADR-003 (WebSocket nativo), ADR-004 (sesión con cookie), ADR-008 (alcance del MVP), ADR-009 (reglas de dominio), ADR-010 (reglas 8.9, 8.11 y 8.12) y ADR-011 (convenciones 9.10 y 9.16 a 9.18) |
 | **Resuelve** | Hallazgos C-03 (parte de tiempo real), C-04, C-11 y C-16; pendiente P4 (semántica del protocolo); efecto R-4 (aviso de turno) |
@@ -273,7 +273,7 @@ Cuando la partida termina o se anula, el servidor envía un último `MATCH_UPDAT
 
 ## 6. Vistas
 
-Las tres vistas están definidas campo por campo en [`02-realtime.ts`](02-realtime.ts).
+Las tres vistas están definidas campo por campo en [`realtime.ts`](../packages/contracts/src/realtime.ts).
 
 | Vista | Qué contiene | Dónde viaja |
 |---|---|---|
