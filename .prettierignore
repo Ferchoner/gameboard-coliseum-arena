@@ -1,0 +1,12 @@
+node_modules
+dist
+.nuxt
+.output
+pnpm-lock.yaml
+# La documentación y los contratos escritos se mantienen a mano.
+docs
+contracts
+planning
+README.md
+LICENSE
+apps/backend/drizzle

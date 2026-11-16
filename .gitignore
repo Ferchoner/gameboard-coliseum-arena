@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.nuxt/
+.output/
+.data/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+!.env.https.example
+.certs/
+.DS_Store
+*.log
