@@ -85,7 +85,11 @@ Las inconsistencias que el registro inicial pedía normalizar están resueltas. 
 
 No son decisiones. No deben tratarse como aprobadas.
 
-Ninguna. B1, el reparto del resto del MVP en hitos, se aceptó el 2026-11-16.
+| Propuesta | Dónde |
+|---|---|
+| V1 a V12: decisiones del Hito 4, reconexión y recuperación. V2 precisa la regla 7.26 y V5 añade una regla a las salas | [ADR-015](../docs/adr/0015-decisiones-del-hito-4.md) |
+
+B1, el reparto del resto del MVP en hitos, se aceptó el 2026-11-16.
 
 ---
 
