@@ -1,0 +1,19 @@
+{
+  "name": "@gameboard/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pruebas en navegador: usan la aplicación entera como la usa una persona.",
+  "type": "module",
+  "scripts": {
+    "e2e": "playwright test",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@gameboard/contracts": "workspace:*",
+    "@playwright/test": "1.65.1",
+    "@types/node": "catalog:",
+    "@types/pg": "8.23.1",
+    "pg": "8.23.1",
+    "typescript": "catalog:"
+  }
+}

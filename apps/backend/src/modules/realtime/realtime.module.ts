@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
+import { GameSessionsModule } from '../game-sessions/game-sessions.module.js';
 import { RoomsModule } from '../rooms/rooms.module.js';
 import { RealtimeGateway } from './realtime.gateway.js';
 import { RealtimeHandshake } from './realtime-handshake.js';
@@ -10,7 +11,7 @@ import { RealtimeHandshake } from './realtime-handshake.js';
  * y este decide a qué conexiones se los envía (ADR-013, decisión H5).
  */
 @Module({
-  imports: [AuthModule, RoomsModule],
+  imports: [AuthModule, RoomsModule, GameSessionsModule],
   providers: [RealtimeGateway, RealtimeHandshake],
   exports: [RealtimeHandshake],
 })

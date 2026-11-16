@@ -23,12 +23,9 @@ export interface RoomMatches {
 }
 
 /**
- * Lo que `rooms` pide a quien gestiona las partidas (ADR-013, decisión
- * H1). La interfaz se define aquí y la implementa `matches`, de modo que
- * `matches` conoce a `rooms` y no al revés.
- *
- * Su forma definitiva se confirma en el Hito 3, cuando exista quien la
- * implemente.
+ * Lo que `rooms` pide a quien dirige las partidas (ADR-013, decisión H1).
+ * La interfaz se define aquí y la implementa `game-sessions`, de modo que
+ * `game-sessions` conoce a `rooms` y no al revés (ADR-014, decisión K1).
  */
 export interface MatchStarter {
   /**
@@ -42,16 +39,17 @@ export interface MatchStarter {
 }
 
 /**
- * Mientras nadie gestione partidas, ninguna empieza: una sala que cumple
- * la condición de inicio se queda en espera (ADR-013, decisión H2).
+ * Si nadie dirige partidas, ninguna empieza: una sala que cumple la
+ * condición de inicio se queda en espera (ADR-013, decisión H2). Es lo que
+ * hay hasta que `game-sessions` se registra al arrancar.
  */
-const NO_MATCHES_YET: MatchStarter = {
+export const NO_MATCHES_YET: MatchStarter = {
   startMatch: () => Promise.resolve(null),
   describeRoom: () => Promise.resolve({ currentMatchId: null, hasPlayed: false }),
 };
 
 /**
- * Dónde se conecta quien inicia las partidas. El módulo que implementa
+ * Dónde se conecta quien dirige las partidas. El módulo que implementa
  * `MatchStarter` se registra aquí al arrancar; `rooms` no lo importa.
  */
 @Injectable()

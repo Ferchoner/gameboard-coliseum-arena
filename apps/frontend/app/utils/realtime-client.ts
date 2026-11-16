@@ -3,6 +3,8 @@ import {
   CLOSE_CODES_WITHOUT_RECONNECT,
   type Command,
   type CommandRejectionCode,
+  type GameEventView,
+  type MatchView,
   type Notification,
   PROTOCOL_VERSION,
   PROTOCOL_VERSION_PARAM,
@@ -49,6 +51,36 @@ export interface RoomListener {
   onClosed(closeReason: RoomCloseReason): void;
   /** El servidor rechazó la suscripción. Termina aquí. */
   onRejected(code: CommandRejectionCode): void;
+}
+
+/** Lo que recibe quien sigue una partida. */
+export interface MatchListener {
+  /**
+   * El estado completo de la partida, desde el asiento propio: al
+   * suscribirse, al reconectar y en cada cambio. `events` trae lo que
+   * ocurrió en el juego, y `serverTime`, el instante en que se midieron los
+   * relojes. Cuando la partida deja de estar en curso, este es el último aviso.
+   */
+  onMatch(match: MatchView, events: readonly GameEventView[], serverTime: string): void;
+  /** El servidor rechazó la suscripción. Termina aquí. */
+  onRejected(code: CommandRejectionCode): void;
+}
+
+/** Cómo terminó una orden de juego. */
+export type CommandResult =
+  | { readonly ok: true }
+  | {
+      readonly ok: false;
+      /** `NOT_CONNECTED` si la conexión se cerró para no volver antes de tener respuesta. */
+      readonly code: CommandRejectionCode | 'NOT_CONNECTED';
+      /** Motivo propio del juego, cuando el rechazo viene de sus reglas. */
+      readonly reason?: string;
+    };
+
+/** Una orden de juego enviada que todavía no tiene respuesta. */
+interface PendingCommand {
+  readonly command: Extract<Command, { type: 'SUBMIT_ACTION' | 'RESIGN_MATCH' }>;
+  readonly resolve: (result: CommandResult) => void;
 }
 
 /** Un manejador de eventos, tan permisivo con su parámetro como los del navegador. */
@@ -118,6 +150,15 @@ export class RealtimeClient {
   private readonly rooms = new Map<string, RoomListener>();
   /** A qué sala corresponde cada orden de suscripción que espera respuesta. */
   private readonly pendingSubscriptions = new Map<string, string>();
+  /** Partidas que la aplicación quiere seguir. Se recuperan al reconectar. */
+  private readonly matches = new Map<string, MatchListener>();
+  private readonly pendingMatchSubscriptions = new Map<string, string>();
+  /**
+   * Órdenes de juego sin respuesta, por su `requestId`. Si la conexión se
+   * corta antes de que llegue, se reenvían tal cual al reconectar: el
+   * servidor no aplica dos veces la misma petición (ADR-010, regla 8.13).
+   */
+  private readonly pendingCommands = new Map<string, PendingCommand>();
 
   constructor(private readonly options: RealtimeClientOptions) {}
 
@@ -131,8 +172,7 @@ export class RealtimeClient {
   /** Cierra la conexión y deja de reconectar. Las suscripciones se olvidan. */
   stop(): void {
     this.clearTimers();
-    this.rooms.clear();
-    this.pendingSubscriptions.clear();
+    this.forgetEverything();
     const socket = this.detach();
     socket?.close();
     this.setState({ status: 'idle' });
@@ -153,6 +193,42 @@ export class RealtimeClient {
         this.send({ type: 'UNSUBSCRIBE_ROOM', requestId: this.newRequestId(), roomId });
       }
     };
+  }
+
+  /**
+   * Sigue una partida. El estado llega por `listener.onMatch`, ahora y cada
+   * vez que cambie. Devuelve cómo dejar de seguirla.
+   */
+  subscribeMatch(matchId: string, listener: MatchListener): () => void {
+    this.matches.set(matchId, listener);
+    if (this.state.status === 'open') this.sendSubscribeMatch(matchId);
+
+    return () => {
+      if (this.matches.get(matchId) !== listener) return;
+      this.matches.delete(matchId);
+      if (this.state.status === 'open') {
+        this.send({ type: 'UNSUBSCRIBE_MATCH', requestId: this.newRequestId(), matchId });
+      }
+    };
+  }
+
+  /**
+   * Envía una jugada. `stateVersion` es la versión del estado que la
+   * persona tenía delante. La partida como queda llega por la suscripción;
+   * aquí solo se sabe si la jugada se aceptó.
+   */
+  submitAction(matchId: string, stateVersion: number, action: unknown): Promise<CommandResult> {
+    return this.sendCommand({
+      type: 'SUBMIT_ACTION',
+      requestId: this.newRequestId(),
+      matchId,
+      payload: { stateVersion, action },
+    });
+  }
+
+  /** Se rinde en una partida. */
+  resignMatch(matchId: string): Promise<CommandResult> {
+    return this.sendCommand({ type: 'RESIGN_MATCH', requestId: this.newRequestId(), matchId });
   }
 
   // --- Conexión ------------------------------------------------------------
@@ -185,12 +261,24 @@ export class RealtimeClient {
     if (this.silenceTimer) clearTimeout(this.silenceTimer);
     this.silenceTimer = null;
     this.pendingSubscriptions.clear();
+    this.pendingMatchSubscriptions.clear();
     return socket;
+  }
+
+  /** Olvida las suscripciones y da por perdidas las órdenes sin respuesta. */
+  private forgetEverything(): void {
+    this.rooms.clear();
+    this.matches.clear();
+    this.pendingSubscriptions.clear();
+    this.pendingMatchSubscriptions.clear();
+    const commands = [...this.pendingCommands.values()];
+    this.pendingCommands.clear();
+    for (const { resolve } of commands) resolve({ ok: false, code: 'NOT_CONNECTED' });
   }
 
   private onClose(code: number): void {
     if (CLOSE_CODES_WITHOUT_RECONNECT.includes(code)) {
-      this.rooms.clear();
+      this.forgetEverything();
       this.setState({ status: 'stopped', reason: STOP_REASONS[code] ?? 'PROTOCOL_ERROR' });
       return;
     }
@@ -211,7 +299,7 @@ export class RealtimeClient {
           if (allowed) {
             this.connect();
           } else {
-            this.rooms.clear();
+            this.forgetEverything();
             this.setState({ status: 'stopped', reason: 'SESSION_ENDED' });
           }
         },
@@ -261,6 +349,9 @@ export class RealtimeClient {
         this.setState({ status: 'open' });
         // El servidor no recuerda las suscripciones de la conexión anterior.
         for (const roomId of this.rooms.keys()) this.sendSubscribe(roomId);
+        for (const matchId of this.matches.keys()) this.sendSubscribeMatch(matchId);
+        // Las órdenes que se quedaron sin respuesta se repiten con su mismo identificador.
+        for (const { command } of this.pendingCommands.values()) this.send(command);
         return;
 
       case 'ROOM_SUBSCRIBED':
@@ -279,22 +370,96 @@ export class RealtimeClient {
         return;
       }
 
-      case 'COMMAND_REJECTED': {
-        const roomId = message.requestId
-          ? this.pendingSubscriptions.get(message.requestId)
-          : undefined;
-        if (roomId === undefined || !message.requestId) return;
-        this.pendingSubscriptions.delete(message.requestId);
-        const listener = this.rooms.get(roomId);
-        this.rooms.delete(roomId);
-        listener?.onRejected(message.payload.code);
+      case 'MATCH_SUBSCRIBED':
+        if (message.requestId) this.pendingMatchSubscriptions.delete(message.requestId);
+        this.deliverMatch(message.payload.match, [], message.serverTime);
+        return;
+
+      case 'MATCH_UPDATED': {
+        this.deliverMatch(message.payload.match, message.payload.events, message.serverTime);
+        // Si es la respuesta a una orden propia, la orden se aceptó.
+        const command = message.requestId && this.pendingCommands.get(message.requestId);
+        if (command && message.requestId) {
+          this.pendingCommands.delete(message.requestId);
+          command.resolve({ ok: true });
+        }
         return;
       }
 
+      case 'COMMAND_REJECTED':
+        if (message.requestId) this.onRejection(message.requestId, message.payload);
+        return;
+
       default:
-        // Los latidos solo cuentan como señal de vida. Lo demás llega en hitos posteriores.
+        // Los latidos solo cuentan como señal de vida. El aviso personal de
+        // partida se usará con la modalidad por turnos (Hito 5).
         return;
     }
+  }
+
+  private deliverMatch(
+    match: MatchView,
+    events: readonly GameEventView[],
+    serverTime: string,
+  ): void {
+    const listener = this.matches.get(match.matchId);
+    // Cuando la partida termina o se anula, la suscripción acaba con este aviso.
+    if (match.status !== 'IN_PROGRESS') this.matches.delete(match.matchId);
+    listener?.onMatch(match, events, serverTime);
+  }
+
+  /** Un rechazo responde a una suscripción o a una orden de juego. */
+  private onRejection(
+    requestId: string,
+    payload: Extract<Notification, { type: 'COMMAND_REJECTED' }>['payload'],
+  ): void {
+    const roomId = this.pendingSubscriptions.get(requestId);
+    if (roomId !== undefined) {
+      this.pendingSubscriptions.delete(requestId);
+      const listener = this.rooms.get(roomId);
+      this.rooms.delete(roomId);
+      listener?.onRejected(payload.code);
+      return;
+    }
+
+    const matchId = this.pendingMatchSubscriptions.get(requestId);
+    if (matchId !== undefined) {
+      this.pendingMatchSubscriptions.delete(requestId);
+      const listener = this.matches.get(matchId);
+      this.matches.delete(matchId);
+      listener?.onRejected(payload.code);
+      return;
+    }
+
+    const command = this.pendingCommands.get(requestId);
+    if (command) {
+      this.pendingCommands.delete(requestId);
+      command.resolve({
+        ok: false,
+        code: payload.code,
+        ...(payload.reason === undefined ? {} : { reason: payload.reason }),
+      });
+    }
+  }
+
+  private sendSubscribeMatch(matchId: string): void {
+    const requestId = this.newRequestId();
+    this.pendingMatchSubscriptions.set(requestId, matchId);
+    this.send({ type: 'SUBSCRIBE_MATCH', requestId, matchId });
+  }
+
+  /**
+   * Envía una orden de juego y espera su respuesta. Si no hay conexión
+   * ahora mismo, sale al reconectar.
+   */
+  private sendCommand(command: PendingCommand['command']): Promise<CommandResult> {
+    if (this.state.status === 'idle' || this.state.status === 'stopped') {
+      return Promise.resolve({ ok: false, code: 'NOT_CONNECTED' });
+    }
+    return new Promise((resolve) => {
+      this.pendingCommands.set(command.requestId, { command, resolve });
+      if (this.state.status === 'open') this.send(command);
+    });
   }
 
   private sendSubscribe(roomId: string): void {

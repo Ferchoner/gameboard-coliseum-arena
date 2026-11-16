@@ -21,3 +21,10 @@ export function formatPlayers(game: Pick<Game, 'minPlayers' | 'maxPlayers'>): st
     ? es.home.players.exact(game.minPlayers)
     : es.home.players.range(game.minPlayers, game.maxPlayers);
 }
+
+const DATE_TIME = new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' });
+
+/** Una fecha del servidor, en la hora local de quien la lee: "16 nov 2026, 7:05". */
+export function formatDateTime(iso: string): string {
+  return DATE_TIME.format(new Date(iso));
+}

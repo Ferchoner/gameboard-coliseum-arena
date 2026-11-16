@@ -1,4 +1,5 @@
-import type { RoomCloseReason } from '@gameboard/contracts';
+import type { GameEventView, RoomCloseReason } from '@gameboard/contracts';
+import type { MatchSnapshot } from './match-snapshot.js';
 import { Injectable, Logger } from '@nestjs/common';
 
 /** Algo que ocurrió y que el canal de tiempo real tiene que contar a los clientes. */
@@ -6,6 +7,19 @@ export type RealtimeEvent =
   /** Cambió algo de una sala: sus miembros, sus marcas de listo o su estado. */
   | { readonly type: 'ROOM_CHANGED'; readonly roomId: string }
   | { readonly type: 'ROOM_CLOSED'; readonly roomId: string; readonly closeReason: RoomCloseReason }
+  /**
+   * Cambió una partida: empezó, alguien jugó, terminó o se anuló. Lleva la
+   * partida tal como quedó guardada, para que cada participante reciba lo
+   * que ve su asiento sin volver a leerla.
+   */
+  | {
+      readonly type: 'MATCH_CHANGED';
+      readonly snapshot: MatchSnapshot;
+      /** Eventos de juego que produjo el cambio. Vacía si no hubo ninguno. */
+      readonly events: readonly GameEventView[];
+      /** La orden que provocó el cambio, si fue la orden de un jugador. */
+      readonly origin: { readonly playerId: string; readonly requestId: string } | null;
+    }
   /** Una sesión de autenticación dejó de valer: se cerró o caducó. */
   | { readonly type: 'SESSION_ENDED'; readonly sessionId: string };
 

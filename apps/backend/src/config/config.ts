@@ -51,6 +51,9 @@ const envSchema = z
       .default(7 * 24),
     ROOM_IDLE_CHECK_SECONDS: z.coerce.number().int().min(1).default(60),
 
+    /** Cada cuánto se buscan partidas con el reloj vencido (ADR-014, decisiones K3 y K22). */
+    MATCH_CLOCK_CHECK_SECONDS: z.coerce.number().int().min(1).default(10),
+
     /** Límites e intervalos del canal de tiempo real (protocolo, sección 9). */
     REALTIME_MAX_MESSAGE_BYTES: z.coerce
       .number()
@@ -120,6 +123,9 @@ export interface AppConfig {
     readonly idleMs: Readonly<Record<MatchMode, number>>;
     readonly idleCheckIntervalMs: number;
   };
+  readonly matches: {
+    readonly clockCheckIntervalMs: number;
+  };
   readonly realtime: {
     readonly maxMessageBytes: number;
     readonly maxConnectionsPerPlayer: number;
@@ -185,6 +191,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
         TURN_BASED: value.ROOM_IDLE_TURN_BASED_HOURS * 60 * 60 * 1000,
       },
       idleCheckIntervalMs: value.ROOM_IDLE_CHECK_SECONDS * 1000,
+    },
+    matches: {
+      clockCheckIntervalMs: value.MATCH_CLOCK_CHECK_SECONDS * 1000,
     },
     realtime: {
       maxMessageBytes: value.REALTIME_MAX_MESSAGE_BYTES,

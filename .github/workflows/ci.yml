@@ -67,3 +67,49 @@ jobs:
 
       - name: Pruebas
         run: pnpm test
+
+  e2e:
+    name: Pruebas en navegador
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: gameboard
+          POSTGRES_PASSWORD: gameboard
+          POSTGRES_DB: gameboard
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gameboard -d gameboard"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+
+    env:
+      # Las pruebas crean esta base de datos de cero en cada ejecución.
+      E2E_DATABASE_URL: postgres://gameboard:gameboard@localhost:5432/gameboard_e2e
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Compilar
+        run: pnpm build
+
+      - name: Instalar el navegador
+        run: pnpm --filter @gameboard/e2e exec playwright install --with-deps chromium
+
+      - name: Pruebas en navegador
+        run: pnpm test:e2e

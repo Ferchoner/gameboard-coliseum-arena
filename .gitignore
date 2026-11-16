@@ -4,6 +4,8 @@ dist/
 .output/
 .data/
 coverage/
+test-results/
+playwright-report/
 *.tsbuildinfo
 .env
 .env.*

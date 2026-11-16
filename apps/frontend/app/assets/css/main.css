@@ -429,3 +429,171 @@ a {
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
+
+/* --- Partidas ------------------------------------------------------------ */
+
+:root {
+  --seat-0: #d6453d;
+  --seat-1: #e9b520;
+  --board: #2f5fd0;
+  --board-hole: #f6f5f1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --seat-0: #ef6a61;
+    --seat-1: #f2c94c;
+    --board: #2a4a9c;
+    --board-hole: #15171b;
+  }
+}
+
+.button.danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--surface);
+}
+
+.result {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-left-width: 6px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.result p:last-child {
+  margin-bottom: 0;
+}
+
+.result.win {
+  border-left-color: var(--ok);
+}
+
+.result.loss {
+  border-left-color: var(--danger);
+}
+
+.match-players {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.match-player {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  align-content: start;
+  gap: 0.35rem 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.match-badges {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.match-player.active {
+  border-color: var(--accent);
+}
+
+.token {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  flex: none;
+}
+
+.token.seat-0,
+.four-cell.seat-0 {
+  background: var(--seat-0);
+}
+
+.token.seat-1,
+.four-cell.seat-1 {
+  background: var(--seat-1);
+}
+
+.clock {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.turn {
+  font-weight: 600;
+}
+
+.resign-question {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.outcome {
+  font-weight: 600;
+}
+
+.outcome.win {
+  color: var(--ok);
+}
+
+.outcome.loss {
+  color: var(--danger);
+}
+
+/* Cuatro en raya: siete columnas que son botones, cada una con sus seis casillas. */
+.four-board {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+  width: min(100%, 30rem);
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  background: var(--board);
+}
+
+.four-column {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.25rem 0;
+  border: 0;
+  border-radius: calc(var(--radius) / 2);
+  background: transparent;
+  cursor: pointer;
+}
+
+.four-column:disabled {
+  cursor: default;
+}
+
+.four-column:not(:disabled):hover,
+.four-column:not(:disabled):focus-visible {
+  background: rgb(255 255 255 / 25%);
+}
+
+.four-cell {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--board-hole);
+}
+
+.four-cell.last {
+  box-shadow: inset 0 0 0 3px rgb(255 255 255 / 70%);
+}
+
+.four-cell.winning {
+  box-shadow:
+    inset 0 0 0 3px #ffffff,
+    0 0 0 3px #ffffff;
+}

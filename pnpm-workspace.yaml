@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - e2e
 
 # Versiones únicas para las dependencias que usa más de un paquete.
 catalog:

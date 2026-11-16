@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "allowJs": true,
+    "allowImportingTsExtensions": true,
+    "lib": ["es2024", "dom"],
+    "types": ["node"]
+  },
+  "include": ["playwright.config.ts", "tests", "support"]
+}

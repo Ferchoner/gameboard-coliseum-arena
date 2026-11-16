@@ -5,6 +5,7 @@ import { ConfigModule } from './config/config.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { BroadcastModule } from './modules/broadcast/broadcast.module.js';
+import { GameSessionsModule } from './modules/game-sessions/game-sessions.module.js';
 import { GamesModule } from './modules/games/games.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { RealtimeModule } from './modules/realtime/realtime.module.js';
@@ -27,6 +28,7 @@ export class AppModule {
         AuthModule,
         GamesModule,
         RoomsModule,
+        GameSessionsModule,
         RealtimeModule,
         HealthModule,
       ],

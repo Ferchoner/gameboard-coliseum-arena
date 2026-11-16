@@ -59,6 +59,8 @@ Los dos módulos se necesitan en los dos sentidos. `rooms` tiene que arrancar la
 
 **Recomendación:** la interfaz definida en `rooms`.
 
+*Nota del 2026-11-16: al diseñar la interfaz en el Hito 3 se vio que `matches` y `game-sessions` se necesitarían en los dos sentidos. Quien se registra como iniciador de partidas es `game-sessions`, que dirige la partida y usa a `matches` como registro (ADR-014, decisión K1). Lo esencial de H1 no cambia: `rooms` no conoce a ninguno de los dos.*
+
 La interfaz tiene dos operaciones: iniciar una partida para una sala, dentro de la transacción recibida, y decir cuál es la partida en curso de una sala. La segunda existe porque la vista de sala lleva `currentMatchId` y el modelo de datos aceptado no guarda ese dato en `rooms`: está en `matches`. Así no hay que cambiar el modelo. Su forma exacta se confirma en el Hito 3, cuando exista quien la implemente.
 
 ### H2. Qué pasa en este hito cuando una sala cumple la condición de inicio
@@ -256,14 +258,14 @@ El catálogo sigue vacío y en el repositorio no hay ningún juego de demostraci
 
 ### Elecciones menores tomadas al construir
 
-Ninguna estaba en las veinte decisiones y ninguna cambia un contrato. Son **recomendaciones aplicadas, pendientes de confirmación**: se revisan con la pull request del hito y cualquiera se puede cambiar sin tocar el resto.
+Ninguna estaba en las veinte decisiones y ninguna cambia un contrato. Se aplicaron como recomendaciones y **quedaron confirmadas el 2026-11-16**, junto con las decisiones del Hito 3.
 
 | ID | Asunto | Lo que se hizo | Alternativa |
 |---|---|---|---|
 | C1 | `UNSUBSCRIBE_ROOM` y `UNSUBSCRIBE_MATCH` de quien no está suscrito | Se responde igual que si lo estuviera, con `ROOM_UNSUBSCRIBED` o `MATCH_UNSUBSCRIBED`. Pedirlo dos veces no es un error | Rechazarlo. Obliga al cliente a tratar como fallo algo que ya está como quería |
 | C2 | Identificador de sala con formato inválido en la dirección | `ROOM_NOT_FOUND`, igual que una sala que no existe | `VALIDATION_ERROR`. Distingue dos casos que para quien llama son el mismo |
 | C3 | Miembros de una sala cerrada | Sus filas se conservan y dejan de contar para el límite de partidas simultáneas. Quien seguía dentro puede ver la sala cerrada con su motivo, y salir de ella | Borrarlas al cerrar. Se pierde quién estaba y el aviso del motivo a quien vuelve más tarde |
-| C4 | Cómo registra `matches` su iniciador de partidas (H1) | `rooms` expone un punto de registro, `MatchStarterSlot`. Mientras nadie se registra, se usa el iniciador que no inicia nada (H2). Una regla automática impide que `rooms` importe `matches` | Inyección directa del módulo `matches`, que crearía la dependencia circular que H1 evita |
+| C4 | Cómo se registra el iniciador de partidas (H1). Desde ADR-014, K1, quien se registra es `game-sessions` | `rooms` expone un punto de registro, `MatchStarterSlot`. Mientras nadie se registra, se usa el iniciador que no inicia nada (H2). Una regla automática impide que `rooms` importe `matches` | Inyección directa del módulo `matches`, que crearía la dependencia circular que H1 evita |
 | C5 | Marca de listo repetida | Marcarse listo cuando ya se estaba no cuenta como actividad de la sala ni genera aviso | Contarla. Permitiría mantener viva una sala inactiva sin cambiar nada |
 
 ### Lo que queda sin hacer, y dónde
@@ -271,5 +273,5 @@ Ninguna estaba en las veinte decisiones y ninguna cambia un contrato. Son **reco
 | Asunto | Cuándo |
 |---|---|
 | Cierre con el código 1008 por incumplir el protocolo de forma repetida. El protocolo lo liga a los límites de frecuencia, que H9 dejó fuera de este hito. Hoy cada mensaje inválido se rechaza y la conexión sigue abierta | Hito 7 |
-| El texto "Todos están listos. La partida empezará enseguida" se queda en pantalla, porque todavía nada inicia la partida (H2) | Hito 3 |
+| El texto "Todos están listos. La partida empezará enseguida" se queda en pantalla, porque todavía nada inicia la partida (H2) | Hito 3. **Resuelto el 2026-11-16:** la partida empieza y la página pasa a ella |
 | Prueba en Windows. Todo se ejecutó en Linux | Al probarlo en el equipo de quien decide |

@@ -2,28 +2,29 @@
 
 Una plataforma web para jugar juegos de mesa en línea contra otras personas, en tiempo real o por turnos. El primer juego es Cuatro en raya.
 
-**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y están implementados el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo), y el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo). Todavía no hay partidas ni ningún juego: el catálogo está vacío hasta el Hito 3, así que hasta entonces no se puede crear una sala desde la aplicación, y una sala completa todavía no inicia partida. Cada hito se implementa solo cuando se autoriza de forma explícita.
+**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **corte vertical** completo: el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo); el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo), y el **Hito 3**, Cuatro en raya en tiempo real (la partida empieza sola cuando todos están listos, con tablero, relojes, rendición, resultado, historial y revancha). Falta el resto del MVP: recuperación ante cortes y reinicios, modalidad por turnos, cuenta, estadísticas y administración. Cada hito se implementa solo cuando se autoriza de forma explícita.
 
 ## Qué hay aquí
 
 | Carpeta | Contenido |
 |---|---|
 | [`docs/`](docs/) | Visión, arquitectura, modelo de datos y flujos |
-| [`docs/adr/`](docs/adr/README.md) | Las trece decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
+| [`docs/adr/`](docs/adr/README.md) | Las catorce decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
 | [`docs/auditoria/`](docs/auditoria/README.md) | El análisis que precedió a las decisiones. Es histórico y no se mantiene al día |
 | [`contracts/`](contracts/) | La API, el protocolo de tiempo real, el contrato del motor de juego, el catálogo de errores y la matriz de permisos |
 | [`planning/`](planning/) | El backlog por hitos y el registro de lo decidido y lo abierto |
 | [`apps/backend/`](apps/backend/) | El servidor: la API y el canal de tiempo real |
 | [`apps/frontend/`](apps/frontend/) | La aplicación web |
 | [`packages/contracts/`](packages/contracts/) | Tipos y esquemas de la API y del protocolo, y catálogo de errores. Lo usan el backend y el frontend |
-| [`packages/game-engine/`](packages/game-engine/) | El contrato de los motores de juego y su registro. No depende de nada |
+| [`packages/game-engine/`](packages/game-engine/) | El contrato de los motores de juego, su registro y el motor de Cuatro en raya. No depende de nada |
+| [`e2e/`](e2e/) | Pruebas en navegador: dos personas juegan una partida entera contra el servidor y la base de datos reales |
 
 ## Cómo ejecutarlo en local
 
 Hace falta [Node.js](https://nodejs.org/) 26.13 o posterior de la línea 26, [pnpm](https://pnpm.io/) 12 y [Docker](https://www.docker.com/) para la base de datos. Funciona en Windows, macOS y Linux.
 
 ```sh
-pnpm install     # instala las dependencias de los cuatro paquetes
+pnpm install     # instala las dependencias de todos los paquetes
 pnpm db:up       # arranca PostgreSQL 18 en Docker
 pnpm dev         # compila, aplica las migraciones y arranca la API y el frontend
 ```
@@ -53,6 +54,7 @@ Nada es obligatorio en local. Para cambiar la base de datos, el registro de acti
 | `pnpm db:up`, `pnpm db:down` | Arranca o detiene la base de datos |
 | `pnpm db:migrate` | Aplica las migraciones pendientes |
 | `pnpm test` | Ejecuta las pruebas. Las del backend usan la base de datos `gameboard_test`, que `pnpm db:up` crea |
+| `pnpm test:e2e` | Ejecuta las pruebas en navegador. Antes hay que construir con `pnpm build`, tener la base de datos en marcha y `pnpm dev` parado, porque usan sus mismos puertos. La primera vez hay que descargar el navegador con `pnpm --filter @gameboard/e2e exec playwright install chromium`. Usan su propia base de datos, `gameboard_e2e`, que crean de cero cada vez |
 | `pnpm check` | Todo lo que se comprueba en cada pull request: formato, análisis, reglas de dependencias, compilación, tipos y pruebas |
 | `pnpm build` | Compila los paquetes y el backend, y genera el frontend como archivos estáticos en `apps/frontend/.output/public` |
 | `pnpm format` | Da formato al código |

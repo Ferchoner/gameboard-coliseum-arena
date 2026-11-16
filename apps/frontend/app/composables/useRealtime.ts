@@ -1,6 +1,7 @@
 import { useRuntimeConfig, useState } from '#imports';
 import {
   type ConnectionState,
+  type MatchListener,
   RealtimeClient,
   realtimeUrl,
   type RoomListener,
@@ -41,5 +42,10 @@ export function useRealtime() {
     stop: () => client?.stop(),
     subscribeRoom: (roomId: string, listener: RoomListener) =>
       getClient().subscribeRoom(roomId, listener),
+    subscribeMatch: (matchId: string, listener: MatchListener) =>
+      getClient().subscribeMatch(matchId, listener),
+    submitAction: (matchId: string, stateVersion: number, action: unknown) =>
+      getClient().submitAction(matchId, stateVersion, action),
+    resignMatch: (matchId: string) => getClient().resignMatch(matchId),
   };
 }

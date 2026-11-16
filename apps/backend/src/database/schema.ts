@@ -5,7 +5,14 @@
  * este archivo.
  */
 export { authSessions } from '../modules/auth/auth.schema.js';
+export { gameSessions, matchActions } from '../modules/game-sessions/game-sessions.schema.js';
 export { gameVersions, games } from '../modules/games/games.schema.js';
+export {
+  matches,
+  matchPlayers,
+  matchResults,
+  playerResults,
+} from '../modules/matches/matches.schema.js';
 export { players } from '../modules/players/players.schema.js';
 export { profiles } from '../modules/profiles/profiles.schema.js';
 export { roomPlayers, rooms } from '../modules/rooms/rooms.schema.js';

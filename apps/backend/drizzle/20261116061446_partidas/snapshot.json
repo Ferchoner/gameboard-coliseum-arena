@@ -1,0 +1,1744 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "079d6c57-6dbf-4a36-a530-ad33f53e6a91",
+  "prevIds": [
+    "f5d0cf44-eb19-4f18-8886-a360ab7b2f9a"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "game_sessions"
+      ],
+      "writes": [
+        "s|tbl|public.game_sessions",
+        "n|tbl|public.game_sessions",
+        "e|tbl|public.game_sessions",
+        "n|rel|public.game_sessions",
+        "n|type|public.game_sessions",
+        "n|rel|public.game_sessions_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "match_actions"
+      ],
+      "writes": [
+        "s|tbl|public.match_actions",
+        "n|tbl|public.match_actions",
+        "e|tbl|public.match_actions",
+        "n|rel|public.match_actions",
+        "n|type|public.match_actions",
+        "n|rel|public.match_actions_pk"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "match_players"
+      ],
+      "writes": [
+        "s|tbl|public.match_players",
+        "n|tbl|public.match_players",
+        "e|tbl|public.match_players",
+        "n|rel|public.match_players",
+        "n|type|public.match_players",
+        "n|rel|public.match_players_pk"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "match_results"
+      ],
+      "writes": [
+        "s|tbl|public.match_results",
+        "n|tbl|public.match_results",
+        "e|tbl|public.match_results",
+        "n|rel|public.match_results",
+        "n|type|public.match_results",
+        "n|rel|public.match_results_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "matches"
+      ],
+      "writes": [
+        "s|tbl|public.matches",
+        "n|tbl|public.matches",
+        "e|tbl|public.matches",
+        "n|rel|public.matches",
+        "n|type|public.matches",
+        "n|rel|public.matches_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "player_results"
+      ],
+      "writes": [
+        "s|tbl|public.player_results",
+        "n|tbl|public.player_results",
+        "e|tbl|public.player_results",
+        "n|rel|public.player_results",
+        "n|type|public.player_results",
+        "n|rel|public.player_results_pk"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "game_sessions",
+        "game_sessions_active_deadline_idx"
+      ],
+      "writes": [
+        "s|idx|public.game_sessions_active_deadline_idx",
+        "n|idx|public.game_sessions_active_deadline_idx",
+        "e|idx|public.game_sessions_active_deadline_idx",
+        "n|rel|public.game_sessions_active_deadline_idx"
+      ],
+      "reads": [
+        "n|tbl|public.game_sessions",
+        "n|sch|public",
+        "n|col|public.game_sessions.turn_deadline_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "match_actions",
+        "match_actions_request_unique"
+      ],
+      "writes": [
+        "s|idx|public.match_actions_request_unique",
+        "n|idx|public.match_actions_request_unique",
+        "e|idx|public.match_actions_request_unique",
+        "n|rel|public.match_actions_request_unique"
+      ],
+      "reads": [
+        "n|tbl|public.match_actions",
+        "n|sch|public",
+        "n|col|public.match_actions.match_id",
+        "n|col|public.match_actions.player_id",
+        "n|col|public.match_actions.request_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "match_players",
+        "match_players_match_seat_unique"
+      ],
+      "writes": [
+        "s|idx|public.match_players_match_seat_unique",
+        "n|idx|public.match_players_match_seat_unique",
+        "e|idx|public.match_players_match_seat_unique",
+        "n|rel|public.match_players_match_seat_unique"
+      ],
+      "reads": [
+        "n|tbl|public.match_players",
+        "n|sch|public",
+        "n|col|public.match_players.match_id",
+        "n|col|public.match_players.seat"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "match_players",
+        "match_players_player_match_idx"
+      ],
+      "writes": [
+        "s|idx|public.match_players_player_match_idx",
+        "n|idx|public.match_players_player_match_idx",
+        "e|idx|public.match_players_player_match_idx",
+        "n|rel|public.match_players_player_match_idx"
+      ],
+      "reads": [
+        "n|tbl|public.match_players",
+        "n|sch|public",
+        "n|col|public.match_players.player_id",
+        "n|col|public.match_players.match_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "matches",
+        "matches_room_in_progress_unique"
+      ],
+      "writes": [
+        "s|idx|public.matches_room_in_progress_unique",
+        "n|idx|public.matches_room_in_progress_unique",
+        "e|idx|public.matches_room_in_progress_unique",
+        "n|rel|public.matches_room_in_progress_unique"
+      ],
+      "reads": [
+        "n|tbl|public.matches",
+        "n|sch|public",
+        "n|col|public.matches.room_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "matches",
+        "matches_room_started_at_idx"
+      ],
+      "writes": [
+        "s|idx|public.matches_room_started_at_idx",
+        "n|idx|public.matches_room_started_at_idx",
+        "e|idx|public.matches_room_started_at_idx",
+        "n|rel|public.matches_room_started_at_idx"
+      ],
+      "reads": [
+        "n|tbl|public.matches",
+        "n|sch|public",
+        "n|col|public.matches.room_id",
+        "n|col|public.matches.started_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "player_results",
+        "player_results_player_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.player_results_player_id_idx",
+        "n|idx|public.player_results_player_id_idx",
+        "e|idx|public.player_results_player_id_idx",
+        "n|rel|public.player_results_player_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.player_results",
+        "n|sch|public",
+        "n|col|public.player_results.player_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "game_sessions"
+      ],
+      "writes": [
+        "s|fk|public.game_sessions.game_sessions_match_id_matches_id_fkey",
+        "n|fk|public.game_sessions.game_sessions_match_id_matches_id_fkey",
+        "e|fk|public.game_sessions.game_sessions_match_id_matches_id_fkey",
+        "n|con|public.game_sessions.game_sessions_match_id_matches_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.game_sessions",
+        "n|sch|public",
+        "n|tbl|public.matches",
+        "n|sch|public",
+        "n|col|public.game_sessions.match_id",
+        "n|col|public.matches.id",
+        "e|uniqueness|public.matches.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "match_actions"
+      ],
+      "writes": [
+        "s|fk|public.match_actions.match_actions_match_id_matches_id_fkey",
+        "n|fk|public.match_actions.match_actions_match_id_matches_id_fkey",
+        "e|fk|public.match_actions.match_actions_match_id_matches_id_fkey",
+        "n|con|public.match_actions.match_actions_match_id_matches_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.match_actions",
+        "n|sch|public",
+        "n|tbl|public.matches",
+        "n|sch|public",
+        "n|col|public.match_actions.match_id",
+        "n|col|public.matches.id",
+        "e|uniqueness|public.matches.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "match_actions"
+      ],
+      "writes": [
+        "s|fk|public.match_actions.match_actions_match_player_fk",
+        "n|fk|public.match_actions.match_actions_match_player_fk",
+        "e|fk|public.match_actions.match_actions_match_player_fk",
+        "n|con|public.match_actions.match_actions_match_player_fk"
+      ],
+      "reads": [
+        "n|tbl|public.match_actions",
+        "n|sch|public",
+        "n|tbl|public.match_players",
+        "n|sch|public",
+        "n|col|public.match_actions.match_id",
+        "n|col|public.match_actions.player_id",
+        "n|col|public.match_players.match_id",
+        "n|col|public.match_players.player_id",
+        "e|uniqueness|public.match_players.match_id.player_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "match_players"
+      ],
+      "writes": [
+        "s|fk|public.match_players.match_players_match_id_matches_id_fkey",
+        "n|fk|public.match_players.match_players_match_id_matches_id_fkey",
+        "e|fk|public.match_players.match_players_match_id_matches_id_fkey",
+        "n|con|public.match_players.match_players_match_id_matches_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.match_players",
+        "n|sch|public",
+        "n|tbl|public.matches",
+        "n|sch|public",
+        "n|col|public.match_players.match_id",
+        "n|col|public.matches.id",
+        "e|uniqueness|public.matches.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "match_players"
+      ],
+      "writes": [
+        "s|fk|public.match_players.match_players_player_id_players_id_fkey",
+        "n|fk|public.match_players.match_players_player_id_players_id_fkey",
+        "e|fk|public.match_players.match_players_player_id_players_id_fkey",
+        "n|con|public.match_players.match_players_player_id_players_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.match_players",
+        "n|sch|public",
+        "n|tbl|public.players",
+        "n|sch|public",
+        "n|col|public.match_players.player_id",
+        "n|col|public.players.id",
+        "e|uniqueness|public.players.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "match_results"
+      ],
+      "writes": [
+        "s|fk|public.match_results.match_results_match_id_matches_id_fkey",
+        "n|fk|public.match_results.match_results_match_id_matches_id_fkey",
+        "e|fk|public.match_results.match_results_match_id_matches_id_fkey",
+        "n|con|public.match_results.match_results_match_id_matches_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.match_results",
+        "n|sch|public",
+        "n|tbl|public.matches",
+        "n|sch|public",
+        "n|col|public.match_results.match_id",
+        "n|col|public.matches.id",
+        "e|uniqueness|public.matches.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "matches"
+      ],
+      "writes": [
+        "s|fk|public.matches.matches_room_id_rooms_id_fkey",
+        "n|fk|public.matches.matches_room_id_rooms_id_fkey",
+        "e|fk|public.matches.matches_room_id_rooms_id_fkey",
+        "n|con|public.matches.matches_room_id_rooms_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.matches",
+        "n|sch|public",
+        "n|tbl|public.rooms",
+        "n|sch|public",
+        "n|col|public.matches.room_id",
+        "n|col|public.rooms.id",
+        "e|uniqueness|public.rooms.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "matches"
+      ],
+      "writes": [
+        "s|fk|public.matches.matches_game_version_id_game_versions_id_fkey",
+        "n|fk|public.matches.matches_game_version_id_game_versions_id_fkey",
+        "e|fk|public.matches.matches_game_version_id_game_versions_id_fkey",
+        "n|con|public.matches.matches_game_version_id_game_versions_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.matches",
+        "n|sch|public",
+        "n|tbl|public.game_versions",
+        "n|sch|public",
+        "n|col|public.matches.game_version_id",
+        "n|col|public.game_versions.id",
+        "e|uniqueness|public.game_versions.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "player_results"
+      ],
+      "writes": [
+        "s|fk|public.player_results.player_results_match_id_match_results_match_id_fkey",
+        "n|fk|public.player_results.player_results_match_id_match_results_match_id_fkey",
+        "e|fk|public.player_results.player_results_match_id_match_results_match_id_fkey",
+        "n|con|public.player_results.player_results_match_id_match_results_match_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.player_results",
+        "n|sch|public",
+        "n|tbl|public.match_results",
+        "n|sch|public",
+        "n|col|public.player_results.match_id",
+        "n|col|public.match_results.match_id",
+        "e|uniqueness|public.match_results.match_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "player_results"
+      ],
+      "writes": [
+        "s|fk|public.player_results.player_results_match_player_fk",
+        "n|fk|public.player_results.player_results_match_player_fk",
+        "e|fk|public.player_results.player_results_match_player_fk",
+        "n|con|public.player_results.player_results_match_player_fk"
+      ],
+      "reads": [
+        "n|tbl|public.player_results",
+        "n|sch|public",
+        "n|tbl|public.match_players",
+        "n|sch|public",
+        "n|col|public.player_results.match_id",
+        "n|col|public.player_results.player_id",
+        "n|col|public.match_players.match_id",
+        "n|col|public.match_players.player_id",
+        "e|uniqueness|public.match_players.match_id.player_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "game_sessions",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "match_actions",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "match_players",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "match_results",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "matches",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "player_results",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "match_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "status",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "state",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "state_version",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "active_seats",
+        "type": "smallint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 1,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "clocks",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "turn_started_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "turn_deadline_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_actions",
+        "name": "match_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_actions",
+        "name": "sequence",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_actions",
+        "name": "player_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_actions",
+        "name": "request_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_actions",
+        "name": "action",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_actions",
+        "name": "clock_remaining_ms",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_actions",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_players",
+        "name": "match_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_players",
+        "name": "player_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_players",
+        "name": "seat",
+        "type": "smallint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_results",
+        "name": "match_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_results",
+        "name": "reason",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_results",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "room_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "game_version_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "mode",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "time_control",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "status",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "abort_reason",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "started_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "ended_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "player_results",
+        "name": "match_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "player_results",
+        "name": "player_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "player_results",
+        "name": "outcome",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "player_results",
+        "name": "score",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "game_sessions_active_deadline_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "turn_deadline_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": "\"status\" = 'ACTIVE'",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_actions",
+        "name": "match_actions_request_unique",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "match_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "player_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "request_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_players",
+        "name": "match_players_match_seat_unique",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "match_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "seat",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_players",
+        "name": "match_players_player_match_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "player_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "match_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "matches_room_in_progress_unique",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "room_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"status\" = 'IN_PROGRESS'",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "matches_room_started_at_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "room_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "started_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "player_results",
+        "name": "player_results_player_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "player_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "game_sessions_match_id_matches_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "match_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "matches",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_actions",
+        "name": "match_actions_match_id_matches_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "match_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "matches",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_actions",
+        "name": "match_actions_match_player_fk",
+        "nameExplicit": true,
+        "columns": [
+          "match_id",
+          "player_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "match_players",
+        "columnsTo": [
+          "match_id",
+          "player_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_players",
+        "name": "match_players_match_id_matches_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "match_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "matches",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_players",
+        "name": "match_players_player_id_players_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "player_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "players",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_results",
+        "name": "match_results_match_id_matches_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "match_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "matches",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "matches_room_id_rooms_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "room_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "rooms",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "matches_game_version_id_game_versions_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "game_version_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "game_versions",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "player_results",
+        "name": "player_results_match_id_match_results_match_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "match_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "match_results",
+        "columnsTo": [
+          "match_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "player_results",
+        "name": "player_results_match_player_fk",
+        "nameExplicit": true,
+        "columns": [
+          "match_id",
+          "player_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "match_players",
+        "columnsTo": [
+          "match_id",
+          "player_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_actions",
+        "name": "match_actions_pk",
+        "columns": [
+          "match_id",
+          "sequence"
+        ],
+        "nameExplicit": true,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_players",
+        "name": "match_players_pk",
+        "columns": [
+          "match_id",
+          "player_id"
+        ],
+        "nameExplicit": true,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "player_results",
+        "name": "player_results_pk",
+        "columns": [
+          "match_id",
+          "player_id"
+        ],
+        "nameExplicit": true,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "game_sessions_pkey",
+        "columns": [
+          "match_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_results",
+        "name": "match_results_pkey",
+        "columns": [
+          "match_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "matches_pkey",
+        "columns": [
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "game_sessions_status_valid",
+        "value": "\"status\" in ('ACTIVE', 'CLOSED')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "game_sessions_state_version_valid",
+        "value": "\"state_version\" >= 0",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "game_sessions_active_has_deadline",
+        "value": "\"status\" <> 'ACTIVE' or (\"turn_started_at\" is not null and \"turn_deadline_at\" is not null)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_actions",
+        "name": "match_actions_sequence_valid",
+        "value": "\"sequence\" >= 1",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_players",
+        "name": "match_players_seat_valid",
+        "value": "\"seat\" >= 0",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_results",
+        "name": "match_results_reason_valid",
+        "value": "\"reason\" in ('COMPLETED', 'TIMEOUT', 'RESIGNATION', 'ABANDONMENT')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "matches_mode_valid",
+        "value": "\"mode\" in ('REALTIME', 'TURN_BASED')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "matches_status_valid",
+        "value": "\"status\" in ('IN_PROGRESS', 'FINISHED', 'ABORTED')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "matches_abort_reason_valid",
+        "value": "\"abort_reason\" in ('ADMIN', 'FAILURE')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "matches_abort_consistent",
+        "value": "(\"status\" = 'ABORTED') = (\"abort_reason\" is not null)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "matches_ended_consistent",
+        "value": "(\"status\" = 'IN_PROGRESS') = (\"ended_at\" is null)",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "player_results",
+        "name": "player_results_outcome_valid",
+        "value": "\"outcome\" in ('WIN', 'LOSS', 'DRAW')",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

@@ -8,6 +8,7 @@ import { type RealtimeEvent, RealtimeEvents } from '../src/modules/broadcast/rea
 import {
   type MatchStarter,
   MatchStarterSlot,
+  NO_MATCHES_YET,
   type RoomMatches,
   type RoomReadyToStart,
 } from '../src/modules/rooms/match-starter.js';
@@ -93,12 +94,10 @@ describe('salas', () => {
   let t: TestApp;
   let events: RealtimeEvent[];
   let stopListening: () => void;
-  let noMatchesYet: MatchStarter;
 
   beforeAll(async () => {
     await resetDatabase();
     t = await createTestApp({ engines, env: { MAX_TURN_BASED_MATCHES_PER_PLAYER: '3' } });
-    noMatchesYet = t.app.get(MatchStarterSlot).current;
     stopListening = t.app.get(RealtimeEvents).subscribe((event) => events.push(event));
   });
   afterAll(async () => {
@@ -109,7 +108,8 @@ describe('salas', () => {
   });
   beforeEach(async () => {
     t.clock.reset();
-    t.app.get(MatchStarterSlot).register(noMatchesYet);
+    // Estas pruebas son las de las salas: las partidas las inicia un sustituto.
+    t.app.get(MatchStarterSlot).register(NO_MATCHES_YET);
     await resetDatabase();
     for (const slug of ['duel', 'party', 'blitz', 'picky', 'tuned']) {
       await seedGame({ slug, name: slug, versions: [{ version: '1.0.0', isCurrent: true }] });

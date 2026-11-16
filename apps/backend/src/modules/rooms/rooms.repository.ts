@@ -109,6 +109,11 @@ export class RoomsRepository {
     await tx.update(rooms).set({ status: 'IN_MATCH' }).where(eq(rooms.id, id));
   }
 
+  /** Devuelve la sala a la espera al terminar su partida (ADR-009, regla 7.11). */
+  async backToWaiting(id: string, lastActivityAt: Date, tx: Transaction): Promise<void> {
+    await tx.update(rooms).set({ status: 'WAITING', lastActivityAt }).where(eq(rooms.id, id));
+  }
+
   async closeRoom(
     id: string,
     closeReason: RoomCloseReason,
@@ -199,6 +204,11 @@ export class RoomsRepository {
       .update(roomPlayers)
       .set({ isReady })
       .where(and(eq(roomPlayers.roomId, roomId), eq(roomPlayers.playerId, playerId)));
+  }
+
+  /** Quita la marca de "listo" a todos los miembros, al terminar una partida (regla 7.11). */
+  async clearReadyMarks(roomId: string, tx: Transaction): Promise<void> {
+    await tx.update(roomPlayers).set({ isReady: false }).where(eq(roomPlayers.roomId, roomId));
   }
 
   /** Al salir, la fila se borra (modelo de datos, decisión R4). */

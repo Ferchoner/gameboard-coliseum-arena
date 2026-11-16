@@ -13,7 +13,7 @@ Este documento es un índice. No decide nada: dice dónde está cada decisión y
 
 ### Arquitectura
 
-Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron el 2026-11-14, y la duodécima y la decimotercera, el 2026-11-16.
+Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron el 2026-11-14, y las tres siguientes, el 2026-11-16.
 
 | ADR | Decisión |
 |---|---|
@@ -29,7 +29,8 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | ADR-010 | Persistencia de partida |
 | ADR-011 | Convenciones de nombres y glosario |
 | ADR-012 | Decisiones de arranque del Hito 1 (S1 a S25): herramientas, versiones, validación, sesiones y entorno local |
-| ADR-013 | Decisiones del Hito 2 (H1 a H20): salas, canal de tiempo real, avisos tras guardar y tareas periódicas |
+| ADR-013 | Decisiones del Hito 2 (H1 a H20): salas, canal de tiempo real, avisos tras guardar y tareas periódicas. Incluye las elecciones C1 a C5, confirmadas después |
+| ADR-014 | Decisiones del Hito 3 (K1 a K22): quién dirige la partida, estado siempre en la base de datos, relojes, el juego Cuatro en raya, frontend y pruebas en navegador |
 
 ### Contratos y modelo, versión 1
 
@@ -42,6 +43,14 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | [Catálogo de errores](../contracts/04-error-catalog.md) | 2026-11-16 | E1 a E8 y los ajustes J1 a J5 |
 | [Matriz de permisos](../contracts/05-permissions.md) | 2026-11-16 | P1 a P7 |
 | [Arquitectura lógica y módulos](../docs/02-arquitectura.md) | 2026-11-16 | D1 a D6 |
+
+### Decisiones sueltas
+
+Tomadas por quien decide fuera de un ADR. No cambian ningún contrato.
+
+| Fecha | Asunto | Decisión | Se aplica en |
+|---|---|---|---|
+| 2026-11-16 | Alta de juegos y versiones nuevos en el catálogo | Un juego o una versión nuevos llegan con su motor, mediante una migración, y quedan **inactivos**. Desde administración se activan, se desactivan y se elige la versión vigente. El alta no se hace por la API, como ya decía A5. Precisa K5 de ADR-014, que solo decidía el alta de Cuatro en raya, el primer juego, que entró ya activo | Cada juego o versión nuevos, y la administración del Hito 6 |
 
 ---
 
@@ -77,7 +86,8 @@ No son decisiones. No deben tratarse como aprobadas.
 
 | Propuesta | Dónde |
 |---|---|
-| B1: reparto del resto del MVP en hitos. Se decide al terminar el corte vertical | [`backlog-mvp.md`](backlog-mvp.md) |
+| B1: reparto del resto del MVP en hitos. El corte vertical terminó el 2026-11-16 con el Hito 3, así que toca decidirlo | [`backlog-mvp.md`](backlog-mvp.md) |
+| L1 a L7: siete elecciones menores tomadas al construir el Hito 3. Están aplicadas como recomendaciones. L3 se aparta de la decisión K15 y L4 adelanta un punto del Hito 4 | [ADR-014](../docs/adr/0014-decisiones-del-hito-3.md), sección 13 |
 
 ---
 
@@ -108,15 +118,15 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 
 | Asunto | Cuándo | Dónde está anotado |
 |---|---|---|
-| Forma definitiva de la interfaz entre los módulos de salas y de partidas | Al implementarla, en el Hito 3 | ADR-013, decisión H1 |
-| Conectar el inicio de partida a las salas. Hasta entonces una sala completa se queda en espera | Hito 3 | ADR-013, decisión H2 |
+| No descontar el tiempo de una parada del servidor. Hasta entonces se descuenta a quien le tocaba | Hito 4 | ADR-014, decisión K3 |
+| Controles de tiempo por turnos de Cuatro en raya | Hito 5 | ADR-014, decisión K6 |
+| Crear las estadísticas y rellenarlas con los resultados ya guardados | Hito 6 | ADR-014, decisión K4 |
+| Pruebas en navegador en otros navegadores además de Chromium, y en el modo HTTPS | Con la preparación para publicar, en el Hito 7 | ADR-014, sección 13 |
+| Librería de componentes del frontend | Con la administración visual o un segundo juego | ADR-014, decisión K7 |
 | Margen de espera antes de dar a un jugador por desconectado | Con la reconexión, en el Hito 4 | ADR-013, decisión H13 |
 | Cierre de la conexión con el código 1008 cuando un cliente incumple el protocolo de forma repetida. Hoy cada mensaje inválido se rechaza, pero la conexión sigue abierta | Con los límites de frecuencia, en el Hito 7 | ADR-013, decisión H9 y sección 13 |
-| Confirmar las cinco elecciones menores tomadas al construir el Hito 2 | Al revisar su pull request | ADR-013, sección 13 |
 | Paso de Drizzle a la versión 1.0 definitiva, cuando se publique. Hoy se usa la candidata `1.0.0-rc.5` | Cuando salga | ADR-012, decisión S8 |
 | Paso a TypeScript 7, cuando las herramientas lo admitan | Cuando salga la 7.1 | ADR-012, decisión S5 |
-| Librería de componentes del frontend y uso del motor en el navegador | Al iniciar el Hito 3 | ADR-012, decisiones S24 y S25 |
-| Qué controles de tiempo ofrece Cuatro en raya en tiempo real | Al implementar el juego | Notas del motor, sección 7 |
 | Generar al construir el contenido del catálogo, y no solo la portada. Exige que la API esté disponible al construir. Hoy la portada se genera y la lista de juegos se pide en el navegador | Con el alojamiento | ADR-006; `apps/frontend/nuxt.config.ts` |
 | Valores definitivos de los límites de frecuencia y de tamaño | Tras el corte vertical, con datos reales | Protocolo, sección 12; notas de la API, sección 4 |
 
@@ -153,4 +163,4 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 - Toda propuesta se presenta con sus alternativas, sus consecuencias y una recomendación.
 - Una decisión aceptada no se reescribe. Si cambia, se anota el cambio con su fecha en el documento que la contiene, o se añade un ADR que la sustituye.
 - No se añade ninguna dependencia, no se cambia ningún contrato y no se implementa nada fuera del alcance sin aprobación previa.
-- No se escribe código de un hito hasta recibir su autorización explícita. El Hito 1 y el Hito 2 están autorizados desde el 2026-11-16. El Hito 3 y los siguientes no lo están.
+- No se escribe código de un hito hasta recibir su autorización explícita. Los Hitos 1, 2 y 3 están autorizados desde el 2026-11-16. El Hito 4 y los siguientes no lo están.

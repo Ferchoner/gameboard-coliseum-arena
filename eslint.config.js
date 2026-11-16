@@ -41,6 +41,8 @@ export default tseslint.config(
       '**/.nuxt/**',
       '**/.output/**',
       '**/coverage/**',
+      '**/test-results/**',
+      '**/playwright-report/**',
       'apps/backend/drizzle/**',
     ],
   },
@@ -67,6 +69,11 @@ export default tseslint.config(
     files: ['apps/backend/**/*.ts', 'packages/**/*.ts', 'scripts/**/*.mjs', '*.{js,cjs,mjs}'],
     languageOptions: { globals: globals.node },
   },
+  // Pruebas en navegador: se ejecutan en Node y parte de su código, dentro de la página.
+  {
+    files: ['e2e/**/*.{ts,mjs}'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
   {
     files: ['**/*.cjs'],
     languageOptions: { sourceType: 'commonjs' },
@@ -77,6 +84,7 @@ export default tseslint.config(
     files: [
       'scripts/**/*.mjs',
       'apps/*/scripts/**/*.mjs',
+      'e2e/support/**/*.mjs',
       'apps/backend/src/database/migrate.ts',
       'apps/backend/src/main.ts',
     ],
@@ -145,14 +153,16 @@ export default tseslint.config(
   {
     files: ['apps/frontend/**/*.{ts,vue}'],
     rules: {
-      'no-restricted-imports': [
+      '@typescript-eslint/no-restricted-imports': [
         'error',
         {
           patterns: [
             {
               group: ['@gameboard/game-engine', '@gameboard/game-engine/*'],
+              allowTypeImports: true,
               message:
-                'El frontend no usa el motor de juego en este hito (ADR-012, S25): solo los contratos.',
+                'El motor de juego no se ejecuta en el navegador: del motor, el frontend solo ' +
+                'puede importar tipos, con `import type` (ADR-014, K7).',
             },
           ],
         },
