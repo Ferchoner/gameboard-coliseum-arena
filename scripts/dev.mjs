@@ -39,8 +39,16 @@ if (secure && !(existsSync(CERT_FILE) && existsSync(KEY_FILE))) {
 const apiOrigin = `${mode.scheme}://localhost:${mode.apiPort}`;
 const frontendOrigin = `${mode.scheme}://localhost:${mode.frontendPort}`;
 
+// Sin `apps/backend/.env`, la base de datos es la de `docker-compose.yml` y el registro se lee como texto.
+const defaults = existsSync(resolve(ROOT, 'apps/backend/.env'))
+  ? {}
+  : {
+      DATABASE_URL: 'postgres://gameboard:gameboard@localhost:5432/gameboard',
+      LOG_FORMAT: 'text',
+    };
+
 const backendEnv = {
-  LOG_FORMAT: 'text',
+  ...defaults,
   ...process.env,
   NODE_ENV: 'development',
   HOST: 'localhost',
@@ -50,10 +58,6 @@ const backendEnv = {
   TLS_CERT_FILE: secure ? CERT_FILE : '',
   TLS_KEY_FILE: secure ? KEY_FILE : '',
 };
-// Sin `.env` ni variable propia, la base de datos es la de `docker-compose.yml`.
-if (!process.env.DATABASE_URL && !existsSync(resolve(ROOT, 'apps/backend/.env'))) {
-  backendEnv.DATABASE_URL = 'postgres://gameboard:gameboard@localhost:5432/gameboard';
-}
 
 const frontendEnv = {
   ...process.env,
