@@ -1,7 +1,8 @@
-import type { RoomView } from '@gameboard/contracts';
+import type { MatchView, RoomView } from '@gameboard/contracts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type ConnectionState,
+  type MatchListener,
   RealtimeClient,
   realtimeUrl,
   reconnectDelay,
@@ -46,6 +47,14 @@ const ROOM = { roomId: 'room-1', status: 'WAITING' } as unknown as RoomView;
 
 function listener() {
   return { onRoom: vi.fn(), onClosed: vi.fn(), onRejected: vi.fn() } satisfies RoomListener;
+}
+
+function matchView(stateVersion: number, status: MatchView['status'] = 'IN_PROGRESS'): MatchView {
+  return { matchId: 'match-1', status, stateVersion } as unknown as MatchView;
+}
+
+function matchListener() {
+  return { onMatch: vi.fn(), onRejected: vi.fn() } satisfies MatchListener;
 }
 
 describe('cliente del canal de tiempo real', () => {
@@ -292,6 +301,196 @@ describe('cliente del canal de tiempo real', () => {
     expect(last().closedByClient).toBe(true);
     expect(states.at(-1)).toBe('idle');
     expect(sockets).toHaveLength(1);
+  });
+
+  describe('partidas', () => {
+    const TOKEN = { type: 'TOKEN_DROPPED', seat: 0, column: 3, row: 0 };
+    const DROP = { type: 'DROP_TOKEN', column: 3 };
+
+    it('sigue una partida y entrega su estado, sus eventos y la hora del servidor', () => {
+      const match = matchListener();
+      client.start();
+      last().welcome();
+
+      client.subscribeMatch('match-1', match);
+
+      expect(last().sent).toEqual([
+        { type: 'SUBSCRIBE_MATCH', requestId: 'request-1', matchId: 'match-1' },
+      ]);
+      last().receive({
+        type: 'MATCH_SUBSCRIBED',
+        requestId: 'request-1',
+        matchId: 'match-1',
+        payload: { match: matchView(0) },
+      });
+      last().receive({
+        type: 'MATCH_UPDATED',
+        matchId: 'match-1',
+        payload: { match: matchView(1), events: [TOKEN] },
+      });
+
+      expect(match.onMatch).toHaveBeenNthCalledWith(
+        1,
+        matchView(0),
+        [],
+        '2026-11-16T00:00:00.000Z',
+      );
+      expect(match.onMatch).toHaveBeenNthCalledWith(
+        2,
+        matchView(1),
+        [TOKEN],
+        '2026-11-16T00:00:00.000Z',
+      );
+    });
+
+    it('cuando la partida termina, la suscripción acaba y no se recupera al reconectar', async () => {
+      const match = matchListener();
+      client.start();
+      last().welcome();
+      client.subscribeMatch('match-1', match);
+
+      last().receive({
+        type: 'MATCH_UPDATED',
+        matchId: 'match-1',
+        payload: { match: matchView(7, 'FINISHED'), events: [] },
+      });
+      last().drop();
+      await vi.advanceTimersByTimeAsync(1000);
+      last().welcome();
+
+      expect(match.onMatch).toHaveBeenCalledTimes(1);
+      expect(last().sent).toEqual([]);
+    });
+
+    it('al dejar de seguirla avisa al servidor, y el rechazo de la suscripción la termina', () => {
+      const [left, rejected] = [matchListener(), matchListener()];
+      client.start();
+      last().welcome();
+      const unsubscribe = client.subscribeMatch('match-1', left);
+      client.subscribeMatch('match-2', rejected);
+
+      unsubscribe();
+      last().receive({
+        type: 'COMMAND_REJECTED',
+        requestId: 'request-2',
+        payload: { code: 'PLAYER_NOT_IN_MATCH', commandType: 'SUBSCRIBE_MATCH' },
+      });
+
+      expect(last().sent.at(-1)).toMatchObject({ type: 'UNSUBSCRIBE_MATCH', matchId: 'match-1' });
+      expect(rejected.onRejected).toHaveBeenCalledWith('PLAYER_NOT_IN_MATCH');
+    });
+
+    it('envía una jugada con la versión del estado y la da por aceptada con su respuesta', async () => {
+      const match = matchListener();
+      client.start();
+      last().welcome();
+      client.subscribeMatch('match-1', match);
+
+      const result = client.submitAction('match-1', 4, DROP);
+      expect(last().sent.at(-1)).toEqual({
+        type: 'SUBMIT_ACTION',
+        requestId: 'request-2',
+        matchId: 'match-1',
+        payload: { stateVersion: 4, action: DROP },
+      });
+      last().receive({
+        type: 'MATCH_UPDATED',
+        requestId: 'request-2',
+        matchId: 'match-1',
+        payload: { match: matchView(5), events: [TOKEN] },
+      });
+
+      await expect(result).resolves.toEqual({ ok: true });
+      // La partida como queda llega por la suscripción.
+      expect(match.onMatch).toHaveBeenCalledWith(matchView(5), [TOKEN], expect.any(String));
+    });
+
+    it('una jugada rechazada devuelve el código y el motivo del juego', async () => {
+      client.start();
+      last().welcome();
+
+      const result = client.submitAction('match-1', 4, DROP);
+      last().receive({
+        type: 'COMMAND_REJECTED',
+        requestId: 'request-1',
+        payload: { code: 'INVALID_ACTION', commandType: 'SUBMIT_ACTION', reason: 'COLUMN_FULL' },
+      });
+
+      await expect(result).resolves.toEqual({
+        ok: false,
+        code: 'INVALID_ACTION',
+        reason: 'COLUMN_FULL',
+      });
+    });
+
+    it('el aviso de la jugada de otro no responde a la orden propia', async () => {
+      client.start();
+      last().welcome();
+      let settled = false;
+
+      void client.resignMatch('match-1').then(() => {
+        settled = true;
+      });
+      last().receive({
+        type: 'MATCH_UPDATED',
+        matchId: 'match-1',
+        payload: { match: matchView(5), events: [] },
+      });
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(last().sent).toEqual([
+        { type: 'RESIGN_MATCH', requestId: 'request-1', matchId: 'match-1' },
+      ]);
+      expect(settled).toBe(false);
+    });
+
+    it('si la conexión se corta sin respuesta, repite la orden con el mismo identificador', async () => {
+      client.start();
+      last().welcome();
+      const result = client.submitAction('match-1', 4, DROP);
+      const [sent] = last().sent;
+
+      last().drop();
+      await vi.advanceTimersByTimeAsync(1000);
+      last().welcome();
+
+      // El servidor no la aplica dos veces: responde con la partida tal como está.
+      expect(last().sent).toEqual([sent]);
+      last().receive({
+        type: 'MATCH_UPDATED',
+        requestId: 'request-1',
+        matchId: 'match-1',
+        payload: { match: matchView(5), events: [] },
+      });
+      await expect(result).resolves.toEqual({ ok: true });
+    });
+
+    it('una orden enviada mientras reconecta sale al abrirse la conexión', async () => {
+      client.start();
+      last().welcome();
+      last().drop();
+
+      void client.submitAction('match-1', 4, DROP);
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(last().sent).toEqual([]);
+      last().welcome();
+
+      expect(last().sent).toMatchObject([{ type: 'SUBMIT_ACTION', matchId: 'match-1' }]);
+    });
+
+    it('sin conexión, o si se cierra para no volver, la orden queda sin enviar', async () => {
+      await expect(client.submitAction('match-1', 4, DROP)).resolves.toEqual({
+        ok: false,
+        code: 'NOT_CONNECTED',
+      });
+
+      client.start();
+      last().welcome();
+      const result = client.resignMatch('match-1');
+      last().drop(4001);
+
+      await expect(result).resolves.toEqual({ ok: false, code: 'NOT_CONNECTED' });
+    });
   });
 
   it('se puede volver a arrancar después de parar o de un cierre definitivo', () => {

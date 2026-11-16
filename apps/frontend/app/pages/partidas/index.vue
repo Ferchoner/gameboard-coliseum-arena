@@ -1,0 +1,168 @@
+<script setup lang="ts">
+import type { MatchSummaryView, Page } from '@gameboard/contracts';
+import { onMounted, ref } from 'vue';
+import { useHead } from '#imports';
+import { useApi } from '../../composables/useApi';
+import { useCatalog } from '../../composables/useCatalog';
+import { useSignedInOnly } from '../../composables/useSignedInOnly';
+import { es } from '../../i18n/es';
+import type { Failure } from '../../utils/api';
+import { failureText } from '../../utils/errors';
+import { formatDateTime } from '../../utils/format';
+
+useSignedInOnly();
+useHead({ title: `${es.matches.title} · ${es.app.name}` });
+
+type ListState =
+  | { readonly status: 'loading' }
+  | {
+      readonly status: 'ready';
+      readonly items: readonly MatchSummaryView[];
+      readonly nextCursor: string | null;
+    }
+  | { readonly status: 'failed'; readonly failure: Failure };
+
+const api = useApi();
+const { load: loadCatalog, gameName } = useCatalog();
+
+const inProgress = ref<ListState>({ status: 'loading' });
+const history = ref<ListState>({ status: 'loading' });
+const loadingMore = ref(false);
+
+function toState(result: Awaited<ReturnType<typeof fetchPage>>): ListState {
+  return result.ok
+    ? { status: 'ready', items: result.data.items, nextCursor: result.data.nextCursor }
+    : { status: 'failed', failure: result.failure };
+}
+
+function fetchPage(status: 'IN_PROGRESS' | 'FINISHED', cursor?: string) {
+  const params = new URLSearchParams({ status });
+  if (cursor) params.set('cursor', cursor);
+  return api.get<Page<MatchSummaryView>>(`/me/matches?${params.toString()}`);
+}
+
+async function load(): Promise<void> {
+  const [current, finished] = await Promise.all([fetchPage('IN_PROGRESS'), fetchPage('FINISHED')]);
+  inProgress.value = toState(current);
+  history.value = toState(finished);
+}
+
+async function loadMore(): Promise<void> {
+  if (history.value.status !== 'ready' || !history.value.nextCursor) return;
+  const { items, nextCursor } = history.value;
+
+  loadingMore.value = true;
+  const result = await fetchPage('FINISHED', nextCursor);
+  loadingMore.value = false;
+
+  history.value = result.ok
+    ? {
+        status: 'ready',
+        items: [...items, ...result.data.items],
+        nextCursor: result.data.nextCursor,
+      }
+    : { status: 'failed', failure: result.failure };
+}
+
+const rivals = (match: MatchSummaryView) =>
+  es.matches.against(match.opponents.map((opponent) => opponent.displayName).join(', '));
+
+onMounted(() => {
+  void loadCatalog();
+  void load();
+});
+</script>
+
+<template>
+  <section class="intro">
+    <h1>{{ es.matches.title }}</h1>
+    <p class="muted">{{ es.matches.intro }}</p>
+  </section>
+
+  <section aria-labelledby="in-progress-title">
+    <h2 id="in-progress-title">{{ es.matches.inProgressTitle }}</h2>
+
+    <p v-if="inProgress.status === 'loading'" class="muted" role="status">
+      {{ es.matches.loading }}
+    </p>
+    <div v-else-if="inProgress.status === 'failed'" class="notice error" role="alert">
+      <p>{{ failureText(inProgress.failure) }}</p>
+      <button type="button" class="button quiet" @click="load">{{ es.home.retry }}</button>
+    </div>
+    <p v-else-if="inProgress.items.length === 0" class="empty">{{ es.matches.emptyInProgress }}</p>
+
+    <ul v-else class="rooms">
+      <li v-for="match in inProgress.items" :key="match.matchId" class="room">
+        <div>
+          <h3>{{ gameName(match.gameSlug) }}</h3>
+          <p>{{ rivals(match) }}</p>
+          <p class="muted">
+            {{ es.home.modes[match.mode] }} ·
+            {{ es.matches.startedAt(formatDateTime(match.startedAt)) }}
+          </p>
+        </div>
+        <div class="room-actions">
+          <span class="badge" :class="{ on: match.yourTurn }">
+            {{ match.yourTurn ? es.matches.yourTurn : es.matches.theirTurn }}
+          </span>
+          <NuxtLink class="button" :to="`/partidas/${match.matchId}`">
+            {{ es.matches.play }}
+          </NuxtLink>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="history-title">
+    <h2 id="history-title">{{ es.matches.historyTitle }}</h2>
+
+    <p v-if="history.status === 'loading'" class="muted" role="status">{{ es.matches.loading }}</p>
+    <div v-else-if="history.status === 'failed'" class="notice error" role="alert">
+      <p>{{ failureText(history.failure) }}</p>
+      <button type="button" class="button quiet" @click="load">{{ es.home.retry }}</button>
+    </div>
+    <p v-else-if="history.items.length === 0" class="empty">{{ es.matches.emptyHistory }}</p>
+
+    <template v-else>
+      <ul class="rooms">
+        <li
+          v-for="match in history.items"
+          :key="match.matchId"
+          class="room"
+          :data-outcome="match.yourOutcome"
+        >
+          <div>
+            <h3>{{ gameName(match.gameSlug) }}</h3>
+            <p>{{ rivals(match) }}</p>
+            <p class="muted">
+              <template v-if="match.endedAt">
+                {{ es.matches.endedAt(formatDateTime(match.endedAt)) }}
+              </template>
+            </p>
+          </div>
+          <div class="room-actions">
+            <span v-if="match.yourOutcome" class="outcome" :class="match.yourOutcome.toLowerCase()">
+              {{ es.matches.outcome[match.yourOutcome] }}
+              <template v-if="match.endReason">
+                · {{ es.matches.endReasons[match.endReason] }}
+              </template>
+            </span>
+            <NuxtLink class="button quiet" :to="`/partidas/${match.matchId}`">
+              {{ es.matches.open }}
+            </NuxtLink>
+          </div>
+        </li>
+      </ul>
+
+      <button
+        v-if="history.nextCursor"
+        type="button"
+        class="button quiet"
+        :disabled="loadingMore"
+        @click="loadMore"
+      >
+        {{ loadingMore ? es.matches.loadingMore : es.matches.more }}
+      </button>
+    </template>
+  </section>
+</template>

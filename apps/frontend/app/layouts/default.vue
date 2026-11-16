@@ -45,6 +45,7 @@ async function onSignOut(): Promise<void> {
       <nav class="site-nav" :aria-label="es.app.name">
         <template v-if="me">
           <NuxtLink class="nav-link" to="/salas">{{ es.nav.rooms }}</NuxtLink>
+          <NuxtLink class="nav-link" to="/partidas">{{ es.nav.matches }}</NuxtLink>
           <span class="who">
             <span class="visually-hidden">{{ es.nav.signedInAs }}</span>
             {{ me.displayName }}

@@ -145,14 +145,16 @@ export default tseslint.config(
   {
     files: ['apps/frontend/**/*.{ts,vue}'],
     rules: {
-      'no-restricted-imports': [
+      '@typescript-eslint/no-restricted-imports': [
         'error',
         {
           patterns: [
             {
               group: ['@gameboard/game-engine', '@gameboard/game-engine/*'],
+              allowTypeImports: true,
               message:
-                'El frontend no usa el motor de juego en este hito (ADR-012, S25): solo los contratos.',
+                'El motor de juego no se ejecuta en el navegador: del motor, el frontend solo ' +
+                'puede importar tipos, con `import type` (ADR-014, K7).',
             },
           ],
         },

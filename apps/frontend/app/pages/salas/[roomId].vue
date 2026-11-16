@@ -61,6 +61,21 @@ async function load(): Promise<void> {
     : { status: 'failed', failure: result.failure };
 }
 
+/**
+ * Muestra la sala. Si su partida acaba de empezar mientras se miraba la
+ * sala, lleva a sus miembros a la partida (ADR-014, decisión K18).
+ */
+function show(next: RoomView): void {
+  const wasWaiting = room.value?.status === 'WAITING';
+  state.value = { status: 'ready', room: next };
+
+  const isMember = next.members.some((member) => member.playerId === me.value?.playerId);
+  if (wasWaiting && isMember && next.status === 'IN_MATCH' && next.currentMatchId) {
+    stopListening();
+    void navigateTo(`/partidas/${next.currentMatchId}`);
+  }
+}
+
 // --- Cambios en vivo -------------------------------------------------------
 
 let unsubscribe: (() => void) | null = null;
@@ -78,7 +93,7 @@ watch(shouldSubscribe, (subscribe) => {
   if (unsubscribe) return;
   unsubscribe = realtime.subscribeRoom(roomId.value, {
     onRoom: (next) => {
-      state.value = { status: 'ready', room: next };
+      show(next);
     },
     // La suscripción terminó: el estado final se pide a la API.
     onClosed: () => {
@@ -110,7 +125,7 @@ async function act(
     void load();
     return false;
   }
-  if (result.data) state.value = { status: 'ready', room: result.data };
+  if (result.data) show(result.data);
   return true;
 }
 
@@ -156,7 +171,16 @@ onBeforeUnmount(stopListening);
           {{ es.room.status[room.status] }}
         </span>
         <span v-if="room.closeReason">{{ es.room.closeReasons[room.closeReason] }}</span>
-        <span v-else-if="room.status === 'IN_MATCH'">{{ es.room.inMatch }}</span>
+        <template v-else-if="room.status === 'IN_MATCH'">
+          <span>{{ es.room.inMatch }}</span>
+          <NuxtLink
+            v-if="myMembership && room.currentMatchId"
+            class="button"
+            :to="`/partidas/${room.currentMatchId}`"
+          >
+            {{ es.room.goToMatch }}
+          </NuxtLink>
+        </template>
         <span v-else>{{ es.room.howItStarts[startHint(room)] }}</span>
       </p>
 

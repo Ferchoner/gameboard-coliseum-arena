@@ -53,10 +53,13 @@ module.exports = {
       name: 'frontend-sin-motor',
       severity: 'error',
       comment:
-        'El frontend depende solo del paquete de contratos. Si usa el motor se decide en el ' +
-        'Hito 3 (ADR-012, decisión S25).',
+        'El motor de juego no se ejecuta en el navegador. Del motor, el frontend solo puede ' +
+        'importar tipos (ADR-014, decisión K7).',
       from: { path: '^apps/frontend/' },
-      to: { path: '(^packages/game-engine/|^@gameboard/game-engine)' },
+      to: {
+        path: '(^packages/game-engine/|^@gameboard/game-engine)',
+        dependencyTypesNot: ['type-only'],
+      },
     },
     {
       name: 'codigo-de-pruebas-fuera-de-produccion',

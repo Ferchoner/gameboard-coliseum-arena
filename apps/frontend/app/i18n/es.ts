@@ -18,6 +18,7 @@ export const es = {
   nav: {
     home: 'Juegos',
     rooms: 'Salas',
+    matches: 'Partidas',
     signIn: 'Entrar',
     register: 'Crear cuenta',
     signOut: 'Salir',
@@ -123,6 +124,7 @@ export const es = {
       allReady: 'Todos están listos. La partida empezará enseguida.',
     },
     inMatch: 'Esta sala tiene una partida en curso.',
+    goToMatch: 'Ir a la partida',
     actions: {
       join: 'Entrar a la sala',
       joining: 'Entrando…',
@@ -133,6 +135,119 @@ export const es = {
       ownerLeaveHint: 'Eres quien creó la sala: si sales, se cierra para todos.',
     },
     notLive: 'Los cambios de esta sala no se están recibiendo en vivo. Se actualiza al recargar.',
+  },
+
+  /** Una partida: el tablero, los relojes y el resultado. */
+  match: {
+    title: (rival: string) => `Partida contra ${rival}`,
+    untitled: 'Partida',
+    loading: 'Cargando la partida…',
+    status: {
+      IN_PROGRESS: 'En curso',
+      FINISHED: 'Terminada',
+      ABORTED: 'Anulada',
+    },
+    playersTitle: 'Jugadores',
+    boardTitle: 'Tablero',
+    you: 'Tú',
+    turnBadge: 'Su turno',
+    clockOf: (name: string) => `Tiempo de ${name}`,
+    turn: {
+      yours: 'Te toca jugar.',
+      theirs: (name: string) => `Le toca a ${name}.`,
+      sending: 'Enviando tu jugada…',
+    },
+    outcome: {
+      WIN: 'Ganaste',
+      LOSS: 'Perdiste',
+      DRAW: 'Empate',
+    },
+    /** Por qué terminó, contado a quien lo provocó y a los demás. */
+    endReasons: {
+      COMPLETED: 'La partida llegó a su final.',
+      TIMEOUT: {
+        you: 'Se te acabó el tiempo.',
+        other: (name: string) => `A ${name} se le acabó el tiempo.`,
+      },
+      RESIGNATION: {
+        you: 'Te rendiste.',
+        other: (name: string) => `${name} se rindió.`,
+      },
+      ABANDONMENT: {
+        you: 'Abandonaste la partida.',
+        other: (name: string) => `${name} abandonó la partida.`,
+      },
+    },
+    aborted: {
+      title: 'Partida anulada',
+      FAILURE: 'La partida se anuló por un fallo del servidor. No cuenta para nadie.',
+      ADMIN: 'Un administrador anuló la partida. No cuenta para nadie.',
+    },
+    resign: {
+      action: 'Rendirse',
+      question: '¿Seguro que quieres rendirte? Perderás la partida.',
+      confirm: 'Sí, rendirme',
+      cancel: 'Seguir jugando',
+      sending: 'Rindiéndote…',
+    },
+    after: {
+      backToRoom: 'Volver a la sala',
+      rematchHint: 'En la sala pueden marcarse listos otra vez para jugar la revancha.',
+      roomClosedHint: 'La sala de esta partida se cerró al terminar.',
+      allMatches: 'Ver mis partidas',
+    },
+    unknownGame: 'Esta versión de la aplicación no sabe mostrar este juego. Recarga la página.',
+    noBoard: 'El tablero de esta partida no se puede mostrar.',
+    notConnected: 'No hay conexión con el servidor, así que no se envió. Vuelve a intentarlo.',
+  },
+
+  /** Lista de las partidas propias. */
+  matches: {
+    title: 'Mis partidas',
+    intro: 'Las partidas que tienes en curso y las que ya terminaste.',
+    inProgressTitle: 'En curso',
+    historyTitle: 'Historial',
+    loading: 'Cargando tus partidas…',
+    emptyInProgress: 'No tienes ninguna partida en curso.',
+    emptyHistory: 'Todavía no has terminado ninguna partida.',
+    against: (names: string) => `Contra ${names}`,
+    play: 'Ir a la partida',
+    open: 'Ver',
+    yourTurn: 'Te toca',
+    theirTurn: 'Le toca a tu rival',
+    startedAt: (date: string) => `Empezó el ${date}`,
+    endedAt: (date: string) => `Terminó el ${date}`,
+    more: 'Ver más partidas',
+    loadingMore: 'Cargando…',
+    outcome: {
+      WIN: 'Victoria',
+      LOSS: 'Derrota',
+      DRAW: 'Empate',
+    },
+    endReasons: {
+      COMPLETED: 'partida completa',
+      TIMEOUT: 'por tiempo',
+      RESIGNATION: 'por rendición',
+      ABANDONMENT: 'por abandono',
+    },
+  },
+
+  /** Textos propios de cada juego. */
+  games: {
+    'four-in-a-row': {
+      seats: ['Rojas', 'Amarillas'],
+      dropIn: (column: number) => `Soltar ficha en la columna ${column}`,
+      columnState: (tokens: number, capacity: number) => `${tokens} de ${capacity} fichas`,
+      end: {
+        line: 'Cuatro en línea.',
+        full: 'El tablero se llenó sin cuatro en línea.',
+      },
+      rejections: {
+        MALFORMED_ACTION: 'Esa jugada no es válida.',
+        COLUMN_OUT_OF_RANGE: 'Esa columna no existe.',
+        COLUMN_FULL: 'Esa columna está llena.',
+      },
+    },
   },
 
   /** Estado de la conexión de tiempo real. */
