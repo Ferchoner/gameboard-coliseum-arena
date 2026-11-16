@@ -77,7 +77,6 @@ No son decisiones. No deben tratarse como aprobadas.
 | Propuesta | Dónde |
 |---|---|
 | B1: reparto del resto del MVP en hitos. Se decide al terminar el corte vertical | [`backlog-mvp.md`](backlog-mvp.md) |
-| H1 a H20: decisiones del Hito 2, salas y tiempo real. Se presentaron el 2026-11-16 | [ADR-013](../docs/adr/0013-decisiones-del-hito-2.md) |
 
 ---
 
@@ -108,7 +107,9 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 
 | Asunto | Cuándo | Dónde está anotado |
 |---|---|---|
-| Quién llama a quién entre los módulos de salas y de partidas | Al iniciar el Hito 2 | `docs/02-arquitectura.md`, sección 10 |
+| Forma definitiva de la interfaz entre los módulos de salas y de partidas | Al implementarla, en el Hito 3 | ADR-013, decisión H1 |
+| Conectar el inicio de partida a las salas. Hasta entonces una sala completa se queda en espera | Hito 3 | ADR-013, decisión H2 |
+| Margen de espera antes de dar a un jugador por desconectado | Con la reconexión, en el Hito 4 | ADR-013, decisión H13 |
 | Paso de Drizzle a la versión 1.0 definitiva, cuando se publique. Hoy se usa la candidata `1.0.0-rc.5` | Cuando salga | ADR-012, decisión S8 |
 | Paso a TypeScript 7, cuando las herramientas lo admitan | Cuando salga la 7.1 | ADR-012, decisión S5 |
 | Librería de componentes del frontend y uso del motor en el navegador | Al iniciar el Hito 3 | ADR-012, decisiones S24 y S25 |

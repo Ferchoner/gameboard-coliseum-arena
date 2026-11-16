@@ -18,7 +18,7 @@ Cada archivo de esta carpeta recoge una decisión de arquitectura aceptada, con 
 | [ADR-010](0010-persistencia-de-partida.md) | Persistencia de partida | Aceptada |
 | [ADR-011](0011-convenciones-y-glosario.md) | Convenciones de nombres, identificadores y glosario | Aceptada |
 | [ADR-012](0012-decisiones-de-arranque.md) | Decisiones de arranque del Hito 1 | Aceptada |
-| [ADR-013](0013-decisiones-del-hito-2.md) | Decisiones del Hito 2, salas y tiempo real | **Propuesta** |
+| [ADR-013](0013-decisiones-del-hito-2.md) | Decisiones del Hito 2, salas y tiempo real | Aceptada |
 
 ## Decisiones aplazadas
 
@@ -26,7 +26,7 @@ El alojamiento del backend, el de PostgreSQL, las copias de seguridad, la superv
 
 ## Propuestas pendientes de confirmación
 
-ADR-013 entero es una propuesta: sus decisiones H1 a H20 no están aceptadas y no se escribe código del Hito 2 hasta que lo estén. De las anteriores no queda ninguna: las dos que había, el alcance de la cookie de sesión (ADR-004) y los nombres de las carpetas (ADR-005), se confirmaron el 2026-11-16 en ADR-012, decisiones S13 y S1.
+No queda ninguna dentro de los ADR. Las dos que había, el alcance de la cookie de sesión (ADR-004) y los nombres de las carpetas (ADR-005), se confirmaron el 2026-11-16 en ADR-012, decisiones S13 y S1.
 
 ## Convenciones
 

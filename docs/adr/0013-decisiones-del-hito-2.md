@@ -2,9 +2,9 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Propuesta. Ninguna de sus decisiones está aceptada |
+| **Estado** | Aceptada, con un cambio en H3 |
 | **Fecha** | 2026-11-16 |
-| **Decide** | Fernando Hernandez Argueta |
+| **Decidida por** | Fernando Hernandez Argueta |
 | **Cierra** | El asunto abierto sobre `rooms` y `matches` (`docs/02-arquitectura.md`, sección 10) y lo que ADR-012 dejó para el Hito 2 (sección 11) |
 | **Depende de** | ADR-003, ADR-004, ADR-009, ADR-010, ADR-012, el modelo de datos y los contratos de la API y de tiempo real |
 
@@ -26,7 +26,7 @@ Los contratos ya fijan qué hace cada operación y cada mensaje. Lo que falta de
 - Cada decisión tiene un identificador (H1 a H20), sus alternativas y una recomendación.
 - Las decisiones H1 a H9 afectan a la arquitectura o cuesta deshacerlas. Van explicadas una a una.
 - Las decisiones H10 a H20 son menores y fáciles de cambiar. Van en una tabla.
-- **Todo es propuesta hasta que se acepte.** No se escribe código del Hito 2 antes.
+- **Las 20 se aceptaron el 2026-11-16 tal como se recomendaban, con un cambio:** en H3 no se añade ningún juego de demostración.
 
 ## 3. Resumen
 
@@ -34,7 +34,7 @@ Los contratos ya fijan qué hace cada operación y cada mensaje. Lo que falta de
 |---|---|---|
 | H1 | Quién depende de quién entre `rooms` y `matches` | `rooms` define una interfaz pequeña y `matches` la implementa. La dependencia va en un solo sentido: `matches` conoce a `rooms`, y no al revés |
 | H2 | Qué pasa en este hito cuando una sala cumple la condición de inicio | Nada todavía. La sala se queda en espera, completa. El inicio se conecta en el Hito 3 sin tocar `rooms` |
-| H3 | Cómo probar las salas a mano si el catálogo está vacío | Un juego de demostración que solo existe en el entorno local y se retira en el Hito 3 |
+| H3 | Cómo probar las salas a mano si el catálogo está vacío | Se recomendó un juego de demostración solo en local. **Decisión: no se añade nada.** Las salas se comprueban con pruebas automáticas y a mano desde el Hito 3 |
 | H4 | Servidor WebSocket | El adaptador oficial de NestJS sobre la librería `ws`, con la sesión comprobada antes de aceptar la conexión |
 | H5 | Cómo avisan los módulos sin conocer el WebSocket | Una interfaz neutral de difusión y presencia, que `realtime` implementa. `rooms` y `auth` no importan `realtime` |
 | H6 | Cómo se garantiza que solo se avisa después de guardar | La transacción lleva una lista de avisos pendientes, que se envían solo si se confirma |
@@ -83,6 +83,8 @@ Una sala es siempre de un juego, y crearla exige que el motor valide sus opcione
 | Adelantar el motor de Cuatro en raya | El juego de verdad desde ya | Es trabajo del Hito 3 y tiene una decisión abierta propia: qué controles de tiempo ofrece |
 
 **Recomendación:** el juego de demostración. Declararía de 2 a 4 jugadores y las dos modalidades, para poder ver también una sala con más de dos plazas y la opción de revancha por turnos.
+
+**Decisión (2026-11-16): no añadir nada.** No hay juego de demostración. En ejecución el catálogo sigue vacío y no se puede crear ninguna sala hasta el Hito 3. El Hito 2 se comprueba con pruebas automáticas, que usan el motor de prueba, y el frontend de salas se recorre en un navegador con ese mismo motor cargado solo para la comprobación, sin que quede en el repositorio.
 
 ---
 
@@ -191,7 +193,7 @@ El protocolo fija seis límites (sección 9). El backlog sitúa los límites de 
 | Hallazgo | Qué se propone |
 |---|---|
 | El contrato de la API dice que entrar o marcarse listo puede devolver la sala ya en `IN_MATCH`. En este hito no puede ocurrir, porque las partidas son del Hito 3 | H2. Hueco temporal, anotado en el backlog |
-| El catálogo está vacío hasta el Hito 3, y sin juego no se puede crear una sala | H3 |
+| El catálogo está vacío hasta el Hito 3, y sin juego no se puede crear una sala | H3. Se acepta: las salas se prueban a mano desde el Hito 3 |
 | La vista de sala lleva `currentMatchId`, pero la tabla `rooms` del modelo aceptado no lo guarda | H1. `rooms` lo pregunta por la interfaz. El modelo no cambia |
 | El backlog pone el cierre de conexiones al terminar la sesión en el Hito 2 y los límites de frecuencia en el Hito 7, pero el protocolo los lista juntos | H9 |
 
@@ -226,10 +228,10 @@ Si alguno falla, se avisa antes de cambiar de opción.
 
 ## 12. Efecto sobre los documentos
 
-Se aplican al aceptarse las decisiones. Ninguno cambia un contrato.
+Hechos al aceptarse las decisiones. Ninguno cambia un contrato.
 
 | Documento | Cambio |
 |---|---|
 | `docs/02-arquitectura.md` | Se cierra el asunto abierto sobre `rooms` y `matches` (H1) y se anotan la interfaz neutral de difusión y presencia (H5) y el aviso tras guardar (H6) |
-| `planning/backlog-mvp.md` | Se anota en el Hito 2 que el inicio de partida se conecta en el Hito 3 (H2), y en el Hito 3, retirar el juego de demostración (H3) |
+| `planning/backlog-mvp.md` | Se anota en el Hito 2 que el inicio de partida se conecta en el Hito 3 (H2) y que las salas se prueban a mano desde ese hito (H3) |
 | `planning/decisiones-y-pendientes.md` y `docs/adr/README.md` | Se ponen al día |

@@ -54,6 +54,8 @@ Implementado en noviembre de 2026. El catálogo está vacío hasta el Hito 3, qu
 - [ ] Cierre de salas inactivas (7.14).
 - [ ] Frontend: lista de salas y sala de espera.
 
+Decisiones del hito en [ADR-013](../docs/adr/0013-decisiones-del-hito-2.md). En este hito una sala completa todavía no inicia partida: el inicio se conecta en el Hito 3 (H2). Como el catálogo está vacío hasta entonces, las salas se prueban a mano desde el Hito 3 (H3).
+
 ### Hito 3. Cuatro en raya en tiempo real
 
 - [ ] Motor de Cuatro en raya, con pruebas de sus reglas.
