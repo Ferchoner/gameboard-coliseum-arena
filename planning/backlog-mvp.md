@@ -73,7 +73,7 @@ Construido el 2026-11-16. Lo que resultó al construir, incluidas cinco eleccion
 
 Decisiones del hito en [ADR-014](../docs/adr/0014-decisiones-del-hito-3.md). Cuatro en raya se ofrece solo en tiempo real hasta el Hito 5 (K6). Las estadísticas no se escriben todavía: el Hito 6 las rellena con los resultados guardados (K4). Hasta el Hito 4, el tiempo de una parada del servidor se descuenta a quien le tocaba jugar (K3).
 
-Construido el 2026-11-16. Lo que resultó al construir, incluidas siete elecciones menores que no estaban en ADR-014 y están pendientes de confirmación, está en su sección 13.
+Construido el 2026-11-16. Lo que resultó al construir, incluidas siete elecciones menores que no estaban en ADR-014 y se confirmaron el 2026-11-16, está en su sección 13.
 
 ### Criterios de aceptación del corte vertical
 
@@ -98,7 +98,7 @@ Dos personas, cada una en su navegador:
 
 ### Hito 4. Reconexión y recuperación
 
-- [ ] Reconexión del cliente con espera progresiva y nueva suscripción (7.28). El reenvío de la orden sin respuesta ya está hecho, pendiente de confirmación (ADR-014, sección 13, L4).
+- [ ] Reconexión del cliente con espera progresiva y nueva suscripción (7.28). El reenvío de la orden sin respuesta ya está hecho desde el Hito 3 (ADR-014, sección 13, L4).
 - [ ] Abandono en tiempo real tras 2 minutos sin conexión (7.26).
 - [ ] Anotación periódica de actividad del servidor y ajuste de relojes al arrancar (8.18, 7.29).
 - [x] Carga de la sesión de juego desde la base de datos cuando hace falta (7.22). Hecha en el Hito 3: no hay copia en memoria (ADR-014, K2).
@@ -111,7 +111,7 @@ Dos personas, cada una en su navegador:
 
 - [ ] Salas por turnos: inicio al completarse la sala y revancha opcional (7.10, 7.31).
 - [ ] Controles de tiempo de 12, 24 y 36 horas, y límite de 20 partidas simultáneas (7.2, 7.30).
-- [ ] Lista de "mis partidas en curso", que indica en cuáles te toca. Hay una primera versión en la página `/partidas` desde el Hito 3, pendiente de confirmación (ADR-014, sección 13, L3).
+- [ ] Lista de "mis partidas en curso", que indica en cuáles te toca. Hay una primera versión en la página `/partidas` desde el Hito 3 (ADR-014, sección 13, L3).
 - [ ] Aviso de turno dentro de la aplicación.
 - [ ] Aplicación instalable como PWA.
 

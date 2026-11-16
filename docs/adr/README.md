@@ -29,7 +29,7 @@ El alojamiento del backend, el de PostgreSQL, las copias de seguridad, la superv
 
 Las decisiones K1 a K22 de ADR-014 y las elecciones menores C1 a C5 de ADR-013 se aceptaron el 2026-11-16.
 
-Quedan por confirmar las siete elecciones menores L1 a L7 que se tomaron al construir el Hito 3. Están en la sección 13 de [ADR-014](0014-decisiones-del-hito-3.md), aplicadas como recomendaciones. Dos piden atención: L3 se aparta de la decisión K15 y L4 adelanta un punto que estaba previsto para el Hito 4.
+Las siete elecciones menores L1 a L7 que se tomaron al construir el Hito 3, en la sección 13 de [ADR-014](0014-decisiones-del-hito-3.md), se confirmaron el 2026-11-16. Dentro de los ADR no queda ninguna propuesta pendiente.
 
 ## Convenciones
 

@@ -322,7 +322,7 @@ Las pruebas del servidor cubren lo que el navegador no ve bien, como preveía K8
 
 ### Elecciones menores tomadas al construir
 
-Ninguna estaba en las veintidós decisiones y ninguna cambia un contrato. Están aplicadas como recomendaciones y **están pendientes de confirmación**.
+Ninguna estaba en las veintidós decisiones y ninguna cambia un contrato. Se aplicaron como recomendaciones y **quedaron confirmadas el 2026-11-16** por quien decide, las siete. Con L3, la lista de partidas en curso que K15 dejaba para el Hito 5 queda hecha en su primera versión; con L4, el reenvío de la orden sin respuesta deja de ser tarea del Hito 4.
 
 | ID | Asunto | Lo que se hizo | Alternativa |
 |---|---|---|---|

@@ -30,7 +30,7 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | ADR-011 | Convenciones de nombres y glosario |
 | ADR-012 | Decisiones de arranque del Hito 1 (S1 a S25): herramientas, versiones, validación, sesiones y entorno local |
 | ADR-013 | Decisiones del Hito 2 (H1 a H20): salas, canal de tiempo real, avisos tras guardar y tareas periódicas. Incluye las elecciones C1 a C5, confirmadas después |
-| ADR-014 | Decisiones del Hito 3 (K1 a K22): quién dirige la partida, estado siempre en la base de datos, relojes, el juego Cuatro en raya, frontend y pruebas en navegador |
+| ADR-014 | Decisiones del Hito 3 (K1 a K22): quién dirige la partida, estado siempre en la base de datos, relojes, el juego Cuatro en raya, frontend y pruebas en navegador. Incluye las elecciones L1 a L7, confirmadas el 2026-11-16 |
 
 ### Contratos y modelo, versión 1
 
@@ -87,7 +87,6 @@ No son decisiones. No deben tratarse como aprobadas.
 | Propuesta | Dónde |
 |---|---|
 | B1: reparto del resto del MVP en hitos. El corte vertical terminó el 2026-11-16 con el Hito 3, así que toca decidirlo | [`backlog-mvp.md`](backlog-mvp.md) |
-| L1 a L7: siete elecciones menores tomadas al construir el Hito 3. Están aplicadas como recomendaciones. L3 se aparta de la decisión K15 y L4 adelanta un punto del Hito 4 | [ADR-014](../docs/adr/0014-decisiones-del-hito-3.md), sección 13 |
 
 ---
 
