@@ -44,6 +44,14 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | [Matriz de permisos](../contracts/05-permissions.md) | 2026-11-16 | P1 a P7 |
 | [Arquitectura lógica y módulos](../docs/02-arquitectura.md) | 2026-11-16 | D1 a D6 |
 
+### Decisiones sueltas
+
+Tomadas por quien decide fuera de un ADR. No cambian ningún contrato.
+
+| Fecha | Asunto | Decisión | Se aplica en |
+|---|---|---|---|
+| 2026-11-16 | Alta de juegos y versiones nuevos en el catálogo | Un juego o una versión nuevos llegan con su motor, mediante una migración, y quedan **inactivos**. Desde administración se activan, se desactivan y se elige la versión vigente. El alta no se hace por la API, como ya decía A5. Precisa K5 de ADR-014, que solo decidía el alta de Cuatro en raya, el primer juego, que entró ya activo | Cada juego o versión nuevos, y la administración del Hito 6 |
+
 ---
 
 ## 2. Los quince pendientes iniciales

@@ -122,7 +122,7 @@ Dos personas, cada una en su navegador:
 - [ ] Edición del perfil y cambio de contraseña.
 - [ ] Recuperación de contraseña, con el envío de correo simulado en local.
 - [ ] Perfil público y estadísticas básicas por juego, actualizadas en la transacción del final de partida (8.15). La tabla se crea aquí y se rellena con los resultados de las partidas ya jugadas (ADR-014, K4).
-- [ ] Administración mínima por API: suspender y reactivar cuentas, cerrar salas, anular partidas, y activar o desactivar juegos y versiones.
+- [ ] Administración mínima por API: suspender y reactivar cuentas, cerrar salas, anular partidas, y activar o desactivar juegos y versiones. Los juegos y versiones nuevos llegan inactivos con su motor, y se activan desde aquí (decidido el 2026-11-16, ver [`decisiones-y-pendientes.md`](decisiones-y-pendientes.md)).
 
 ### Hito 7. Preparación para publicar
 
