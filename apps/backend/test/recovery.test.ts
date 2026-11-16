@@ -249,6 +249,18 @@ describe('reconexión y recuperación', () => {
       expect(room.members.map((member) => member.playerId)).toEqual([match.owner.playerId]);
     });
 
+    it('la revisión periódica aplica un abandono cuyo aviso no llegó', async () => {
+      const match = await followedMatch();
+      await match.guestSocket.close();
+      await match.ownerSocket.nextOfType('MATCH_UPDATED');
+
+      expect(await sessions.abandonDueMatches()).toBe(0);
+      t.clock.advance(ABANDON_MS);
+      expect(await sessions.abandonDueMatches()).toBe(1);
+      expect((await viewOf(t, match.owner, match.matchId)).result?.reason).toBe('ABANDONMENT');
+      expect(await sessions.abandonDueMatches()).toBe(0);
+    });
+
     it('si quien abandona es el anfitrión, la sala se cierra', async () => {
       const match = await followedMatch();
       await match.ownerSocket.close();

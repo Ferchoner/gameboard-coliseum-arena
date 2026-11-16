@@ -152,6 +152,8 @@ export const es = {
     you: 'Tú',
     turnBadge: 'Tiene el turno',
     clockOf: (name: string) => `Tiempo de ${name}`,
+    /** Cuenta atrás de un rival desconectado (regla 7.26). */
+    abandonIn: (time: string) => `Pierde por abandono en ${time}`,
     turn: {
       yours: 'Te toca jugar.',
       theirs: (name: string) => `Le toca a ${name}.`,
@@ -194,6 +196,8 @@ export const es = {
       backToRoom: 'Volver a la sala',
       rematchHint: 'En la sala pueden marcarse listos otra vez para jugar la revancha.',
       roomClosedHint: 'La sala de esta partida se cerró al terminar.',
+      /** Quien pierde por abandono sale de la sala (regla 7.32). */
+      leftRoomHint: 'Al perder por abandono saliste de la sala.',
       allMatches: 'Ver mis partidas',
     },
     unknownGame: 'Esta versión de la aplicación no sabe mostrar este juego. Recarga la página.',
@@ -253,6 +257,8 @@ export const es = {
   /** Estado de la conexión de tiempo real. */
   realtime: {
     reconnecting: 'Se perdió la conexión con el servidor. Reconectando…',
+    /** Se añade mientras hay una partida en tiempo real en curso (ADR-015, decisión V8). */
+    reconnectingInMatch: 'Si no vuelves a conectar en 2 minutos, perderás la partida.',
     stopped: {
       SESSION_ENDED: 'Tu sesión terminó. Vuelve a entrar.',
       UNSUPPORTED_VERSION: 'Hay una versión nueva de la aplicación. Recarga la página.',

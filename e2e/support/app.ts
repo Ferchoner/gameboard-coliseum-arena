@@ -117,6 +117,27 @@ export function clock(page: Page, seat: number): Locator {
   return page.locator(`[data-clock-seat="${seat}"]`);
 }
 
+/** La tarjeta de un jugador en la página de la partida. */
+export function playerCard(page: Page, seat: number): Locator {
+  return page.locator(`.match-player[data-seat="${seat}"]`);
+}
+
+/** La cuenta atrás del abandono en la tarjeta de un jugador. */
+export function abandonCountdown(page: Page, seat: number): Locator {
+  return page.locator(`[data-abandon-seat="${seat}"]`);
+}
+
+/** El aviso de que se perdió la conexión con el servidor. */
+export function connectionLost(page: Page): Locator {
+  return page.getByRole('status').filter({ hasText: 'Se perdió la conexión con el servidor' });
+}
+
+/** Un reloj "4:07" en milisegundos. */
+export function clockMs(text: string): number {
+  const parts = text.trim().split(':').map(Number);
+  return parts.reduce((total, part) => total * 60 + part, 0) * 1000;
+}
+
 /**
  * Juega una serie de columnas pulsando el tablero, alternando los asientos.
  * Tras cada jugada espera a que los dos la vean. `played` son las jugadas

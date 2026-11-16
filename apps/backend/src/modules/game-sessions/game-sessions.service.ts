@@ -500,6 +500,23 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
   }
 
   /**
+   * Revisa las partidas con algún ausente de plazo vencido. Cubre un
+   * aviso que falló, igual que la revisión de relojes cubre a sus
+   * temporizadores. Devuelve cuántos abandonos aplicó.
+   */
+  async abandonDueMatches(): Promise<number> {
+    let abandoned = 0;
+    for (const matchId of this.absences.dueMatchIds(this.clock.now())) {
+      try {
+        if (await this.abandonIfDue(matchId)) abandoned += 1;
+      } catch (error) {
+        this.logger.error(`Falló el abandono en la partida ${matchId}: ${String(error)}`);
+      }
+    }
+    return abandoned;
+  }
+
+  /**
    * Cómo está cada jugador de una partida para quien la ve: si está
    * conectado y, si falta en una partida en tiempo real, cuándo pierde por
    * abandono (protocolo, `abandonAt`).

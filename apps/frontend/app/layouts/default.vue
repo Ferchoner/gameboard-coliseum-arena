@@ -7,12 +7,17 @@ import { es } from '../i18n/es';
 import { failureText } from '../utils/errors';
 
 const { session, me, signOut } = useSession();
-const { state: connection } = useRealtime();
+const { state: connection, realtimeMatches } = useRealtime();
 
 /** Lo que hay que contar de la conexión de tiempo real, si hay algo que contar. */
 const connectionNotice = computed(() => {
   if (!me.value) return null;
-  if (connection.value.status === 'reconnecting') return es.realtime.reconnecting;
+  if (connection.value.status === 'reconnecting') {
+    // Sin conexión corre el plazo de abandono de sus partidas en tiempo real (regla 7.26).
+    return realtimeMatches.value.length > 0
+      ? `${es.realtime.reconnecting} ${es.realtime.reconnectingInMatch}`
+      : es.realtime.reconnecting;
+  }
   // El fin de la sesión lo cuenta la propia sesión, que lleva a la página de entrada.
   if (connection.value.status === 'stopped' && connection.value.reason !== 'SESSION_ENDED') {
     return es.realtime.stopped[connection.value.reason];

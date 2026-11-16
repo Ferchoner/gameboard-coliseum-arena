@@ -502,6 +502,13 @@ a {
   gap: 0.4rem;
 }
 
+.abandon-countdown {
+  grid-column: 1 / -1;
+  color: var(--warning);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .match-player.active {
   border-color: var(--accent);
 }

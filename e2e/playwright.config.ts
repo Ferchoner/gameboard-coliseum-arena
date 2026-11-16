@@ -32,7 +32,22 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     ...(chromiumPath ? { launchOptions: { executablePath: chromiumPath } } : {}),
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      testIgnore: /reinicio\.spec\.ts$/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    // Reinicia la API de verdad, así que va aparte, después de todas las demás (ADR-015, V6).
+    {
+      name: 'reinicio',
+      testMatch: /reinicio\.spec\.ts$/,
+      dependencies: ['chromium'],
+      // De una en una: dos reinicios a la vez se estorbarían.
+      workers: 1,
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
 
   webServer: [
     {

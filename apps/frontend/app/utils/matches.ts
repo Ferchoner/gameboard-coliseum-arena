@@ -25,6 +25,30 @@ export function clockAfter(
   return Math.max(0, player.clockRemainingMs - Math.max(0, elapsedMs));
 }
 
+/**
+ * Cuánto le falta a un jugador desconectado para perder por abandono,
+ * `elapsedMs` después de recibir la partida. `serverTime` es la hora del
+ * servidor con la que llegó: `abandonAt` también es hora del servidor, así
+ * que la diferencia no depende del reloj del navegador, igual que los
+ * relojes (ADR-015, decisión V8). `null` si no está en esa situación.
+ */
+export function abandonAfter(
+  match: Pick<MatchView, 'status'>,
+  player: Pick<MatchPlayerView, 'abandonAt'>,
+  serverTime: string,
+  elapsedMs: number,
+): number | null {
+  if (match.status !== 'IN_PROGRESS' || player.abandonAt === null) return null;
+  const remaining = Date.parse(player.abandonAt) - Date.parse(serverTime);
+  if (Number.isNaN(remaining)) return null;
+  return Math.max(0, remaining - Math.max(0, elapsedMs));
+}
+
+/** Si quien mira perdió la partida por abandono, y con ello salió de la sala (regla 7.32). */
+export function youAbandoned(match: Pick<MatchView, 'result' | 'yourSeat'>): boolean {
+  return match.result?.reason === 'ABANDONMENT' && outcomeOf(match, match.yourSeat) === 'LOSS';
+}
+
 /** Un reloj en minutos y segundos: "4:07". Solo marca "0:00" cuando no queda nada. */
 export function formatClock(ms: number): string {
   const totalSeconds = Math.ceil(Math.max(0, ms) / 1000);

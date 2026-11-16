@@ -49,14 +49,23 @@ export class AbandonmentWatch implements OnApplicationShutdown {
 
     const absence: Absence = { abandonAt, timer: null };
     players.set(playerId, absence);
+    this.arm(matchId, absence);
+  }
+
+  private arm(matchId: string, absence: Absence): void {
     // Las pruebas piden la comprobación cuando les conviene (ADR-013, decisión H8).
     if (this.config.environment === 'test') return;
     const delayMs = Math.min(
-      Math.max(0, abandonAt.getTime() - this.clock.now().getTime()),
+      Math.max(0, absence.abandonAt.getTime() - this.clock.now().getTime()),
       MAX_DELAY_MS,
     );
     absence.timer = setTimeout(() => {
       absence.timer = null;
+      // Un temporizador puede saltar un instante antes de tiempo: se vuelve a poner.
+      if (this.clock.now().getTime() < absence.abandonAt.getTime()) {
+        this.arm(matchId, absence);
+        return;
+      }
       this.onDue?.(matchId);
     }, delayMs);
     // Un temporizador pendiente no debe impedir que el proceso termine.
@@ -85,6 +94,13 @@ export class AbandonmentWatch implements OnApplicationShutdown {
     return [...players]
       .filter(([, absence]) => absence.abandonAt.getTime() <= now.getTime())
       .map(([playerId]) => playerId);
+  }
+
+  /** Las partidas con algún ausente cuyo plazo ya venció en `now`. */
+  dueMatchIds(now: Date): string[] {
+    return [...this.absences.keys()].filter(
+      (matchId) => this.dueAbsentees(matchId, now).length > 0,
+    );
   }
 
   /** La partida terminó: ya no hay ausencias que contar. */

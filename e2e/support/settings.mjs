@@ -13,6 +13,22 @@ export const FRONTEND_PORT = 3001;
 export const API_ORIGIN = `http://localhost:${API_PORT}`;
 export const FRONTEND_ORIGIN = `http://localhost:${FRONTEND_PORT}`;
 
+/**
+ * Puerto del arranque de la API, al que una prueba pide reiniciarla
+ * (ADR-015, decisión V6). Solo escucha en la máquina de las pruebas.
+ */
+export const CONTROL_PORT = 3010;
+export const CONTROL_ORIGIN = `http://localhost:${CONTROL_PORT}`;
+
+/**
+ * Plazos acortados para no esperar minutos en las pruebas (ADR-015,
+ * decisión V6): el abandono llega a los 10 segundos, el margen de
+ * desconexión es de 1 y los latidos van cada 2.
+ */
+export const ABANDON_SECONDS = 10;
+export const HEARTBEAT_SECONDS = 2;
+export const DISCONNECT_GRACE_SECONDS = 1;
+
 /** Base de datos de estas pruebas. Se borra y se crea de nuevo en cada ejecución. */
 export const DATABASE_URL =
   process.env.E2E_DATABASE_URL ?? 'postgres://gameboard:gameboard@localhost:5432/gameboard_e2e';

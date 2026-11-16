@@ -5,7 +5,7 @@ import { GameSessionsService } from './game-sessions.service.js';
 
 /**
  * Revisa cada pocos segundos si hay partidas con el reloj vencido y les
- * aplica el vencimiento (ADR-010, regla 8.17; ADR-014, decisión K3). Cubre
+ * aplica el vencimiento, y si quedó algún abandono sin aplicar (ADR-010, regla 8.17; ADR-014, decisión K3). Cubre
  * a los temporizadores de cada partida, que viven en memoria y se pierden
  * si el servidor se reinicia.
  *
@@ -45,6 +45,9 @@ export class ClockSweeper implements OnApplicationShutdown {
     try {
       const expired = await this.sessions.expireDueMatches();
       if (expired > 0) this.logger.log(`Se aplicaron ${expired} vencimientos de reloj.`);
+      // De paso, los abandonos cuyo aviso no llegó a aplicarse (ADR-015, decisión V1).
+      const abandoned = await this.sessions.abandonDueMatches();
+      if (abandoned > 0) this.logger.log(`Se aplicaron ${abandoned} abandonos.`);
     } catch (error) {
       this.logger.error(`Falló la revisión de relojes vencidos: ${String(error)}`);
     } finally {

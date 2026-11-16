@@ -291,6 +291,85 @@ describe('cliente del canal de tiempo real', () => {
     expect(states.at(-1)).toBe('reconnecting');
   });
 
+  it('al volver la red reintenta enseguida, con la espera de vuelta en 1 segundo', async () => {
+    client.start();
+    last().drop();
+    await vi.advanceTimersByTimeAsync(1000);
+    last().drop();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(sockets).toHaveLength(2);
+
+    client.reconnectNow('online');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(sockets).toHaveLength(3);
+
+    last().drop();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(sockets).toHaveLength(4);
+  });
+
+  it('al volver la red abre otra conexión aunque la anterior parezca abierta', async () => {
+    const room = listener();
+    client.start();
+    last().welcome();
+    client.subscribeRoom('room-1', room);
+
+    client.reconnectNow('online');
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(sockets[0]?.closedByClient).toBe(true);
+    expect(sockets).toHaveLength(2);
+    last().welcome();
+    expect(last().sent).toMatchObject([{ type: 'SUBSCRIBE_ROOM', roomId: 'room-1' }]);
+  });
+
+  it('al volver a la página solo reconecta si la conexión lleva tiempo callada', async () => {
+    client.start();
+    last().welcome(10_000);
+
+    await vi.advanceTimersByTimeAsync(14_000);
+    client.reconnectNow('visible');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(sockets).toHaveLength(1);
+
+    await vi.advanceTimersByTimeAsync(2_000);
+    client.reconnectNow('visible');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(sockets).toHaveLength(2);
+  });
+
+  it('entrega el aviso personal de una partida propia', () => {
+    const onPlayerMatch = vi.fn();
+    client = new RealtimeClient({
+      url: 'ws://api.test/realtime',
+      createSocket: () => {
+        const socket = new FakeSocket();
+        sockets.push(socket);
+        return socket;
+      },
+      onState: () => undefined,
+      canRetry: () => Promise.resolve(true),
+      onPlayerMatch,
+    });
+    client.start();
+    last().welcome();
+
+    const summary = { matchId: 'match-1', mode: 'REALTIME', status: 'IN_PROGRESS' };
+    last().receive({
+      type: 'PLAYER_MATCH_UPDATED',
+      matchId: 'match-1',
+      payload: { match: summary },
+    });
+
+    expect(onPlayerMatch).toHaveBeenCalledWith(summary);
+  });
+
+  it('no hace nada si no se pidió conectar', async () => {
+    client.reconnectNow('online');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(sockets).toHaveLength(0);
+  });
+
   it('al parar cierra la conexión y no reconecta', async () => {
     client.start();
     last().welcome();

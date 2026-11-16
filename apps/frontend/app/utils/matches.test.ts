@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { fourInARowTexts } from '../games/four-in-a-row';
 import { es } from '../i18n/es';
 import {
+  abandonAfter,
   clockAfter,
   endReasonText,
   formatClock,
@@ -11,6 +12,7 @@ import {
   rivalNames,
   shouldRefreshAfter,
   supersedes,
+  youAbandoned,
 } from './matches';
 
 function player(seat: number, displayName: string, clockRemainingMs = 300_000): MatchPlayerView {
@@ -96,6 +98,32 @@ describe('relojes de una partida', () => {
     expect(formatClock(0)).toBe('0:00');
     expect(formatClock(-50)).toBe('0:00');
     expect(formatClock(3 * 3_600_000 + 5 * 60_000 + 7_000)).toBe('3:05:07');
+  });
+});
+
+describe('cuenta atrás del abandono', () => {
+  const serverTime = '2026-11-16T00:01:00.000Z';
+  const absent = { abandonAt: '2026-11-16T00:02:42.000Z' };
+
+  it('cuenta desde la hora del servidor con la que llegó la partida', () => {
+    expect(abandonAfter(match(), absent, serverTime, 0)).toBe(102_000);
+    expect(abandonAfter(match(), absent, serverTime, 2_000)).toBe(100_000);
+    expect(formatClock(abandonAfter(match(), absent, serverTime, 0) ?? 0)).toBe('1:42');
+  });
+
+  it('no baja de cero', () => {
+    expect(abandonAfter(match(), absent, serverTime, 500_000)).toBe(0);
+  });
+
+  it('no hay cuenta atrás si el jugador no falta o si la partida ya no está en curso', () => {
+    expect(abandonAfter(match(), { abandonAt: null }, serverTime, 0)).toBeNull();
+    expect(abandonAfter(finished('ABANDONMENT', 0), absent, serverTime, 0)).toBeNull();
+  });
+
+  it('sabe si quien mira perdió por abandono', () => {
+    expect(youAbandoned(finished('ABANDONMENT', 1))).toBe(true);
+    expect(youAbandoned(finished('ABANDONMENT', 0))).toBe(false);
+    expect(youAbandoned(finished('RESIGNATION', 1))).toBe(false);
   });
 });
 
