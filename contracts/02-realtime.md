@@ -12,7 +12,7 @@
 
 **Cambio posterior a la aceptación, aceptado el 2026-11-16.** Al escribir la API REST, `MatchSummaryView` ganó cuatro campos: `yourOutcome`, `endReason`, `startedAt` y `endedAt`. El cambio solo añade campos y permite que el aviso personal y la lista "mis partidas" de la API usen la misma forma. Es el punto A1 de [`01-rest-api.md`](01-rest-api.md).
 
-Los códigos de error de este documento son provisionales en su redacción: el catálogo único de errores, que es un entregable posterior, los reúne con los de la API y los del motor.
+El significado de cada código de error está en el [catálogo único de errores](04-error-catalog.md), que los reúne con los de la API y los del motor.
 
 ---
 

@@ -2,12 +2,12 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, en revisión |
+| **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta |
 | **Reúne** | Los códigos de [`01-rest-api.yaml`](01-rest-api.yaml), [`02-realtime.ts`](02-realtime.ts) y [`03-game-engine.ts`](03-game-engine.ts) |
 | **Aplica** | ADR-011 (convención 9.1), ADR-009 (reglas de dominio), ADR-010 (reglas 8.11 y 8.12) |
 | **Resuelve** | Vacío G-04 (catálogo de errores unificado) |
 
-**Cómo leer este documento.** Las secciones 3 a 8 listan cada código una sola vez, con el canal en el que aparece. Casi todo sale de los tres contratos ya aceptados y no cambia nada. Lo nuevo está en dos sitios: la [sección 10](#10-ajustes-que-pide-a-los-contratos-aceptados), con cinco ajustes a contratos aceptados que **no están aplicados** y esperan confirmación, y la [sección 11](#11-puntos-a-revisar), con las decisiones de diseño propias del entregable, como recomendación.
+**Cómo leer este documento.** Las secciones 3 a 8 listan cada código una sola vez, con el canal en el que aparece. Casi todo sale de los tres contratos y no cambia nada. Lo que este catálogo añadió está en dos sitios: la [sección 10](#10-ajustes-hechos-a-los-contratos), con cinco ajustes a la API, y la [sección 11](#11-decisiones-de-diseño-propias-de-este-entregable), con las decisiones de diseño propias del entregable.
 
 ---
 
@@ -58,7 +58,7 @@ Cada código lleva una de estas seis reacciones.
 | Administración | 6 |
 | **Total** | **41** |
 
-De los 41, cuatro son nuevos y están propuestos en la sección 10. Los otros 37 ya están en los contratos aceptados.
+De los 41, cuatro los añadió este catálogo (sección 10). Los otros 37 ya estaban en los contratos.
 
 En las tablas, la columna **API** da el estado HTTP, **TR** indica si el código puede llegar en un `COMMAND_REJECTED` del canal de tiempo real y **Motor** si lo emite el motor de juego.
 
@@ -72,10 +72,10 @@ En las tablas, la columna **API** da el estado HTTP, **TR** indica si el código
 | `INVALID_MESSAGE` | El mensaje no es JSON, le falta un campo obligatorio o su tipo no existe | | Sí | | Defecto |
 | `UNAUTHENTICATED` | No hay sesión, o la sesión caducó o fue cerrada | 401 | | | Iniciar sesión |
 | `FORBIDDEN` | La cuenta no tiene el rol que la operación exige | 403 | | | Informar |
-| `ORIGIN_NOT_ALLOWED` | **Nuevo.** La petición no viene del origen del frontend | 403 | | | Defecto |
-| `ROUTE_NOT_FOUND` | **Nuevo.** La ruta no existe en la API | 404 | | | Defecto |
-| `METHOD_NOT_ALLOWED` | **Nuevo.** La ruta existe, pero no admite ese método | 405 | | | Defecto |
-| `PAYLOAD_TOO_LARGE` | **Nuevo.** El cuerpo de la petición supera el tamaño admitido | 413 | | | Defecto |
+| `ORIGIN_NOT_ALLOWED` | La petición no viene del origen del frontend | 403 | | | Defecto |
+| `ROUTE_NOT_FOUND` | La ruta no existe en la API | 404 | | | Defecto |
+| `METHOD_NOT_ALLOWED` | La ruta existe, pero no admite ese método | 405 | | | Defecto |
+| `PAYLOAD_TOO_LARGE` | El cuerpo de la petición supera el tamaño admitido | 413 | | | Defecto |
 | `RATE_LIMITED` | Demasiadas peticiones u órdenes en poco tiempo | 429 | Sí | | Esperar |
 | `INTERNAL_ERROR` | Fallo del servidor. La operación no se aplicó | 500 | Sí | | Esperar |
 
@@ -169,25 +169,25 @@ El motor emite cinco códigos. La plataforma decide cuáles llegan al cliente.
 
 ---
 
-## 10. Ajustes que pide a los contratos aceptados
+## 10. Ajustes hechos a los contratos
 
-Al reunir los tres contratos aparecieron cinco puntos por ajustar. **Ninguno está aplicado.** Se aplicarán a la API si se confirman. El protocolo de tiempo real y el contrato del motor no cambian.
+Al reunir los tres contratos aparecieron cinco puntos por ajustar. Se aceptaron el 2026-11-16 y están aplicados. El protocolo de tiempo real y el contrato del motor no cambiaron, salvo una frase en las notas del protocolo.
 
 | ID | Ajuste | Contrato | Motivo |
 |---|---|---|---|
-| J1 | Añadir `ORIGIN_NOT_ALLOWED` para las peticiones rechazadas por su origen. Hoy responden `FORBIDDEN`, que queda solo para la falta de rol | API | Son dos situaciones distintas. Una es un usuario sin permiso; la otra es un fallo de configuración o un intento de ataque, y conviene poder distinguirla al primer vistazo |
+| J1 | Añadir `ORIGIN_NOT_ALLOWED` para las peticiones rechazadas por su origen. Antes respondían `FORBIDDEN`, que queda solo para la falta de rol | API | Son dos situaciones distintas. Una es un usuario sin permiso; la otra es un fallo de configuración o un intento de ataque, y conviene poder distinguirla al primer vistazo |
 | J2 | Añadir `ROUTE_NOT_FOUND`, `METHOD_NOT_ALLOWED` y `PAYLOAD_TOO_LARGE` para los fallos que no pertenecen a ninguna operación | API | El servidor ya tiene que responder algo en esos casos. Así responde con el mismo sobre y con un código de la lista cerrada |
-| J3 | Declarar `error.code` como lista cerrada en el archivo OpenAPI, con los códigos de este catálogo, y describir `details` para los códigos que lo usan | API | Hoy `code` es un texto libre con un ejemplo. Con la lista, las herramientas pueden comprobar que el cliente y el servidor usan los mismos códigos |
+| J3 | Declarar `error.code` como lista cerrada en el archivo OpenAPI, con los códigos de este catálogo, y describir `details` para los códigos que lo usan | API | Antes `code` era un texto libre con un ejemplo. Con la lista, las herramientas pueden comprobar que el cliente y el servidor usan los mismos códigos |
 | J4 | Igualar la descripción de `MATCH_NOT_IN_PROGRESS` en la API ("ya terminó") con la del protocolo ("terminó o se anuló") | API | El mismo código debe describirse igual en los dos canales |
 | J5 | Sustituir en las notas de la API y del protocolo la frase que llama provisionales a los códigos por un enlace a este catálogo | API y protocolo, solo notas | Dejan de ser provisionales |
 
 ---
 
-## 11. Puntos a revisar
+## 11. Decisiones de diseño propias de este entregable
 
-Decisiones de diseño propias de este entregable. Son **recomendaciones pendientes de confirmación**.
+Estas decisiones no derivan de un ADR: se tomaron al escribir el catálogo. Fueron **aceptadas el 2026-11-16** por Fernando Hernandez Argueta.
 
-| ID | Recomendación | Alternativa | Motivo |
+| ID | Decisión | Alternativa descartada | Motivo |
 |---|---|---|---|
 | E1 | **Un solo espacio de nombres para los tres canales**, sin prefijos | Códigos con prefijo por canal o por módulo, como `ROOMS.FULL` | El cliente maneja un solo diccionario de textos. Hoy siete códigos ya se comparten entre la API y el tiempo real |
 | E2 | **`VALIDATION_ERROR` en la API e `INVALID_MESSAGE` en tiempo real siguen siendo dos códigos** | Unificarlos en uno | No son la misma situación. El primero suele ser un dato que el usuario escribió mal y puede corregir. El segundo solo ocurre si el cliente está mal programado |

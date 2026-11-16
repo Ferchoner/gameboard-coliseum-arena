@@ -2,12 +2,12 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, en revisión |
+| **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta |
 | **Cubre** | Las 28 operaciones de [`01-rest-api.yaml`](01-rest-api.yaml) y las 6 órdenes de [`02-realtime.md`](02-realtime.md) |
 | **Aplica** | ADR-004 (sesión con cookie), ADR-008 (punto 15, administración mínima), ADR-009 (reglas de dominio), ADR-011 (convenciones 9.11 a 9.15) |
 | **Resuelve** | Vacío G-03 (roles y permisos) y pendiente P7 en la parte de permisos |
 
-**Cómo leer este documento.** Las matrices de las secciones 2 a 5 reúnen lo que la API y el protocolo ya dicen, operación por operación. No añaden ni quitan permisos. Las decisiones de diseño propias del entregable están en la [sección 8](#8-puntos-a-revisar), como recomendación.
+**Cómo leer este documento.** Las matrices de las secciones 2 a 5 reúnen lo que la API y el protocolo ya dicen, operación por operación. No añaden ni quitan permisos. Las decisiones de diseño propias del entregable están en la [sección 8](#8-decisiones-de-diseño-propias-de-este-entregable).
 
 ---
 
@@ -143,7 +143,7 @@ Toda petición pasa por las mismas comprobaciones, en este orden. Se responde co
 
 | # | Comprobación | Si falla, en la API | En tiempo real |
 |---|---|---|---|
-| 1 | Origen permitido | `403 FORBIDDEN`, o `ORIGIN_NOT_ALLOWED` si se confirma el ajuste J1 del catálogo de errores | Se rechaza la apertura de la conexión |
+| 1 | Origen permitido | `403 ORIGIN_NOT_ALLOWED` | Se rechaza la apertura de la conexión |
 | 2 | Límite de frecuencia | `429 RATE_LIMITED` | `RATE_LIMITED` |
 | 3 | Sesión válida | `401 UNAUTHENTICATED` | Se rechaza la apertura. Si la sesión termina después, cierre con el código 4001 |
 | 4 | Rol, solo en administración | `403 FORBIDDEN` | No aplica |
@@ -166,11 +166,11 @@ Este orden es compatible con el que el protocolo fija para `SUBMIT_ACTION`, cuyo
 
 ---
 
-## 8. Puntos a revisar
+## 8. Decisiones de diseño propias de este entregable
 
-Decisiones de diseño propias de este entregable. Son **recomendaciones pendientes de confirmación**. Las tres primeras son las que más pesan.
+Estas decisiones no derivan de un ADR: se tomaron al escribir la matriz. Fueron **aceptadas el 2026-11-16** por Fernando Hernandez Argueta.
 
-| ID | Recomendación | Alternativa | Motivo |
+| ID | Decisión | Alternativa descartada | Motivo |
 |---|---|---|---|
 | P1 | **El administrador no puede ver las partidas de otros.** Para verla necesita ser participante, como cualquiera. Sí puede anularla o cerrar su sala | Dejar que el administrador vea cualquier partida | No hay espectadores en el MVP, y la administración aprobada es mínima (ADR-008, punto 15). Añadirlo después es compatible |
 | P2 | **El anfitrión no tiene poderes propios una vez creada la sala.** No puede expulsar a nadie, cambiar las opciones ni ceder su papel. Lo único que lo distingue es que, si sale, la sala se cierra | Permitirle expulsar o cambiar opciones | Con salas públicas que empiezan solas, esos poderes aportan poco y añaden casos que programar y probar. Quien no esté conforme con una sala crea otra |

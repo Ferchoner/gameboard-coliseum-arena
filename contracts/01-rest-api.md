@@ -10,7 +10,9 @@
 
 **Cómo leer este documento.** El contrato es el archivo OpenAPI, que define cada operación con sus datos de entrada, de salida y sus errores. Este documento resume las operaciones, explica las reglas comunes y reúne las decisiones de diseño propias del entregable en la [sección 7](#7-decisiones-de-diseño-propias-de-este-entregable).
 
-Los códigos de error son provisionales en su redacción: el catálogo único de errores, que es el entregable siguiente, los reúne con los del protocolo y los del motor. El detalle de quién puede hacer cada operación irá en la matriz de permisos.
+El significado de cada código de error está en el [catálogo único de errores](04-error-catalog.md), y el detalle de quién puede hacer cada operación, en la [matriz de permisos](05-permissions.md).
+
+**Cambio posterior a la aceptación, aceptado el 2026-11-16.** Al escribir el catálogo de errores se hicieron cinco ajustes a esta API, los J1 a J5 de su sección 10: un código propio para el rechazo por origen, tres códigos para fallos generales, la lista cerrada de códigos en el archivo OpenAPI y dos cambios de redacción.
 
 ---
 
@@ -35,7 +37,7 @@ Los códigos de error son provisionales en su redacción: el catálogo único de
 | Alcance de la cookie | **Propuesta pendiente de confirmación:** ligada solo al host de la API | ADR-004, sección 5 |
 | Duración | 30 días de inactividad, con un tope de 90 días | ADR-004, condición 5.6 |
 | CORS | Solo se admite el origen exacto del frontend, con credenciales. El frontend envía sus peticiones con las credenciales incluidas | ADR-004, condición 5.4 |
-| CSRF | El servidor rechaza con `403` las peticiones que cambian algo y no vienen del origen del frontend | ADR-004, condición 5.3 |
+| CSRF | El servidor rechaza con `403` y el código `ORIGIN_NOT_ALLOWED` las peticiones que cambian algo y no vienen del origen del frontend | ADR-004, condición 5.3 |
 | Ya no existe | `POST /auth/refresh`. Con sesión de servidor no hay nada que renovar | ADR-004. Resuelve C-03 |
 
 ### Códigos de estado
@@ -50,7 +52,9 @@ Los códigos de error son provisionales en su redacción: el catálogo único de
 | `401` | No hay sesión |
 | `403` | Hay sesión, pero no permiso |
 | `404` | Lo pedido no existe |
+| `405` | La ruta no admite ese método |
 | `409` | La operación choca con el estado actual: sala llena, partida en curso, nombre ya usado |
+| `413` | El cuerpo de la petición es demasiado grande |
 | `429` | Demasiadas peticiones |
 | `500` | Fallo del servidor |
 

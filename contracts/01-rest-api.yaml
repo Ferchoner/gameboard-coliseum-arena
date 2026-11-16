@@ -11,7 +11,7 @@ info:
 
     **Sesión.** La identidad viaja en una cookie de sesión que el servidor entrega al registrarse o al iniciar sesión. El cliente nunca envía un identificador de jugador como prueba de identidad.
 
-    **Errores comunes.** Además de los que indica cada operación, cualquiera puede responder `403` con `FORBIDDEN` si la petición viene de un origen no permitido, `429` con `RATE_LIMITED` y `500` con `INTERNAL_ERROR`. Toda respuesta lleva la cabecera `X-Request-Id`, que identifica la petición en los registros del servidor.
+    **Errores comunes.** Además de los que indica cada operación, cualquiera puede responder `403` con `ORIGIN_NOT_ALLOWED` si la petición viene de un origen no permitido, `413` con `PAYLOAD_TOO_LARGE` si el cuerpo supera el tamaño admitido, `429` con `RATE_LIMITED` y `500` con `INTERNAL_ERROR`. Una ruta que no existe responde `404` con `ROUTE_NOT_FOUND`, y un método que la ruta no admite, `405` con `METHOD_NOT_ALLOWED`. Un cuerpo que no es JSON válido responde `400` con `VALIDATION_ERROR`. La lista completa de códigos, con su significado, está en `04-error-catalog.md`. Toda respuesta lleva la cabecera `X-Request-Id`, que identifica la petición en los registros del servidor.
 
     **Canal de tiempo real.** Las jugadas, la rendición y los avisos en vivo no están en esta API. Están en `02-realtime.md`.
 servers:
@@ -1093,7 +1093,7 @@ paths:
           description: |-
             Códigos posibles:
 
-            - `MATCH_NOT_IN_PROGRESS`: la partida ya terminó.
+            - `MATCH_NOT_IN_PROGRESS`: la partida no está en curso: terminó o se anuló.
           content:
             application/json:
               schema:
@@ -1436,18 +1436,60 @@ components:
           additionalProperties: false
           properties:
             code:
-              type: string
-              description: Código estable, en inglés. Es lo que debe leer el cliente.
-              examples:
-              - ROOM_NOT_FOUND
+              $ref: '#/components/schemas/ErrorCode'
             message:
               type: string
               description: Texto para quien desarrolla. No está pensado para mostrarse al usuario.
             details:
               type: object
               additionalProperties: true
-              description: Datos adicionales, según el código.
+              description: |-
+                Datos adicionales. Solo los llevan estos códigos:
+
+                - `VALIDATION_ERROR`: `fields`, una lista de `{ field, rule }`. `rule` es `REQUIRED`, `INVALID_FORMAT`, `TOO_SHORT`, `TOO_LONG` u `OUT_OF_RANGE`.
+                - `UNSUPPORTED_ROOM_OPTIONS`: `option`, que es `mode`, `timeControl` o `maxPlayers`.
+                - `INVALID_SETTINGS`: `reason`, el motivo propio del juego, si lo hay.
+                - `MATCH_LIMIT_REACHED`: `mode` y `limit`, la modalidad y su máximo.
       description: Forma de toda respuesta de error.
+    ErrorCode:
+      type: string
+      description: Código estable, en inglés. Es lo que debe leer el cliente. La lista es cerrada y su significado
+        está en `04-error-catalog.md`. Un cliente trata un código que no conoce como un fallo genérico.
+      enum:
+      - VALIDATION_ERROR
+      - UNAUTHENTICATED
+      - FORBIDDEN
+      - ORIGIN_NOT_ALLOWED
+      - ROUTE_NOT_FOUND
+      - METHOD_NOT_ALLOWED
+      - PAYLOAD_TOO_LARGE
+      - RATE_LIMITED
+      - INTERNAL_ERROR
+      - EMAIL_TAKEN
+      - USERNAME_TAKEN
+      - INVALID_CREDENTIALS
+      - ACCOUNT_SUSPENDED
+      - INVALID_RESET_TOKEN
+      - INVALID_CURRENT_PASSWORD
+      - PLAYER_NOT_FOUND
+      - GAME_NOT_FOUND
+      - ROOM_NOT_FOUND
+      - PLAYER_NOT_IN_ROOM
+      - ROOM_NOT_WAITING
+      - ROOM_FULL
+      - ROOM_IN_MATCH
+      - MATCH_LIMIT_REACHED
+      - UNSUPPORTED_ROOM_OPTIONS
+      - INVALID_SETTINGS
+      - MATCH_NOT_FOUND
+      - PLAYER_NOT_IN_MATCH
+      - MATCH_NOT_IN_PROGRESS
+      - USER_NOT_FOUND
+      - CANNOT_CHANGE_OWN_STATUS
+      - GAME_VERSION_NOT_FOUND
+      - ENGINE_NOT_REGISTERED
+      - GAME_VERSION_IS_CURRENT
+      - GAME_VERSION_NOT_ACTIVE
     MatchMode:
       type: string
       enum:
