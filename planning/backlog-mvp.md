@@ -1,35 +1,135 @@
-# Backlog inicial por hitos
+# Backlog del MVP por hitos
 
-## Hito 0 — Decisiones y contratos
-- [ ] ADR stack backend, ORM, auth, realtime.
-- [ ] Diagramas C4 y ER revisados.
-- [ ] OpenAPI v1 y protocolo realtime v1 validados.
-- [ ] Contrato GameEngine y serialización aprobado.
-- [ ] Matriz de permisos, errores y estados.
+| Campo | Valor |
+|---|---|
+| **Estado** | Versión 1, en revisión |
+| **Sustituye a** | El backlog inicial |
+| **Recoge** | ADR-008 (alcance del MVP) y los contratos, versión 1 |
 
-## Hito 1 — Base plataforma
-- [ ] Proyecto backend, migraciones, health checks, logging, tests.
-- [ ] Auth, User, Profile, Player.
-- [ ] Catálogo Game y GameVersion.
-- [ ] Frontend mínimo login/lobby.
+**Cómo leer este documento.** El contenido de cada hito sale del alcance aceptado en ADR-008. Lo que este documento propone por su cuenta es **cómo se reparte el resto del MVP en los hitos 4 a 7**, que es una recomendación pendiente de confirmación ([sección final](#punto-a-revisar)).
 
-## Hito 2 — Salas y tiempo real
-- [ ] Crear/listar/unirse/salir de sala.
-- [ ] WebSocket autenticado, ready, estado de sala.
-- [ ] Validaciones de capacidad y concurrencia.
+Ninguna tarea de los hitos 1 a 7 puede empezar sin la autorización explícita para implementar.
 
-## Hito 3 — Vertical slice Connect Four
-- [ ] Motor puro con tests de reglas.
-- [ ] Crear Match y GameSession de forma atómica.
-- [ ] Acciones con idempotencia, versionado y snapshots.
-- [ ] Vista de juego y sincronización de dos clientes.
-- [ ] Finalización, resultados e historial.
+---
 
-## Hito 4 — Resiliencia y entrega
-- [ ] Reconexión tras pérdida de red.
-- [ ] Recuperación tras reinicio del proceso.
-- [ ] Pruebas e2e de partida completa y acciones inválidas.
-- [ ] Seguridad, rate limits, backups, monitoreo y guía de despliegue.
+## Hito 0. Decisiones y contratos
 
-## Criterios de aceptación del slice
-Dos usuarios independientes pueden registrarse, ingresar a una misma sala, iniciar Connect Four, alternar jugadas válidas, rechazar acciones fuera de turno, terminar una partida y consultar su resultado. Un reintento con el mismo requestId no duplica la jugada. Un reinicio después de una jugada confirmada permite restaurar el estado. Un cliente no puede suplantar otro playerId.
+- [x] Decisiones de backend, acceso a datos, tiempo real y autenticación (ADR-001 a ADR-004).
+- [x] Decisiones de repositorio, frontend, línea base, alcance, reglas de dominio, persistencia y convenciones (ADR-005 a ADR-011).
+- [x] Modelo de datos, versión 1, con su diagrama de entidades.
+- [x] Contrato del motor de juego, versión 1.
+- [x] Protocolo de tiempo real, versión 1.
+- [x] API REST, versión 1, en formato OpenAPI.
+- [x] Catálogo único de errores y matriz de permisos.
+- [ ] Documentos de arquitectura, backlog y README al día. En revisión.
+- [ ] Revisión de cierre del Hito 0 y autorización para implementar.
+
+Los diagramas de arquitectura están en [`docs/02-arquitectura.md`](../docs/02-arquitectura.md), y el de entidades, en [`docs/03-dominio-datos.md`](../docs/03-dominio-datos.md).
+
+---
+
+## Corte vertical
+
+### Hito 1. Base de la plataforma
+
+- [ ] Tomar las decisiones de arranque aplazadas en los ADR (lista en `docs/02-arquitectura.md`, sección 8).
+- [ ] Repositorio con espacios de trabajo: backend, frontend, contratos y motor (ADR-005).
+- [ ] Comprobación automática de que el motor no depende de nada del servidor (ADR-001, condición 5.5).
+- [ ] Tipos de la API, del protocolo y del catálogo de errores en el paquete de contratos.
+- [ ] Base del backend: configuración, conexión a PostgreSQL, migraciones, registro de actividad, comprobación de salud, sobre de respuesta y errores del catálogo.
+- [ ] Entorno local con el frontend y la API en dos orígenes del mismo sitio, como en producción (ADR-004).
+- [ ] Cuenta, perfil y jugador. Registro, inicio y cierre de sesión con cookie. CORS, CSRF y lista de orígenes.
+- [ ] Catálogo de juegos y versiones, con el registro de motores.
+- [ ] Frontend mínimo: registro, inicio de sesión y catálogo.
+
+### Hito 2. Salas y tiempo real
+
+- [ ] Crear, listar, ver, entrar, salir y marcarse listo, por la API.
+- [ ] Capacidad comprobada de forma atómica (7.15) y límite de partidas simultáneas (7.30).
+- [ ] Conexión WebSocket con identidad en la apertura, latidos y cierre al terminar la sesión.
+- [ ] Suscripción a salas, avisos de cambios y presencia.
+- [ ] Cierre de salas inactivas (7.14).
+- [ ] Frontend: lista de salas y sala de espera.
+
+### Hito 3. Cuatro en raya en tiempo real
+
+- [ ] Motor de Cuatro en raya, con pruebas de sus reglas.
+- [ ] Inicio de partida automático y atómico, con sorteo de asientos (7.9, 9.19).
+- [ ] Jugadas con versión del estado, control de repetidas, transacción única y registro de jugadas (8.6 a 8.13).
+- [ ] Relojes: descuento, vencimiento y jugada con el reloj agotado (7.2 a 7.5).
+- [ ] Rendición (7.19).
+- [ ] Final de partida en la misma transacción, con resultado, y vuelta de la sala a la espera para la revancha (8.14, 7.11).
+- [ ] Frontend: tablero, relojes, resultado e historial.
+- [ ] Prueba de extremo a extremo de una partida completa y de las jugadas rechazadas.
+
+### Criterios de aceptación del corte vertical
+
+Dos personas, cada una en su navegador:
+
+1. Se registran e inician sesión.
+2. Una crea una sala de Cuatro en raya en tiempo real y la otra entra.
+3. Se marcan listas y la partida empieza sola.
+4. Alternan jugadas válidas y cada una ve el tablero y los dos relojes al día.
+5. Una jugada fuera de turno, una en columna llena y una hecha sobre un estado antiguo se rechazan, cada una con su código.
+6. Una jugada reenviada con el mismo identificador de petición no se aplica dos veces.
+7. La partida termina por cuatro en línea, por tablero lleno, por tiempo agotado o por rendición, y las dos ven el mismo resultado.
+8. Las dos pueden consultar la partida en su historial.
+9. La sala vuelve a la espera y pueden jugar la revancha, con los asientos alternados.
+10. Ninguna puede actuar en nombre de la otra, envíe lo que envíe.
+
+---
+
+## Resto del MVP
+
+### Hito 4. Reconexión y recuperación
+
+- [ ] Reconexión del cliente con espera progresiva y nueva suscripción (7.28).
+- [ ] Abandono en tiempo real tras 2 minutos sin conexión (7.26).
+- [ ] Anotación periódica de actividad del servidor y ajuste de relojes al arrancar (8.18, 7.29).
+- [ ] Carga de la sesión de juego desde la base de datos cuando hace falta (7.22).
+- [ ] Revisión periódica de relojes vencidos (8.17).
+- [ ] Pruebas: reinicio del servidor a mitad de partida y corte de red de un jugador.
+
+**Criterio de aceptación:** tras reiniciar el servidor después de una jugada confirmada, los dos jugadores reconectan, ven el mismo estado y a ninguno se le ha descontado el tiempo de la caída.
+
+### Hito 5. Modalidad por turnos
+
+- [ ] Salas por turnos: inicio al completarse la sala y revancha opcional (7.10, 7.31).
+- [ ] Controles de tiempo de 12, 24 y 36 horas, y límite de 20 partidas simultáneas (7.2, 7.30).
+- [ ] Lista de "mis partidas en curso", que indica en cuáles te toca.
+- [ ] Aviso de turno dentro de la aplicación.
+- [ ] Aplicación instalable como PWA.
+
+**Criterio de aceptación:** dos personas juegan una partida completa sin coincidir conectadas en ningún momento, y cada una ve al entrar que le toca.
+
+### Hito 6. Cuenta, estadísticas y administración
+
+- [ ] Edición del perfil y cambio de contraseña.
+- [ ] Recuperación de contraseña, con el envío de correo simulado en local.
+- [ ] Perfil público y estadísticas básicas por juego, actualizadas en la transacción del final de partida (8.15).
+- [ ] Administración mínima por API: suspender y reactivar cuentas, cerrar salas, anular partidas, y activar o desactivar juegos y versiones.
+
+### Hito 7. Preparación para publicar
+
+Depende de las decisiones de alojamiento, que están aplazadas.
+
+- [ ] Límites de frecuencia de la API y del canal de tiempo real, con sus valores revisados.
+- [ ] Revisión de seguridad.
+- [ ] Alojamiento, copias de seguridad, supervisión y guía de despliegue.
+- [ ] Servicio real de envío de correo.
+- [ ] Prueba de la cookie de sesión en Safari con un despliegue real (ADR-004).
+- [ ] Política de borrado de datos y registro de acciones de administración, si se decide incluirlos.
+
+---
+
+## Posterior al MVP
+
+Notificaciones push, puntuación y clasificación, panel visual de administración, verificación de correo, acceso con cuentas externas, bots, salas privadas, invitaciones, amigos, emparejamiento automático, espectadores, torneos y monetización (ADR-008).
+
+---
+
+## Punto a revisar
+
+| ID | Recomendación | Alternativa | Motivo |
+|---|---|---|---|
+| B1 | **El resto del MVP se reparte en cuatro hitos, en este orden:** reconexión y recuperación, modalidad por turnos, cuenta y administración, y preparación para publicar | Otro orden, o un solo hito con todo | La modalidad por turnos se apoya en la recuperación desde la base de datos, así que va después de ella (ADR-008, punto 8). Lo que depende del alojamiento va al final porque esa decisión está aplazada |

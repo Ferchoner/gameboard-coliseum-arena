@@ -1,38 +1,149 @@
-# Registro de decisiones y preguntas abiertas
+# Registro de decisiones y asuntos abiertos
 
-## Acordado conceptualmente
-- Backend modular monolítico, API REST + canal realtime WebSocket.
-- Motor server-authoritative, desacoplado de red, UI y persistencia.
-- Juegos registrados por ID y versión.
-- Room, Match y GameSession son conceptos distintos.
-- PostgreSQL como almacenamiento persistente propuesto; estado activo en memoria y snapshots transaccionales.
-- Redis opcional para evolución.
-- Connect Four como primer slice de validación.
-- Nuxt/Vue/TypeScript preferido en frontend; Phaser opcional según juego.
+| Campo | Valor |
+|---|---|
+| **Estado** | Versión 1, en revisión |
+| **Sustituye a** | El registro inicial de decisiones y preguntas abiertas |
 
-## Pendientes de decisión formal (ADR)
-1. Framework backend: NestJS, Fastify directo u otro; evaluar mantenibilidad y WebSocket.
-2. ORM/query builder: Prisma, Drizzle, TypeORM u otro.
-3. Autenticación: cookies/sesiones o tokens; CSRF, rotación, expiración y WebSocket.
-4. Transporte realtime: WebSocket nativo, Socket.IO u otro; semántica de ACK y reconexión.
-5. Modelo de despliegue inicial: hosting, dominio, TLS, PostgreSQL, backups y observabilidad.
-6. Reutilización de Room después de Match y política de rematches.
-7. Estados y permisos exactos de salas, partidas y sesiones.
-8. Eventos persistidos, retención y replay; no asumir event sourcing.
-9. Timeout, abandono, desconexión y recuperación.
-10. Ranking: si entra al MVP y algoritmo.
-11. Soporte para bots/solitario: alcance y modelo de participantes.
-12. Licencias, derechos de arte y selección de juegos que puedan distribuirse.
-13. Seguridad de acciones, rate limits, prevención de trampas y protección de información oculta.
-14. Consistencia de proyecciones estadísticas y resultados bajo reintentos.
-15. Requisitos no funcionales medibles: concurrencia, latencia, disponibilidad y capacidad.
+Este documento es un índice. No decide nada: dice dónde está cada decisión y qué sigue abierto. Si discrepa de un ADR o de un contrato, valen ellos.
 
-## Inconsistencias de ejemplos anteriores que deben normalizarse
-- El campo `playerId` apareció en mensajes entrantes: no confiar en él.
-- Se usaron `version` y `gameVersion` con significados distintos: estandarizar.
-- Los ejemplos `GameState` muestran datos internos completos: filtrar vistas por jugador.
-- La interfaz del motor incluye métodos `initialize/getState`; preferir funciones puras o decidir ciclo de vida antes de implementar.
-- Se mencionó persistir cada jugada y también eventos selectivos: snapshot por jugada confirmada, log de eventos opcional.
+---
 
-## Política de colaboración con IA
-No inventar decisiones cerradas. Registrar propuestas con alternativas, consecuencias y recomendación. Solicitar aprobación antes de introducir dependencias, cambiar contratos o implementar funcionalidades fuera del slice.
+## 1. Decisiones aceptadas
+
+### Arquitectura
+
+Las once están en [`docs/adr/`](../docs/adr/README.md), aceptadas el 2026-11-14.
+
+| ADR | Decisión |
+|---|---|
+| ADR-001 | Backend sobre NestJS, Node.js y TypeScript |
+| ADR-002 | Drizzle sobre PostgreSQL |
+| ADR-003 | WebSocket nativo con protocolo propio |
+| ADR-004 | Sesión de servidor con cookie |
+| ADR-005 | Un solo repositorio con espacios de trabajo |
+| ADR-006 | Frontend renderizado en el navegador, con páginas públicas pregeneradas |
+| ADR-007 | Línea base de doce acuerdos |
+| ADR-008 | Alcance del MVP |
+| ADR-009 | Reglas de dominio de salas, partidas y relojes |
+| ADR-010 | Persistencia de partida |
+| ADR-011 | Convenciones de nombres y glosario |
+
+### Contratos y modelo, versión 1
+
+| Documento | Aceptado | Decisiones propias |
+|---|---|---|
+| [Modelo de datos](../docs/03-dominio-datos.md) | 2026-11-14 | R1 a R10 |
+| [Contrato del motor de juego](../contracts/03-game-engine.md) | 2026-11-15 | M1 a M11 |
+| [Protocolo de tiempo real](../contracts/02-realtime.md) | 2026-11-15 | T1 a T16 |
+| [API REST](../contracts/01-rest-api.md) | 2026-11-16 | A1 a A17 |
+| [Catálogo de errores](../contracts/04-error-catalog.md) | 2026-11-16 | E1 a E8 y los ajustes J1 a J5 |
+| [Matriz de permisos](../contracts/05-permissions.md) | 2026-11-16 | P1 a P7 |
+
+---
+
+## 2. Los quince pendientes iniciales
+
+El registro inicial dejaba quince asuntos por decidir. Así quedaron.
+
+| # | Asunto | Situación | Dónde |
+|---|---|---|---|
+| 1 | Framework del backend | Cerrado | ADR-001 |
+| 2 | Acceso a datos | Cerrado | ADR-002 |
+| 3 | Autenticación | Cerrado | ADR-004 |
+| 4 | Transporte de tiempo real, confirmaciones y reconexión | Cerrado | ADR-003 y el protocolo |
+| 5 | Modelo de despliegue inicial | **Aplazado** | Sección 4 |
+| 6 | Reutilización de la sala y revancha | Cerrado | ADR-009, reglas 7.11 y 7.31 |
+| 7 | Estados y permisos de salas, partidas y sesiones | Cerrado | ADR-009 y la matriz de permisos |
+| 8 | Qué se guarda de una partida y por cuánto tiempo | Cerrado | ADR-010 |
+| 9 | Tiempo agotado, abandono, desconexión y recuperación | Cerrado | ADR-009, reglas 7.16 a 7.29 |
+| 10 | Clasificación | Cerrado: posterior al MVP | ADR-008, punto 14 |
+| 11 | Bots y juego en solitario | Cerrado: posterior al MVP | ADR-008, punto 20 |
+| 12 | Licencias y derechos | Cerrado en parte: el nombre del primer juego. El resto, al elegir el segundo juego | ADR-008, sección 4 |
+| 13 | Seguridad de las jugadas, límites de frecuencia e información oculta | Cerrado | El protocolo, la API, el contrato del motor y la matriz de permisos |
+| 14 | Estadísticas correctas ante reintentos | Cerrado | ADR-010, regla 8.15 |
+| 15 | Requisitos medibles de capacidad, latencia y disponibilidad | **Aplazado** | Sección 4 |
+
+Las inconsistencias que el registro inicial pedía normalizar están resueltas. El detalle de cada una está en la auditoría, en [`docs/auditoria/`](../docs/auditoria/README.md).
+
+---
+
+## 3. Propuestas pendientes de confirmación
+
+No son decisiones. No deben tratarse como aprobadas.
+
+| Propuesta | Dónde |
+|---|---|
+| Ligar la cookie de sesión solo al host de la API | ADR-004, sección 5 |
+| Nombres de las carpetas de los espacios de trabajo | ADR-005, sección 5 |
+| D1 a D6: nombre y lista de módulos, dueño de cada tabla, transacciones entre módulos y envío de correo | [`docs/02-arquitectura.md`](../docs/02-arquitectura.md), sección 9 |
+| B1: reparto del resto del MVP en hitos | [`backlog-mvp.md`](backlog-mvp.md) |
+
+---
+
+## 4. Aplazado
+
+Por decisión de quien decide, hasta que haya algo construido que revisar. Mientras tanto se trabaja en local.
+
+| Asunto | Nota |
+|---|---|
+| Alojamiento del backend y de PostgreSQL | Tendrá su propio ADR. El análisis previo está en [`docs/auditoria/despliegue-y-requisitos.md`](../docs/auditoria/despliegue-y-requisitos.md) |
+| Copias de seguridad y supervisión | Con el alojamiento |
+| Requisitos medibles de capacidad, latencia y disponibilidad | Con el alojamiento |
+| Servicio real de envío de correo | Con el alojamiento. En local se simula |
+
+Lo ya aceptado condiciona estas decisiones: un proceso persistente, una sola instancia, y frontend y API en subdominios de un mismo dominio.
+
+---
+
+## 5. Asuntos abiertos
+
+Reunidos de todos los documentos, por el momento en que toca resolverlos.
+
+### Al iniciar el Hito 1
+
+La lista completa está en [`docs/02-arquitectura.md`](../docs/02-arquitectura.md), sección 8: gestor de paquetes, herramienta de comprobación de dependencias, librería de validación, versión de Drizzle, gestión de sesiones, estado de Argon2id en Node.js 26, uso del motor en el frontend, tipos duplicados y comprobación de salud.
+
+### Durante la implementación
+
+| Asunto | Cuándo | Dónde está anotado |
+|---|---|---|
+| Quién llama a quién entre los módulos de salas y de partidas | Al iniciar el Hito 2 | `docs/02-arquitectura.md`, sección 10 |
+| Qué controles de tiempo ofrece Cuatro en raya en tiempo real | Al implementar el juego | Notas del motor, sección 7 |
+| Textos en español para cada código de error | Con el frontend | Catálogo de errores, sección 14 |
+| Valores definitivos de los límites de frecuencia y de tamaño | Tras el corte vertical, con datos reales | Protocolo, sección 12; notas de la API, sección 4 |
+
+### Antes de publicar
+
+| Asunto | Dónde está anotado |
+|---|---|
+| Política de borrado de datos. Durante el MVP se conserva todo | Modelo de datos, sección 11 |
+| Registro de acciones de administración | Modelo de datos, sección 11; matriz de permisos, sección 9 |
+| Prueba de la cookie de sesión en Safari con un despliegue real | ADR-004 |
+
+### Cuando llegue el juego que lo necesite
+
+| Asunto | Dónde está anotado |
+|---|---|
+| Jugadas simultáneas: hoy la segunda jugada sobre la misma versión del estado se rechaza y hay que reenviarla | Notas del motor, sección 7; protocolo, sección 12 |
+| Jugador retirado en una partida de más de dos que continúa | Notas del motor, sección 7; matriz de permisos, sección 9 |
+| Derechos de arte y selección de juegos | ADR-008, sección 4 |
+
+### Posterior al MVP
+
+| Asunto | Dónde está anotado |
+|---|---|
+| Aviso de turno con la aplicación cerrada, por notificación push | ADR-008, punto 12 |
+| Espectadores y salas privadas | Protocolo, sección 12; matriz de permisos, sección 9 |
+| Nombre visible de un jugador sin cuenta, como un bot | Modelo de datos, sección 11 |
+| Paso a varias instancias del servidor | `docs/02-arquitectura.md`, sección 10 |
+
+---
+
+## 6. Cómo se decide
+
+- Una propuesta no es una decisión hasta que quien decide la confirma de forma explícita.
+- Toda propuesta se presenta con sus alternativas, sus consecuencias y una recomendación.
+- Una decisión aceptada no se reescribe. Si cambia, se anota el cambio con su fecha en el documento que la contiene, o se añade un ADR que la sustituye.
+- No se añade ninguna dependencia, no se cambia ningún contrato y no se implementa nada fuera del alcance sin aprobación previa.
+- No se escribe código de implementación hasta recibir la autorización explícita.

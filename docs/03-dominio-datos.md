@@ -67,7 +67,7 @@ La tabla `server_liveness` no se relaciona con ninguna otra y no aparece en el d
 
 ## 3. Tablas
 
-Son 16 tablas en la versión 1. En las columnas "Nulo", "No" significa que el valor es obligatorio.
+Son 17 tablas en la versión 1. En las columnas "Nulo", "No" significa que el valor es obligatorio.
 
 ### 3.1. Identidad
 
