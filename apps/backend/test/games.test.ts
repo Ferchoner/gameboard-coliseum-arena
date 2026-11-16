@@ -1,44 +1,9 @@
-import { randomUUID } from 'node:crypto';
 import { createFakeEngine } from '@gameboard/game-engine/testing';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { API, createTestApp, type TestApp } from './app.js';
 import { expectMatchesContract } from './contract.js';
-import { query, resetDatabase } from './database.js';
-
-interface GameSeed {
-  readonly slug: string;
-  readonly name: string;
-  readonly description?: string | null;
-  readonly status?: 'ACTIVE' | 'INACTIVE';
-  readonly versions: readonly {
-    readonly version: string;
-    readonly status?: 'ACTIVE' | 'INACTIVE';
-    readonly isCurrent?: boolean;
-  }[];
-}
-
-/** Da de alta un juego en la base de datos, como se hace al añadir un juego (API, decisión A5). */
-async function seedGame(seed: GameSeed): Promise<void> {
-  const gameId = randomUUID();
-  await query(
-    `insert into games (id, slug, name, description, status, created_at, updated_at)
-     values ($1, $2, $3, $4, $5, now(), now())`,
-    [gameId, seed.slug, seed.name, seed.description ?? null, seed.status ?? 'ACTIVE'],
-  );
-  for (const version of seed.versions) {
-    await query(
-      `insert into game_versions (id, game_id, version, status, is_current, released_at, created_at)
-       values ($1, $2, $3, $4, $5, now(), now())`,
-      [
-        randomUUID(),
-        gameId,
-        version.version,
-        version.status ?? 'ACTIVE',
-        version.isCurrent ?? false,
-      ],
-    );
-  }
-}
+import { resetDatabase } from './database.js';
+import { seedGame } from './seed.js';
 
 const TURN_BASED_CONTROLS = [
   { type: 'TOTAL_PER_PLAYER', totalMs: 12 * 60 * 60 * 1000 },
@@ -66,7 +31,11 @@ describe('catálogo de juegos', () => {
     await resetDatabase();
     t = await createTestApp({ engines });
   });
-  afterAll(() => t.close());
+  afterAll(async () => {
+    await t.close();
+    // Las demás pruebas arrancan sin motores: no deben encontrar estos juegos.
+    await resetDatabase();
+  });
   beforeEach(() => resetDatabase());
 
   it('está vacío si no hay juegos dados de alta', async () => {

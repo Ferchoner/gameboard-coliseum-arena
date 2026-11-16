@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 import { DatabaseService, type DbExecutor } from '../../database/database.service.js';
 import { games, gameVersions } from './games.schema.js';
 
 /** Un juego activo junto con su versión vigente. */
 export interface CatalogEntryRow {
+  readonly gameId: string;
   readonly slug: string;
   readonly name: string;
   readonly description: string | null;
@@ -33,6 +34,7 @@ export class GamesRepository {
   ): Promise<CatalogEntryRow | null> {
     const [row] = await executor
       .select({
+        gameId: games.id,
         slug: games.slug,
         name: games.name,
         description: games.description,
@@ -45,6 +47,30 @@ export class GamesRepository {
       )
       .limit(1);
     return row ?? null;
+  }
+
+  /** El nombre corto de cada juego, por su identificador, esté activo o no. */
+  async findSlugsByIds(
+    ids: readonly string[],
+    executor: DbExecutor = this.database.db,
+  ): Promise<{ id: string; slug: string }[]> {
+    if (ids.length === 0) return [];
+    return executor
+      .select({ id: games.id, slug: games.slug })
+      .from(games)
+      .where(inArray(games.id, [...ids]));
+  }
+
+  async findIdBySlug(
+    slug: string,
+    executor: DbExecutor = this.database.db,
+  ): Promise<string | null> {
+    const [row] = await executor
+      .select({ id: games.id })
+      .from(games)
+      .where(eq(games.slug, slug))
+      .limit(1);
+    return row?.id ?? null;
   }
 
   /** Todas las versiones activas. Cada una debe tener un motor registrado (decisión R1). */
@@ -60,6 +86,7 @@ export class GamesRepository {
   private catalogQuery(executor: DbExecutor) {
     return executor
       .select({
+        gameId: games.id,
         slug: games.slug,
         name: games.name,
         description: games.description,

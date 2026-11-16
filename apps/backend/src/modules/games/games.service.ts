@@ -1,11 +1,20 @@
 import type { Game } from '@gameboard/contracts';
-import type { GameEngineRegistry } from '@gameboard/game-engine';
+import type { AnyGameEngine, GameEngineRegistry } from '@gameboard/game-engine';
 import { Inject, Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { AppError } from '../../common/errors/app-error.js';
+import type { DbExecutor } from '../../database/database.service.js';
 import { type CatalogEntryRow, GamesRepository } from './games.repository.js';
 
 /** Con esta clave se inyecta el registro de motores (acuerdo B3). */
 export const GAME_ENGINE_REGISTRY = Symbol('GAME_ENGINE_REGISTRY');
+
+/** Un juego del catálogo listo para jugarse: su identificador y el motor de su versión vigente. */
+export interface PlayableGame {
+  readonly gameId: string;
+  readonly gameSlug: string;
+  readonly gameVersion: string;
+  readonly engine: AnyGameEngine;
+}
 
 /**
  * Catálogo de juegos y versiones. No contiene reglas: lo que un juego
@@ -57,6 +66,30 @@ export class GamesService implements OnApplicationBootstrap {
       throw new AppError('GAME_NOT_FOUND', 'The game does not exist or is not active');
     }
     return game;
+  }
+
+  /**
+   * El juego activo con ese nombre corto y el motor de su versión vigente.
+   * Rechaza con `GAME_NOT_FOUND` si no existe o no está activo.
+   */
+  async getPlayableGame(gameSlug: string, executor?: DbExecutor): Promise<PlayableGame> {
+    const row = await this.repository.findCatalogEntry(gameSlug, executor);
+    const engine = row ? this.engines.resolve(row.slug, row.version) : undefined;
+    if (!row || !engine) {
+      throw new AppError('GAME_NOT_FOUND', 'The game does not exist or is not active');
+    }
+    return { gameId: row.gameId, gameSlug: row.slug, gameVersion: row.version, engine };
+  }
+
+  /** El nombre corto de cada juego, por su identificador. Incluye los inactivos. */
+  async findSlugs(gameIds: readonly string[], executor?: DbExecutor): Promise<Map<string, string>> {
+    const rows = await this.repository.findSlugsByIds([...new Set(gameIds)], executor);
+    return new Map(rows.map((row) => [row.id, row.slug]));
+  }
+
+  /** El identificador del juego con ese nombre corto, o `null` si no existe. */
+  findGameId(gameSlug: string, executor?: DbExecutor): Promise<string | null> {
+    return this.repository.findIdBySlug(gameSlug, executor);
   }
 
   private toGame(row: CatalogEntryRow): Game | null {

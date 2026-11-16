@@ -381,6 +381,22 @@ export const setReadyRequestSchema = z.strictObject({
 });
 export type SetReadyRequest = z.infer<typeof setReadyRequestSchema>;
 
+/** Tamaño de página de las listas paginadas (API, decisión A11). */
+export const PAGE_LIMIT_DEFAULT = 20;
+export const PAGE_LIMIT_MAX = 50;
+
+/**
+ * Parámetros de `GET /rooms`. Llegan en la dirección, como texto, y por eso
+ * `limit` se convierte a número.
+ */
+export const listRoomsQuerySchema = z.object({
+  gameSlug: z.string().min(1).exactOptional(),
+  mode: matchModeSchema.exactOptional(),
+  cursor: z.string().min(1).exactOptional(),
+  limit: z.coerce.number().int().min(1).max(PAGE_LIMIT_MAX).default(PAGE_LIMIT_DEFAULT),
+});
+export type ListRoomsQuery = z.infer<typeof listRoomsQuerySchema>;
+
 export const setUserStatusRequestSchema = z.strictObject({
   status: userStatusSchema,
 });

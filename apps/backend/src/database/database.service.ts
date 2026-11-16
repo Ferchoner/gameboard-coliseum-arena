@@ -33,12 +33,44 @@ export class DatabaseService implements OnApplicationShutdown {
     this.db = drizzle({ client: this.pool });
   }
 
+  /** Lo que cada transacción abierta tiene pendiente de hacer cuando se confirme. */
+  private readonly pending = new WeakMap<Transaction, (() => void)[]>();
+
   /**
    * Ejecuta `work` en una sola transacción: o se guarda todo o no se guarda
    * nada. Quien la abre pasa la transacción a los repositorios que participan.
+   *
+   * Lo anotado con `afterCommit` se ejecuta solo si la transacción se
+   * confirma, y se descarta si se revierte.
    */
-  transaction<T>(work: (tx: Transaction) => Promise<T>): Promise<T> {
-    return this.db.transaction(work);
+  async transaction<T>(work: (tx: Transaction) => Promise<T>): Promise<T> {
+    let effects: (() => void)[] = [];
+    const result = await this.db.transaction(async (tx) => {
+      effects = [];
+      this.pending.set(tx, effects);
+      return work(tx);
+    });
+
+    for (const effect of effects) {
+      try {
+        effect();
+      } catch (error) {
+        // Lo guardado, guardado está: un aviso que falla no deshace la operación.
+        this.logger.error(`Falló una acción posterior a la transacción: ${String(error)}`);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Anota algo que debe ocurrir solo cuando la transacción se haya
+   * confirmado, como avisar a los clientes (ADR-010, regla 8.9; ADR-013,
+   * decisión H6). Cualquier módulo que participa en la transacción puede usarlo.
+   */
+  afterCommit(tx: Transaction, effect: () => void): void {
+    const effects = this.pending.get(tx);
+    if (!effects) throw new Error('La transacción no la abrió DatabaseService.transaction()');
+    effects.push(effect);
   }
 
   /** Comprueba que la base de datos responde. */

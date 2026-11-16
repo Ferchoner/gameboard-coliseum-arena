@@ -1,3 +1,4 @@
+import type { AddressInfo } from 'node:net';
 import type { AnyGameEngine } from '@gameboard/game-engine';
 import { createGameEngineRegistry } from '@gameboard/game-engine';
 import type { NestExpressApplication } from '@nestjs/platform-express';
@@ -38,6 +39,11 @@ export interface TestApp {
   readonly request: () => ReturnType<typeof supertest>;
   /** Como `request`, pero conserva las cookies entre peticiones, igual que un navegador. */
   readonly agent: () => ReturnType<typeof supertest.agent>;
+  /**
+   * Abre un puerto libre y devuelve la dirección del servidor para el
+   * canal de tiempo real, por ejemplo `ws://127.0.0.1:54321`.
+   */
+  readonly listen: () => Promise<string>;
   readonly close: () => Promise<void>;
 }
 
@@ -80,6 +86,11 @@ export async function createTestApp(options: TestAppOptions = {}): Promise<TestA
     clock,
     request: () => supertest(app.getHttpServer()),
     agent: () => supertest.agent(app.getHttpServer()),
+    listen: async () => {
+      await app.listen(0, '127.0.0.1');
+      const address = app.getHttpServer().address() as AddressInfo;
+      return `ws://127.0.0.1:${address.port}`;
+    },
     close: () => app.close(),
   };
 }

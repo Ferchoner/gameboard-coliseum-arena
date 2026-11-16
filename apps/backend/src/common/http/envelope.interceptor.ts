@@ -19,6 +19,9 @@ export class EnvelopeInterceptor implements NestInterceptor {
   constructor(private readonly reflector: Reflector) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    // El sobre es de la API. Los mensajes del canal de tiempo real tienen el suyo.
+    if (context.getType() !== 'http') return next.handle();
+
     const raw = this.reflector.getAllAndOverride<boolean | undefined>(RAW_RESPONSE, [
       context.getHandler(),
       context.getClass(),

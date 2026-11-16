@@ -42,4 +42,13 @@ export class ProfilesService {
     const row = await this.repository.findByUserId(userId);
     return row ? toProfile(row) : null;
   }
+
+  /** El nombre visible de cada cuenta, por el identificador de la cuenta. */
+  async findDisplayNames(
+    userIds: readonly string[],
+    executor?: DbExecutor,
+  ): Promise<Map<string, string>> {
+    const rows = await this.repository.findByUserIds(userIds, executor);
+    return new Map(rows.map((row) => [row.userId, row.displayName]));
+  }
 }

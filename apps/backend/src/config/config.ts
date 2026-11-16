@@ -1,3 +1,4 @@
+import type { MatchMode } from '@gameboard/contracts';
 import { z } from 'zod';
 
 /**
@@ -36,6 +37,30 @@ const envSchema = z
     /** Certificado y clave para servir por HTTPS en local (ADR-012, decisión S14). */
     TLS_CERT_FILE: z.string().min(1).optional(),
     TLS_KEY_FILE: z.string().min(1).optional(),
+
+    /** Partidas simultáneas por jugador, contando las salas en las que espera (regla 7.30). */
+    MAX_REALTIME_MATCHES_PER_PLAYER: z.coerce.number().int().min(1).default(1),
+    MAX_TURN_BASED_MATCHES_PER_PLAYER: z.coerce.number().int().min(1).default(20),
+
+    /** Tiempo sin actividad tras el que una sala en espera se cierra sola (regla 7.14). */
+    ROOM_IDLE_REALTIME_MINUTES: z.coerce.number().int().min(1).default(30),
+    ROOM_IDLE_TURN_BASED_HOURS: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .default(7 * 24),
+    ROOM_IDLE_CHECK_SECONDS: z.coerce.number().int().min(1).default(60),
+
+    /** Límites e intervalos del canal de tiempo real (protocolo, sección 9). */
+    REALTIME_MAX_MESSAGE_BYTES: z.coerce
+      .number()
+      .int()
+      .min(1024)
+      .default(16 * 1024),
+    REALTIME_MAX_CONNECTIONS_PER_PLAYER: z.coerce.number().int().min(1).default(5),
+    REALTIME_MAX_SUBSCRIPTIONS_PER_CONNECTION: z.coerce.number().int().min(1).default(20),
+    REALTIME_HEARTBEAT_SECONDS: z.coerce.number().int().min(1).default(25),
+    REALTIME_SESSION_CHECK_SECONDS: z.coerce.number().int().min(1).default(60),
 
     LOG_FORMAT: z.enum(['json', 'text']).default('json'),
     LOG_LEVEL: z.enum(['error', 'warn', 'log', 'debug']).default('log'),
@@ -88,6 +113,20 @@ export interface AppConfig {
     /** Tope que la renovación no puede superar. */
     readonly absoluteMs: number;
   };
+  readonly rooms: {
+    /** Máximo de partidas simultáneas por jugador y modalidad (regla 7.30). */
+    readonly maxMatchesPerPlayer: Readonly<Record<MatchMode, number>>;
+    /** Inactividad tras la que se cierra una sala en espera, por modalidad (regla 7.14). */
+    readonly idleMs: Readonly<Record<MatchMode, number>>;
+    readonly idleCheckIntervalMs: number;
+  };
+  readonly realtime: {
+    readonly maxMessageBytes: number;
+    readonly maxConnectionsPerPlayer: number;
+    readonly maxSubscriptionsPerConnection: number;
+    readonly heartbeatIntervalMs: number;
+    readonly sessionCheckIntervalMs: number;
+  };
   readonly logging: {
     readonly format: 'json' | 'text';
     readonly level: 'error' | 'warn' | 'log' | 'debug';
@@ -135,6 +174,24 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
       cookieSecure: value.SESSION_COOKIE_SECURE,
       idleMs: value.SESSION_IDLE_DAYS * DAY_MS,
       absoluteMs: value.SESSION_ABSOLUTE_DAYS * DAY_MS,
+    },
+    rooms: {
+      maxMatchesPerPlayer: {
+        REALTIME: value.MAX_REALTIME_MATCHES_PER_PLAYER,
+        TURN_BASED: value.MAX_TURN_BASED_MATCHES_PER_PLAYER,
+      },
+      idleMs: {
+        REALTIME: value.ROOM_IDLE_REALTIME_MINUTES * 60 * 1000,
+        TURN_BASED: value.ROOM_IDLE_TURN_BASED_HOURS * 60 * 60 * 1000,
+      },
+      idleCheckIntervalMs: value.ROOM_IDLE_CHECK_SECONDS * 1000,
+    },
+    realtime: {
+      maxMessageBytes: value.REALTIME_MAX_MESSAGE_BYTES,
+      maxConnectionsPerPlayer: value.REALTIME_MAX_CONNECTIONS_PER_PLAYER,
+      maxSubscriptionsPerConnection: value.REALTIME_MAX_SUBSCRIPTIONS_PER_CONNECTION,
+      heartbeatIntervalMs: value.REALTIME_HEARTBEAT_SECONDS * 1000,
+      sessionCheckIntervalMs: value.REALTIME_SESSION_CHECK_SECONDS * 1000,
     },
     logging: {
       format: value.LOG_FORMAT,

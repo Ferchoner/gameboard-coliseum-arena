@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import type { IncomingHttpHeaders } from 'node:http';
+import type { Response } from 'express';
 import { Clock } from '../../common/clock.js';
 import type { AppConfig } from '../../config/config.js';
 import { APP_CONFIG } from '../../config/config.module.js';
@@ -36,7 +37,8 @@ export class SessionCookie {
     private readonly clock: Clock,
   ) {}
 
-  read(request: Request): string | null {
+  /** Lee la cookie de una petición de la API o de la apertura de un WebSocket. */
+  read(request: { readonly headers: IncomingHttpHeaders }): string | null {
     return readCookie(request.headers.cookie, this.config.session.cookieName);
   }
 
