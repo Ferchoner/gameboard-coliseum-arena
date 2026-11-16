@@ -14,6 +14,7 @@
     "format:check": "prettier --check .",
     "deps:check": "depcruise apps/backend/src apps/backend/test apps/frontend packages/contracts/src packages/game-engine/src --config .dependency-cruiser.cjs",
     "test": "pnpm -r run test",
+    "test:e2e": "pnpm --filter @gameboard/e2e run e2e",
     "check": "pnpm format:check && pnpm lint && pnpm build && pnpm deps:check && pnpm typecheck && pnpm test",
     "db:up": "docker compose up -d --wait postgres",
     "db:down": "docker compose down",

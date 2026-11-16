@@ -150,7 +150,7 @@ export const es = {
     playersTitle: 'Jugadores',
     boardTitle: 'Tablero',
     you: 'Tú',
-    turnBadge: 'Su turno',
+    turnBadge: 'Tiene el turno',
     clockOf: (name: string) => `Tiempo de ${name}`,
     turn: {
       yours: 'Te toca jugar.',

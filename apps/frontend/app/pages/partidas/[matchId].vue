@@ -239,11 +239,6 @@ onBeforeUnmount(() => {
             {{ player.displayName }}
             <span v-if="player.seatName" class="muted">({{ player.seatName }})</span>
           </span>
-          <span v-if="player.isYou" class="badge">{{ es.match.you }}</span>
-          <span v-if="player.hasTurn" class="badge on">{{ es.match.turnBadge }}</span>
-          <span v-if="inProgress" class="badge" :class="{ on: player.connected }">
-            {{ player.connected ? es.room.connected : es.room.disconnected }}
-          </span>
           <span
             class="clock"
             role="timer"
@@ -251,6 +246,13 @@ onBeforeUnmount(() => {
             :data-clock-seat="player.seat"
           >
             {{ player.clock }}
+          </span>
+          <span v-if="player.isYou || inProgress" class="match-badges">
+            <span v-if="player.isYou" class="badge">{{ es.match.you }}</span>
+            <span v-if="player.hasTurn" class="badge on">{{ es.match.turnBadge }}</span>
+            <span v-if="inProgress" class="badge" :class="{ on: player.connected }">
+              {{ player.connected ? es.room.connected : es.room.disconnected }}
+            </span>
           </span>
         </li>
       </ul>

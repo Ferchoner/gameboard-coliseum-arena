@@ -2,6 +2,8 @@ node_modules
 dist
 .nuxt
 .output
+test-results
+playwright-report
 pnpm-lock.yaml
 # La documentación y los contratos escritos se mantienen a mano.
 docs
