@@ -35,8 +35,9 @@ test('quien pierde la red y vuelve a tiempo sigue jugando', async ({ browser }) 
   );
 
   // Al volver la red reconecta enseguida, sin esperar al siguiente reintento (V7).
+  // Sin el aviso de la red, la espera progresiva tardaría hasta 8 segundos más.
   await second.page.context().setOffline(false);
-  await expect(connectionLost(second.page)).toHaveCount(0);
+  await expect(connectionLost(second.page)).toHaveCount(0, { timeout: 2_000 });
   await expect(playerCard(first.page, 1)).toContainText('Conectado');
   await expect(abandonCountdown(first.page, 1)).toHaveCount(0);
 

@@ -213,3 +213,56 @@ Hechos al aceptarse las decisiones. Ninguno cambia un contrato.
 | `docs/03-dominio-datos.md` | Se precisa el ajuste tras una caída (V4) |
 | `planning/backlog-mvp.md` | Se marcan las tareas del Hito 4 que ya están hechas |
 | `planning/decisiones-y-pendientes.md` y `docs/adr/README.md` | Se ponen al día |
+
+## 13. Lo que resultó al construir
+
+Añadido el 2026-11-16, al terminar el hito. No cambia ninguna decisión aceptada ni ningún contrato.
+
+### Supuestos de la sección 10
+
+| Supuesto | Resultado |
+|---|---|
+| Reiniciar la API desde el arranque de pruebas en navegador es fiable en GitHub | **Se cumple.** El arranque de pruebas corre la API en un proceso aparte y la reinicia cuando una prueba lo pide. En local, la prueba del reinicio pasó en cada una de varias repeticiones seguidas, y pasa en el trabajo "Pruebas en navegador" de GitHub |
+| El apagado ordenado tiene tiempo de escribir la anotación antes de cerrar la base de datos | **Se cumple.** La anotación exacta se escribe en el paso de NestJS anterior al cierre de la base de datos. Una prueba del servidor apaga y arranca con un minuto de diferencia, y el reloj de quien tenía el turno solo pierde lo jugado |
+| Al volver la red, el navegador avisa con el evento `online` también cuando la emulación de red se desactiva | **Se cumple.** La prueba del corte de red exige que el aviso de conexión perdida desaparezca en menos de 2 segundos tras volver la red. Con la espera progresiva sola tardaría hasta 8 segundos más |
+
+### Cómo se comprueba el criterio de aceptación
+
+| Nivel | Qué se prueba |
+|---|---|
+| Servidor, con el tiempo controlado (13 pruebas nuevas) | Reinicio ordenado; caída sin apagado, que cuenta desde la última anotación periódica; un turno que empezó después de la última anotación y no queda en el futuro; primer arranque sin anotación; arranque que falla si el ajuste falla; abandono con salida de la sala; abandono del anfitrión, que cierra la sala; vuelta a tiempo; todos ausentes, hasta que vuelve uno; reloj agotado antes que el plazo; abandono tras un reinicio; revisión periódica de abandonos pendientes; margen de desconexión con tiempo real |
+| Navegador, grupo general | Corte de red de un jugador con la emulación de Chromium: vuelve a tiempo y sigue jugando, o no vuelve y pierde por abandono |
+| Navegador, grupo `reinicio`, después de los demás y de una en una | Dos personas jugando; la API se apaga en orden, está parada 6 segundos y vuelve a arrancar. Los dos reconectan solos, ven la misma partida, la versión del estado no cambia, el reloj de quien tenía el turno pierde menos de 3 segundos y siguen jugando |
+
+En las pruebas en navegador el abandono llega a los 10 segundos, el margen de desconexión es de 1 y los latidos van cada 2 (V6).
+
+### Elecciones menores tomadas al construir
+
+Ninguna estaba en las doce decisiones y ninguna cambia un contrato. Se aplicaron como recomendaciones y **esperan confirmación**.
+
+| ID | Asunto | Lo que se hizo | Alternativa |
+|---|---|---|---|
+| W1 | Dónde vive el margen de 5 segundos (V3) | Lo lleva el canal de tiempo real, que es quien conoce las conexiones. Durante el margen el jugador sigue constando como conectado, y el aviso de desconexión sale al terminar. Al apagarse el servidor no se da a nadie por desconectado: tras arrancar, la cuenta empieza de nuevo (7.29) | Llevar el margen en la presencia compartida. Pondría un temporizador en un módulo que hoy solo guarda datos |
+| W2 | Abandonos cuyo aviso no llega a aplicarse. **Precisa V1**, que daba por hecho que no había revisión periódica | Un aviso que salta un instante antes de tiempo se vuelve a poner, y la revisión periódica de relojes aplica además los abandonos pendientes. La primera vez que se repitió la prueba del corte de red, el plazo llegó a 0:00 y el abandono no se aplicó: el aviso saltó un milisegundo antes de la hora | Solo volver a poner el aviso. Un fallo de la base de datos justo en ese momento dejaría el abandono sin aplicar hasta que alguien se conecte |
+| W3 | Una partida que empieza con alguien ya sin conexión | Su plazo empieza al empezar la partida | Esperar a que se conecte y se vuelva a desconectar. Quien no llega nunca no perdería por abandono |
+| W4 | Plazo de abandono y reloj vencidos a la vez | Va primero el reloj, como en la rendición (ADR-014, L1). Quien pierde por tiempo no sale de la sala | Aplicar el abandono. El motivo del final dependería del orden de dos avisos |
+| W5 | Partidas por turnos | No cuentan ausencias, porque 7.26 es solo para tiempo real. Su turno sí se desplaza tras una parada del servidor, porque 7.29 vale para todas | Desplazar solo las partidas en tiempo real. Una parada larga se descontaría a quien tiene el turno en una partida por turnos |
+| W6 | Salida de la sala con más de dos jugadores (V5) | Quien pierde por abandono sale de la sala en la transacción que termina la partida. Con dos jugadores, que es el único caso hoy, el abandono siempre la termina | Sacarlo de la sala en cuanto abandona, aunque la partida siga. Exige una operación de sala nueva sin ningún juego que la necesite |
+| W7 | Cuándo reconecta el navegador por su cuenta (V7) | Al volver la red abre siempre otra conexión, aunque la anterior parezca abierta, porque un corte no siempre la cierra. Al volver a la página solo si la conexión lleva más de un latido y medio sin recibir nada | Reconectar solo si ya se estaba esperando un reintento. Una conexión muerta tardaría hasta 50 segundos en notarse |
+| W8 | Cómo sabe el aviso de conexión perdida que hay una partida en tiempo real en curso (V8) | Al conectar pregunta a la API por las partidas en curso, y lo mantiene al día con el aviso personal de cada partida y con lo que ve la página de la partida | Mostrar la advertencia solo en la página de la partida. Quien está en otra página no se enteraría |
+| W9 | Lo que ve quien perdió por abandono | "Al perder por abandono saliste de la sala." y el enlace a sus partidas, sin el enlace a la sala, que ya no lo admite | Dejar el enlace a la sala. Llevaría a un error |
+
+### Otras notas
+
+- Variables de entorno nuevas: `MATCH_ABANDON_SECONDS` (120), `REALTIME_DISCONNECT_GRACE_SECONDS` (5, admite fracciones y 0) y `SERVER_LIVENESS_SECONDS` (10), en `apps/backend/.env.example` (V9). Las pruebas del servidor usan un margen de 0 salvo la que prueba el margen.
+- Migración nueva, `actividad_del_servidor`, con la tabla `server_liveness` tal como la define el modelo de datos.
+- El orden de arranque de V10 lo lleva una sola pieza de `game-sessions`: ajuste, temporizadores y ausencias, revisión periódica y anotación periódica.
+- El protocolo dice que un jugador "sin ninguna conexión durante 2 minutos seguidos pierde por abandono" y no menciona el margen ni el caso de V2. Es cierto en el caso normal y no se tocó, porque los contratos solo cambian con autorización. Conviene precisarlo la próxima vez que se abra el protocolo.
+
+### Lo que queda sin hacer, y dónde
+
+| Asunto | Cuándo |
+|---|---|
+| Lo de la sección 11: caída solo de la base de datos, abandono en el móvil y más de una instancia | Hitos 7 y 5, y después del MVP |
+| Sacar de la sala a quien abandona una partida de más de dos jugadores que sigue (W6) | Con el primer juego de más de dos jugadores |
+| Precisar en el protocolo el margen de desconexión y el caso de V2 | La próxima vez que se autorice cambiar los contratos |

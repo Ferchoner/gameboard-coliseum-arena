@@ -86,7 +86,9 @@ Las inconsistencias que el registro inicial pedía normalizar están resueltas. 
 
 No son decisiones. No deben tratarse como aprobadas.
 
-Ninguna. B1, el reparto del resto del MVP en hitos, se aceptó el 2026-11-16.
+- **W1 a W9**: elecciones menores tomadas al construir el Hito 4, en [ADR-015, sección 13](../docs/adr/0015-decisiones-del-hito-4.md#13-lo-que-resultó-al-construir). W2 precisa V1: la revisión periódica de relojes aplica también los abandonos pendientes.
+
+B1, el reparto del resto del MVP en hitos, se aceptó el 2026-11-16.
 
 ---
 
@@ -121,6 +123,8 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 | Crear las estadísticas y rellenarlas con los resultados ya guardados | Hito 6 | ADR-014, decisión K4 |
 | Caída solo de la base de datos con el servidor en marcha: su tiempo se descuenta | Con el alojamiento y la supervisión, en el Hito 7 | ADR-015, sección 11 |
 | Abandono en el móvil al pasar a otra aplicación | Al hacer la aplicación instalable, en el Hito 5 | ADR-015, sección 11 |
+| Sacar de la sala a quien abandona una partida de más de dos jugadores que sigue en curso | Con el primer juego de más de dos jugadores | ADR-015, sección 13, W6 |
+| Precisar en el protocolo el margen de desconexión y el abandono cuando faltan todos | La próxima vez que se autorice cambiar los contratos | ADR-015, sección 13 |
 | Pruebas en navegador en otros navegadores además de Chromium, y en el modo HTTPS | Con la preparación para publicar, en el Hito 7 | ADR-014, sección 13 |
 | Librería de componentes del frontend | Con la administración visual o un segundo juego | ADR-014, decisión K7 |
 | Cierre de la conexión con el código 1008 cuando un cliente incumple el protocolo de forma repetida. Hoy cada mensaje inválido se rechaza, pero la conexión sigue abierta | Con los límites de frecuencia, en el Hito 7 | ADR-013, decisión H9 y sección 13 |
