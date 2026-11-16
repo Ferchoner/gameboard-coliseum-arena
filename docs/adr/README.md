@@ -20,7 +20,7 @@ Cada archivo de esta carpeta recoge una decisión de arquitectura aceptada, con 
 | [ADR-012](0012-decisiones-de-arranque.md) | Decisiones de arranque del Hito 1 | Aceptada |
 | [ADR-013](0013-decisiones-del-hito-2.md) | Decisiones del Hito 2, salas y tiempo real | Aceptada |
 | [ADR-014](0014-decisiones-del-hito-3.md) | Decisiones del Hito 3, Cuatro en raya en tiempo real | Aceptada |
-| [ADR-015](0015-decisiones-del-hito-4.md) | Decisiones del Hito 4, reconexión y recuperación | **Propuesta** |
+| [ADR-015](0015-decisiones-del-hito-4.md) | Decisiones del Hito 4, reconexión y recuperación | Aceptada |
 
 ## Decisiones aplazadas
 
@@ -28,9 +28,7 @@ El alojamiento del backend, el de PostgreSQL, las copias de seguridad, la superv
 
 ## Propuestas pendientes de confirmación
 
-**ADR-015**, con las decisiones V1 a V12 del Hito 4, se presentó el 2026-11-16 y está pendiente. Dos piden atención: V2 precisa la regla 7.26 para cuando no queda nadie conectado y V5 añade una regla a las salas.
-
-Las decisiones K1 a K22 de ADR-014, sus elecciones L1 a L7 y las elecciones C1 a C5 de ADR-013 se aceptaron el 2026-11-16.
+Ninguna. Las decisiones V1 a V12 de ADR-015, K1 a K22 de ADR-014 con sus elecciones L1 a L7, y las elecciones C1 a C5 de ADR-013 se aceptaron el 2026-11-16.
 
 ## Convenciones
 

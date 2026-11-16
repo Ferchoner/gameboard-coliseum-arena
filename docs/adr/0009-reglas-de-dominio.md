@@ -43,6 +43,7 @@ Cambio respecto a la documentación inicial: desaparece el estado READY. "Todos 
 | 7.11 | **Tras terminar una partida en tiempo real**, la sala vuelve a EN ESPERA con los mismos miembros y sin marcas de "listo", para permitir la revancha. Una sala puede albergar varias partidas sucesivas. Las salas por turnos siguen la regla 7.31 |
 | 7.12 | Si el anfitrión sale de una sala EN ESPERA, la sala se cierra. Si sale otro miembro, queda su plaza libre |
 | 7.13 | Durante una partida no se puede "salir de la sala". Quien quiera dejarla debe rendirse |
+| 7.32 | **Quien pierde por abandono sale de la sala**, en la misma transacción que el final de la partida. Si era el anfitrión, la sala se cierra, como en la regla 7.12. *Añadida el 2026-11-16 (ADR-015, V5)* |
 | 7.14 | Una sala EN ESPERA sin actividad se cierra sola pasado un plazo. Valor inicial: 30 minutos en tiempo real y 7 días por turnos |
 | 7.15 | La capacidad se comprueba de forma atómica al entrar: dos personas no pueden ocupar la última plaza a la vez |
 | 7.31 | **Revancha por turnos:** por defecto, una sala por turnos se cierra al terminar su partida. Al crear la sala, el anfitrión puede activar la revancha. Si la activa, al terminar la partida la sala vuelve a EN ESPERA como en la regla 7.11, y la siguiente partida empieza cuando la sala está completa y todos sus miembros se han marcado como listos. *(Añadida el 2026-11-14. Resuelve un caso que las reglas 7.10 y 7.11 dejaban sin definir: una sala por turnos que seguía completa al terminar.)* |
@@ -79,7 +80,7 @@ Cambio respecto a la documentación inicial: INITIALIZING y RECOVERING dejan de 
 |---|---|
 | 7.24 | **Presencia y pertenencia son cosas distintas.** Pertenecer a una sala o a una partida se guarda en la base de datos. Estar conectado es un dato en memoria que se muestra al rival y no se guarda |
 | 7.25 | Un jugador puede tener varias conexiones a la vez, por ejemplo dos pestañas. Todas reciben su vista. Se le considera presente mientras tenga al menos una |
-| 7.26 | **Abandono en tiempo real:** si un jugador pasa 2 minutos seguidos sin ninguna conexión, pierde por abandono, sea o no su turno. Se implementa junto con la reconexión, no en el corte vertical |
+| 7.26 | **Abandono en tiempo real:** si un jugador pasa 2 minutos seguidos sin ninguna conexión, pierde por abandono, sea o no su turno. Se implementa junto con la reconexión, no en el corte vertical. *Precisada el 2026-11-16 (ADR-015, V2): solo pierde por abandono quien falta mientras algún rival está conectado. Si faltan todos, decide el reloj, y en cuanto un rival se conecta, quien lleve 2 minutos o más ausente pierde en ese momento* |
 | 7.27 | **Por turnos no existe el abandono por desconexión.** Estar desconectado es lo normal. Solo se pierde por tiempo agotado o por rendición |
 | 7.28 | Al reconectar, el cliente recibe el estado completo actual desde su punto de vista, con los relojes, y sustituye el que tenía |
 

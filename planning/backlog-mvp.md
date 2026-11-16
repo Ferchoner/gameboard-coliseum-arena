@@ -98,12 +98,15 @@ Dos personas, cada una en su navegador:
 
 ### Hito 4. Reconexión y recuperación
 
-- [ ] Reconexión del cliente con espera progresiva y nueva suscripción (7.28). El reenvío de la orden sin respuesta ya está hecho desde el Hito 3 (ADR-014, sección 13, L4).
-- [ ] Abandono en tiempo real tras 2 minutos sin conexión (7.26).
+- [x] Reconexión del cliente con espera progresiva y nueva suscripción (7.28). Hecha en el Hito 2, y el reenvío de la orden sin respuesta en el Hito 3 (ADR-014, L4).
+- [ ] Reconexión inmediata al volver la red o la pestaña (ADR-015, V7).
+- [ ] Abandono en tiempo real tras 2 minutos sin conexión (7.26), con un margen de 5 segundos al desconectarse (ADR-015, V2 y V3), y salida de la sala de quien abandona (7.32).
 - [ ] Anotación periódica de actividad del servidor y ajuste de relojes al arrancar (8.18, 7.29).
 - [x] Carga de la sesión de juego desde la base de datos cuando hace falta (7.22). Hecha en el Hito 3: no hay copia en memoria (ADR-014, K2).
 - Revisión periódica de relojes vencidos (8.17): pasó al Hito 3 (ADR-014, K3).
 - [ ] Pruebas: reinicio del servidor a mitad de partida y corte de red de un jugador.
+
+Decisiones del hito en [ADR-015](../docs/adr/0015-decisiones-del-hito-4.md).
 
 **Criterio de aceptación:** tras reiniciar el servidor después de una jugada confirmada, los dos jugadores reconectan, ven el mismo estado y a ninguno se le ha descontado el tiempo de la caída.
 

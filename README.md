@@ -2,14 +2,14 @@
 
 Una plataforma web para jugar juegos de mesa en línea contra otras personas, en tiempo real o por turnos. El primer juego es Cuatro en raya.
 
-**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **corte vertical** completo: el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo); el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo), y el **Hito 3**, Cuatro en raya en tiempo real (la partida empieza sola cuando todos están listos, con tablero, relojes, rendición, resultado, historial y revancha). Falta el resto del MVP: recuperación ante cortes y reinicios, modalidad por turnos, cuenta, estadísticas y administración. El reparto del resto del MVP en hitos se aceptó al terminar el corte vertical, y el Hito 4 está autorizado. Sus decisiones abiertas están propuestas en ADR-015, pendientes de aceptación. Cada hito se implementa solo cuando se autoriza de forma explícita.
+**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **corte vertical** completo: el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo); el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo), y el **Hito 3**, Cuatro en raya en tiempo real (la partida empieza sola cuando todos están listos, con tablero, relojes, rendición, resultado, historial y revancha). Falta el resto del MVP: recuperación ante cortes y reinicios, modalidad por turnos, cuenta, estadísticas y administración. El reparto del resto del MVP en hitos se aceptó al terminar el corte vertical, y el Hito 4 está autorizado. Sus decisiones se aceptaron en ADR-015 y está en construcción. Cada hito se implementa solo cuando se autoriza de forma explícita.
 
 ## Qué hay aquí
 
 | Carpeta | Contenido |
 |---|---|
 | [`docs/`](docs/) | Visión, arquitectura, modelo de datos y flujos |
-| [`docs/adr/`](docs/adr/README.md) | Las catorce decisiones de arquitectura aceptadas y la propuesta del Hito 4, con sus alternativas y consecuencias |
+| [`docs/adr/`](docs/adr/README.md) | Las quince decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
 | [`docs/auditoria/`](docs/auditoria/README.md) | El análisis que precedió a las decisiones. Es histórico y no se mantiene al día |
 | [`contracts/`](contracts/) | La API, el protocolo de tiempo real, el contrato del motor de juego, el catálogo de errores y la matriz de permisos |
 | [`planning/`](planning/) | El backlog por hitos y el registro de lo decidido y lo abierto |

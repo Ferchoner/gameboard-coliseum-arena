@@ -2,9 +2,9 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Propuesta. Ninguna decisión está aceptada |
+| **Estado** | Aceptada |
 | **Fecha** | 2026-11-16 |
-| **Decide** | Fernando Hernandez Argueta |
+| **Decidida por** | Fernando Hernandez Argueta |
 | **Cierra** | El margen de espera en la presencia (ADR-013, H13) y lo que ADR-014 dejó para el Hito 4 en su sección 11 |
 | **Depende de** | ADR-009 (reglas 7.24 a 7.29), ADR-010 (reglas 8.17 y 8.18), ADR-013, ADR-014, el modelo de datos y el protocolo de tiempo real |
 
@@ -39,6 +39,7 @@ Lo que falta es el abandono, no descontar el tiempo de una caída y las pruebas.
 - Cada decisión tiene un identificador (V1 a V12), sus alternativas y una recomendación.
 - Las decisiones V1 a V6 afectan a las reglas, a la arquitectura o cuesta deshacerlas. Van explicadas una a una.
 - Las decisiones V7 a V12 son menores y fáciles de cambiar. Van en una tabla.
+- **Las doce se aceptaron el 2026-11-16 tal como se recomendaban.** Donde el texto dice "recomendación", léase "decisión".
 - **Ninguna cambia un contrato.** Dos piden atención porque tocan una regla aceptada: **V2** precisa la regla 7.26 para el caso en que no queda nadie conectado, y **V5** añade una regla nueva a las salas.
 
 ## 3. Resumen
@@ -203,7 +204,7 @@ Si alguno falla, se avisa antes de cambiar de opción.
 
 ## 12. Efecto sobre los documentos
 
-Se hacen al aceptarse las decisiones. Ninguno cambia un contrato.
+Hechos al aceptarse las decisiones. Ninguno cambia un contrato.
 
 | Documento | Cambio |
 |---|---|
