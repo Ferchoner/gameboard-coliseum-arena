@@ -17,6 +17,7 @@ export const es = {
 
   nav: {
     home: 'Juegos',
+    rooms: 'Salas',
     signIn: 'Entrar',
     register: 'Crear cuenta',
     signOut: 'Salir',
@@ -39,7 +40,111 @@ export const es = {
     },
     timePerPlayer: 'por jugador',
     welcome: (name: string) => `Hola, ${name}.`,
+    goToRooms: 'Ver las salas',
     guest: 'Crea una cuenta o entra para jugar.',
+  },
+
+  /** Lista de salas en espera y formulario para crear una. */
+  rooms: {
+    title: 'Salas',
+    intro: 'Entra a una sala que esté esperando jugadores o crea la tuya.',
+    refresh: 'Actualizar',
+    refreshing: 'Actualizando…',
+    loading: 'Cargando las salas…',
+    empty: 'Ahora mismo no hay ninguna sala esperando jugadores.',
+    more: 'Ver más salas',
+    loadingMore: 'Cargando…',
+    listTitle: 'Salas en espera',
+    filters: {
+      game: 'Juego',
+      mode: 'Modalidad',
+      anyGame: 'Todos los juegos',
+      anyMode: 'Todas',
+    },
+    places: (members: number, capacity: number) => `${members} de ${capacity} jugadores`,
+    ownedBy: (name: string) => `Sala de ${name}`,
+    withRematch: 'Con revancha',
+    join: 'Entrar',
+    joining: 'Entrando…',
+    open: 'Ver',
+    create: {
+      title: 'Crear una sala',
+      noGames: 'Todavía no hay juegos disponibles, así que aún no se pueden crear salas.',
+      game: 'Juego',
+      mode: 'Modalidad',
+      timeControl: 'Tiempo por jugador',
+      maxPlayers: 'Jugadores',
+      rematch: 'Volver a jugar en la misma sala al terminar',
+      rematchHint:
+        'Si no lo marcas, la sala se cierra al terminar la partida. En tiempo real la sala siempre queda abierta para la revancha.',
+      submit: 'Crear sala',
+      submitting: 'Creando la sala…',
+    },
+  },
+
+  /** Sala de espera. */
+  room: {
+    title: (owner: string) => `Sala de ${owner}`,
+    /** Cuando quien la creó ya no está, que es lo que pasa en una sala cerrada porque salió. */
+    untitled: 'Sala',
+    loading: 'Cargando la sala…',
+    back: 'Volver a las salas',
+    status: {
+      WAITING: 'En espera',
+      IN_MATCH: 'Partida en curso',
+      CLOSED: 'Cerrada',
+    },
+    closeReasons: {
+      OWNER_LEFT: 'La sala se cerró porque quien la creó salió.',
+      IDLE: 'La sala se cerró por falta de actividad.',
+      MATCH_ENDED: 'La sala se cerró al terminar su partida.',
+      ADMIN: 'Un administrador cerró la sala.',
+    },
+    details: {
+      game: 'Juego',
+      mode: 'Modalidad',
+      timeControl: 'Tiempo por jugador',
+      rematch: 'Revancha',
+      rematchOn: 'La sala sigue abierta al terminar la partida',
+      rematchOff: 'La sala se cierra al terminar la partida',
+    },
+    membersTitle: (members: number, capacity: number) => `Jugadores (${members} de ${capacity})`,
+    freePlace: 'Plaza libre',
+    owner: 'Anfitrión',
+    you: 'Tú',
+    ready: 'Listo',
+    notReady: 'Sin marcar',
+    connected: 'Conectado',
+    disconnected: 'Desconectado',
+    howItStarts: {
+      whenFullAndReady: 'La partida empieza cuando la sala esté completa y todos estén listos.',
+      whenFull: 'La partida empieza en cuanto la sala se complete.',
+      whenAllReady: 'La sala está completa. La partida empieza cuando todos estén listos.',
+      allReady: 'Todos están listos. La partida empezará enseguida.',
+    },
+    inMatch: 'Esta sala tiene una partida en curso.',
+    actions: {
+      join: 'Entrar a la sala',
+      joining: 'Entrando…',
+      setReady: 'Estoy listo',
+      unsetReady: 'Ya no estoy listo',
+      leave: 'Salir de la sala',
+      leaving: 'Saliendo…',
+      ownerLeaveHint: 'Eres quien creó la sala: si sales, se cierra para todos.',
+    },
+    notLive: 'Los cambios de esta sala no se están recibiendo en vivo. Se actualiza al recargar.',
+  },
+
+  /** Estado de la conexión de tiempo real. */
+  realtime: {
+    reconnecting: 'Se perdió la conexión con el servidor. Reconectando…',
+    stopped: {
+      SESSION_ENDED: 'Tu sesión terminó. Vuelve a entrar.',
+      UNSUPPORTED_VERSION: 'Hay una versión nueva de la aplicación. Recarga la página.',
+      TOO_MANY_CONNECTIONS:
+        'Tienes demasiadas pestañas abiertas con esta cuenta. Cierra alguna y recarga la página.',
+      PROTOCOL_ERROR: 'Algo falló en la aplicación. Recarga la página.',
+    },
   },
 
   register: {

@@ -1,23 +1,17 @@
 import type { LoginRequest, Me, RegisterRequest } from '@gameboard/contracts';
 import { computed } from 'vue';
-import { useState } from '#imports';
-import { type ApiResult, codeOf, type Failure } from '../utils/api';
+import { type ApiResult, codeOf } from '../utils/api';
 import { useApi } from './useApi';
+import { useSessionState } from './useSessionState';
 
-export type Session =
-  /** Todavía no se ha preguntado al servidor. */
-  | { readonly status: 'unknown' }
-  | { readonly status: 'anonymous' }
-  | { readonly status: 'signedIn'; readonly me: Me }
-  /** No se pudo saber: el servidor no contestó como se esperaba. */
-  | { readonly status: 'unavailable'; readonly failure: Failure };
+export type { Session } from './useSessionState';
 
 /**
  * La sesión de quien usa la aplicación. La cookie no se puede leer desde
  * el navegador, así que se sabe quién es preguntando a `GET /me`.
  */
 export function useSession() {
-  const session = useState<Session>('session', () => ({ status: 'unknown' }));
+  const session = useSessionState();
   const api = useApi();
 
   function accept(result: ApiResult<Me>): ApiResult<Me> {
@@ -34,6 +28,21 @@ export function useSession() {
     } else {
       session.value = { status: 'unavailable', failure: result.failure };
     }
+  }
+
+  /**
+   * Comprueba si la sesión sigue valiendo, sin perder lo que ya se sabe si
+   * el servidor no contesta. Devuelve `false` solo si se sabe que ya no hay sesión.
+   */
+  async function stillSignedIn(): Promise<boolean> {
+    const result = await api.get<Me>('/me');
+    if (result.ok) {
+      session.value = { status: 'signedIn', me: result.data };
+    } else if (codeOf(result) === 'UNAUTHENTICATED') {
+      session.value = { status: 'anonymous' };
+      return false;
+    }
+    return true;
   }
 
   async function register(body: RegisterRequest): Promise<ApiResult<Me>> {
@@ -57,6 +66,7 @@ export function useSession() {
     session,
     me: computed(() => (session.value.status === 'signedIn' ? session.value.me : null)),
     refresh,
+    stillSignedIn,
     register,
     signIn,
     signOut,

@@ -47,14 +47,16 @@ Implementado en noviembre de 2026. El catálogo está vacío hasta el Hito 3, qu
 
 ### Hito 2. Salas y tiempo real
 
-- [ ] Crear, listar, ver, entrar, salir y marcarse listo, por la API.
-- [ ] Capacidad comprobada de forma atómica (7.15) y límite de partidas simultáneas (7.30).
-- [ ] Conexión WebSocket con identidad en la apertura, latidos y cierre al terminar la sesión.
-- [ ] Suscripción a salas, avisos de cambios y presencia.
-- [ ] Cierre de salas inactivas (7.14).
-- [ ] Frontend: lista de salas y sala de espera.
+- [x] Crear, listar, ver, entrar, salir y marcarse listo, por la API.
+- [x] Capacidad comprobada de forma atómica (7.15) y límite de partidas simultáneas (7.30).
+- [x] Conexión WebSocket con identidad en la apertura, latidos y cierre al terminar la sesión.
+- [x] Suscripción a salas, avisos de cambios y presencia.
+- [x] Cierre de salas inactivas (7.14).
+- [x] Frontend: lista de salas y sala de espera.
 
 Decisiones del hito en [ADR-013](../docs/adr/0013-decisiones-del-hito-2.md). En este hito una sala completa todavía no inicia partida: el inicio se conecta en el Hito 3 (H2). Como el catálogo está vacío hasta entonces, las salas se prueban a mano desde el Hito 3 (H3).
+
+Construido el 2026-11-16. Lo que resultó al construir, incluidas cinco elecciones menores que no estaban en ADR-013, está en su sección 13.
 
 ### Hito 3. Cuatro en raya en tiempo real
 

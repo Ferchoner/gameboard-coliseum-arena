@@ -235,3 +235,41 @@ Hechos al aceptarse las decisiones. Ninguno cambia un contrato.
 | `docs/02-arquitectura.md` | Se cierra el asunto abierto sobre `rooms` y `matches` (H1) y se anotan la interfaz neutral de difusión y presencia (H5) y el aviso tras guardar (H6) |
 | `planning/backlog-mvp.md` | Se anota en el Hito 2 que el inicio de partida se conecta en el Hito 3 (H2) y que las salas se prueban a mano desde ese hito (H3) |
 | `planning/decisiones-y-pendientes.md` y `docs/adr/README.md` | Se ponen al día |
+
+---
+
+## 13. Lo que resultó al construir
+
+Añadido el 2026-11-16, al terminar el hito. No cambia ninguna decisión aceptada.
+
+### Supuestos de la sección 10
+
+| Supuesto | Resultado |
+|---|---|
+| El navegador envía la cookie de sesión al abrir el WebSocket desde el otro origen, en el modo HTTP y en el HTTPS | **Se cumple.** Comprobado en un navegador con dos personas en la misma sala, en `pnpm dev`, en `pnpm dev:https` (cookie con `Secure` y prefijo `__Host-`) y con el frontend generado como archivos estáticos |
+| La comprobación previa a la conexión puede usar los servicios de `auth` | **Se cumple con la salida prevista.** El adaptador oficial se extiende con una clase pequeña, `RealtimeWsAdapter`, que comprueba el origen y la sesión antes de aceptar la conexión |
+| Las pruebas pueden abrir conexiones reales contra el servidor de pruebas | **Se cumple.** El servidor de pruebas escucha en un puerto libre y las pruebas usan un cliente WebSocket real |
+
+### Cómo se probó sin juego (H3)
+
+El catálogo sigue vacío y en el repositorio no hay ningún juego de demostración. Las pruebas automáticas registran un motor de prueba solo durante su ejecución. El frontend se recorrió en un navegador con ese mismo motor cargado desde fuera del repositorio: crear una sala, verla en la lista, entrar, marcas de listo, presencia al cerrar y reabrir la pestaña, reconexión tras reiniciar el servidor, salida, cierre de la sala cuando sale quien la creó y aviso del límite de partidas simultáneas.
+
+### Elecciones menores tomadas al construir
+
+Ninguna estaba en las veinte decisiones y ninguna cambia un contrato. Son **recomendaciones aplicadas, pendientes de confirmación**: se revisan con la pull request del hito y cualquiera se puede cambiar sin tocar el resto.
+
+| ID | Asunto | Lo que se hizo | Alternativa |
+|---|---|---|---|
+| C1 | `UNSUBSCRIBE_ROOM` y `UNSUBSCRIBE_MATCH` de quien no está suscrito | Se responde igual que si lo estuviera, con `ROOM_UNSUBSCRIBED` o `MATCH_UNSUBSCRIBED`. Pedirlo dos veces no es un error | Rechazarlo. Obliga al cliente a tratar como fallo algo que ya está como quería |
+| C2 | Identificador de sala con formato inválido en la dirección | `ROOM_NOT_FOUND`, igual que una sala que no existe | `VALIDATION_ERROR`. Distingue dos casos que para quien llama son el mismo |
+| C3 | Miembros de una sala cerrada | Sus filas se conservan y dejan de contar para el límite de partidas simultáneas. Quien seguía dentro puede ver la sala cerrada con su motivo, y salir de ella | Borrarlas al cerrar. Se pierde quién estaba y el aviso del motivo a quien vuelve más tarde |
+| C4 | Cómo registra `matches` su iniciador de partidas (H1) | `rooms` expone un punto de registro, `MatchStarterSlot`. Mientras nadie se registra, se usa el iniciador que no inicia nada (H2). Una regla automática impide que `rooms` importe `matches` | Inyección directa del módulo `matches`, que crearía la dependencia circular que H1 evita |
+| C5 | Marca de listo repetida | Marcarse listo cuando ya se estaba no cuenta como actividad de la sala ni genera aviso | Contarla. Permitiría mantener viva una sala inactiva sin cambiar nada |
+
+### Lo que queda sin hacer, y dónde
+
+| Asunto | Cuándo |
+|---|---|
+| Cierre con el código 1008 por incumplir el protocolo de forma repetida. El protocolo lo liga a los límites de frecuencia, que H9 dejó fuera de este hito. Hoy cada mensaje inválido se rechaza y la conexión sigue abierta | Hito 7 |
+| El texto "Todos están listos. La partida empezará enseguida" se queda en pantalla, porque todavía nada inicia la partida (H2) | Hito 3 |
+| Prueba en Windows. Todo se ejecutó en Linux | Al probarlo en el equipo de quien decide |

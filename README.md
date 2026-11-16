@@ -2,18 +2,18 @@
 
 Una plataforma web para jugar juegos de mesa en línea contra otras personas, en tiempo real o por turnos. El primer juego es Cuatro en raya.
 
-**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **Hito 1**, la base de la plataforma: cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo. Todavía no hay salas, partidas ni ningún juego: el catálogo está vacío hasta el Hito 3. Cada hito se implementa solo cuando se autoriza de forma explícita.
+**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y están implementados el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo), y el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo). Todavía no hay partidas ni ningún juego: el catálogo está vacío hasta el Hito 3, así que hasta entonces no se puede crear una sala desde la aplicación, y una sala completa todavía no inicia partida. Cada hito se implementa solo cuando se autoriza de forma explícita.
 
 ## Qué hay aquí
 
 | Carpeta | Contenido |
 |---|---|
 | [`docs/`](docs/) | Visión, arquitectura, modelo de datos y flujos |
-| [`docs/adr/`](docs/adr/README.md) | Las doce decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
+| [`docs/adr/`](docs/adr/README.md) | Las trece decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
 | [`docs/auditoria/`](docs/auditoria/README.md) | El análisis que precedió a las decisiones. Es histórico y no se mantiene al día |
 | [`contracts/`](contracts/) | La API, el protocolo de tiempo real, el contrato del motor de juego, el catálogo de errores y la matriz de permisos |
 | [`planning/`](planning/) | El backlog por hitos y el registro de lo decidido y lo abierto |
-| [`apps/backend/`](apps/backend/) | El servidor: la API y, más adelante, el canal de tiempo real |
+| [`apps/backend/`](apps/backend/) | El servidor: la API y el canal de tiempo real |
 | [`apps/frontend/`](apps/frontend/) | La aplicación web |
 | [`packages/contracts/`](packages/contracts/) | Tipos y esquemas de la API y del protocolo, y catálogo de errores. Lo usan el backend y el frontend |
 | [`packages/game-engine/`](packages/game-engine/) | El contrato de los motores de juego y su registro. No depende de nada |
@@ -43,7 +43,7 @@ pnpm dev:https   # frontend en https://localhost:3444 y API en https://localhost
 
 ### Configuración
 
-Nada es obligatorio en local. Para cambiar la base de datos o el registro de actividad, copia [`apps/backend/.env.example`](apps/backend/.env.example) como `apps/backend/.env`. Los puertos y los orígenes los fija el modo elegido.
+Nada es obligatorio en local. Para cambiar la base de datos, el registro de actividad o los límites de las salas y del canal de tiempo real, copia [`apps/backend/.env.example`](apps/backend/.env.example) como `apps/backend/.env`. Los puertos y los orígenes los fija el modo elegido.
 
 ### Órdenes
 
