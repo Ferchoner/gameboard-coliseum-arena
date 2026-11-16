@@ -152,7 +152,7 @@ export default tseslint.config(
             {
               group: ['@gameboard/game-engine', '@gameboard/game-engine/*'],
               message:
-                'El frontend no usa el motor de juego en este hito (ADR-012, S24): solo los contratos.',
+                'El frontend no usa el motor de juego en este hito (ADR-012, S25): solo los contratos.',
             },
           ],
         },

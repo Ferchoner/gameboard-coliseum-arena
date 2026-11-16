@@ -1,0 +1,27 @@
+{
+  "name": "@gameboard/frontend",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Aplicación web de la plataforma.",
+  "type": "module",
+  "scripts": {
+    "postinstall": "nuxt prepare",
+    "dev": "nuxt dev",
+    "build": "nuxt generate",
+    "preview": "nuxt preview",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gameboard/contracts": "workspace:*",
+    "nuxt": "4.6.4",
+    "vue": "3.5.45",
+    "vue-router": "5.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "vue-tsc": "3.3.14"
+  }
+}
