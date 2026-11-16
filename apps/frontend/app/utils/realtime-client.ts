@@ -4,6 +4,7 @@ import {
   type Command,
   type CommandRejectionCode,
   type GameEventView,
+  type MatchSummaryView,
   type MatchView,
   type Notification,
   PROTOCOL_VERSION,
@@ -104,6 +105,11 @@ export interface RealtimeClientOptions {
    * sección 2). Si devuelve `false`, el cliente deja de reintentar.
    */
   readonly canRetry: () => Promise<boolean>;
+  /**
+   * El aviso personal de una partida propia: empezó, cambió o terminó. Llega
+   * por todas las conexiones del jugador, sin suscribirse (ADR-014, K14).
+   */
+  readonly onPlayerMatch?: (match: MatchSummaryView) => void;
   readonly newRequestId?: () => string;
   readonly random?: () => number;
 }
@@ -145,6 +151,10 @@ export class RealtimeClient {
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private silenceTimer: ReturnType<typeof setTimeout> | null = null;
   private heartbeatMs = DEFAULT_HEARTBEAT_MS;
+  /** Cuándo llegó el último mensaje, en el reloj del navegador. */
+  private lastMessageAt = 0;
+  /** Hay una comprobación de sesión en marcha antes de reintentar. */
+  private retrying = false;
 
   /** Salas a las que la aplicación quiere estar suscrita. Se recuperan al reconectar. */
   private readonly rooms = new Map<string, RoomListener>();
@@ -231,6 +241,29 @@ export class RealtimeClient {
     return this.sendCommand({ type: 'RESIGN_MATCH', requestId: this.newRequestId(), matchId });
   }
 
+  /**
+   * La red volvió o la página vuelve a estar a la vista (ADR-015, decisión
+   * V7). Si se esperaba para reintentar, se reintenta ya y la espera vuelve
+   * a empezar en 1 segundo. Una conexión abierta se da por perdida y se
+   * abre otra si la red acaba de volver, porque un corte no siempre la
+   * cierra, o si lleva más de un latido y medio sin recibir nada.
+   */
+  reconnectNow(reason: 'online' | 'visible'): void {
+    if (this.state.status === 'open') {
+      const silentMs = Date.now() - this.lastMessageAt;
+      if (reason === 'visible' && silentMs <= 1.5 * this.heartbeatMs) return;
+      const socket = this.detach();
+      socket?.close();
+      this.setState({ status: 'reconnecting' });
+    } else if (this.state.status !== 'reconnecting') {
+      return;
+    }
+    if (this.retryTimer) clearTimeout(this.retryTimer);
+    this.retryTimer = null;
+    this.attempt = 0;
+    this.retry();
+  }
+
   // --- Conexión ------------------------------------------------------------
 
   private connect(): void {
@@ -293,22 +326,31 @@ export class RealtimeClient {
 
     this.retryTimer = setTimeout(() => {
       this.retryTimer = null;
-      this.options.canRetry().then(
-        (allowed) => {
-          if (this.state.status !== 'reconnecting') return;
-          if (allowed) {
-            this.connect();
-          } else {
-            this.forgetEverything();
-            this.setState({ status: 'stopped', reason: 'SESSION_ENDED' });
-          }
-        },
-        // No se pudo comprobar la sesión: seguramente tampoco hay red. Se sigue intentando.
-        () => {
-          if (this.state.status === 'reconnecting') this.scheduleRetry();
-        },
-      );
+      this.retry();
     }, delay);
+  }
+
+  /** Comprueba la sesión y, si sigue valiendo, vuelve a conectar. */
+  private retry(): void {
+    if (this.retrying) return;
+    this.retrying = true;
+    this.options.canRetry().then(
+      (allowed) => {
+        this.retrying = false;
+        if (this.state.status !== 'reconnecting' || this.retryTimer) return;
+        if (allowed) {
+          this.connect();
+        } else {
+          this.forgetEverything();
+          this.setState({ status: 'stopped', reason: 'SESSION_ENDED' });
+        }
+      },
+      // No se pudo comprobar la sesión: seguramente tampoco hay red. Se sigue intentando.
+      () => {
+        this.retrying = false;
+        if (this.state.status === 'reconnecting' && !this.retryTimer) this.scheduleRetry();
+      },
+    );
   }
 
   /**
@@ -316,6 +358,7 @@ export class RealtimeClient {
    * conexión se da por perdida y se reconecta (protocolo, sección 2).
    */
   private watchSilence(): void {
+    this.lastMessageAt = Date.now();
     if (this.silenceTimer) clearTimeout(this.silenceTimer);
     this.silenceTimer = setTimeout(() => {
       const socket = this.detach();
@@ -390,9 +433,12 @@ export class RealtimeClient {
         if (message.requestId) this.onRejection(message.requestId, message.payload);
         return;
 
+      case 'PLAYER_MATCH_UPDATED':
+        this.options.onPlayerMatch?.(message.payload.match);
+        return;
+
       default:
-        // Los latidos solo cuentan como señal de vida. El aviso personal de
-        // partida se usará con la modalidad por turnos (Hito 5).
+        // Los latidos solo cuentan como señal de vida.
         return;
     }
   }

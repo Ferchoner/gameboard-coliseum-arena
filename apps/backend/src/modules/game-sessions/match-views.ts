@@ -18,6 +18,13 @@ export type MatchOutline = Pick<
   | 'endedAt'
 >;
 
+/** Cómo está un jugador ahora: dato en memoria, que no se guarda (ADR-009, regla 7.24). */
+export interface PlayerPresence {
+  readonly connected: boolean;
+  /** Cuándo pierde por abandono, si falta en una partida en tiempo real (regla 7.26). */
+  readonly abandonAt: Date | null;
+}
+
 /** El asiento de un jugador en una partida, o `undefined` si no participa. */
 export function seatOf(
   match: Pick<MatchSnapshot, 'players'>,
@@ -36,7 +43,7 @@ export function toMatchView(
   snapshot: MatchSnapshot,
   seat: number,
   now: Date,
-  isConnected: (playerId: string) => boolean,
+  presenceOf: (playerId: string) => PlayerPresence,
 ): MatchView {
   const clocks = clocksAt(snapshot.clocks, snapshot.activeSeats, snapshot.turnStartedAt, now);
   return {
@@ -49,17 +56,20 @@ export function toMatchView(
     status: snapshot.status,
     stateVersion: snapshot.stateVersion,
     yourSeat: seat,
-    players: snapshot.players.map((player, playerSeat): MatchPlayerView => ({
-      seat: playerSeat,
-      playerId: player.playerId,
-      username: player.username,
-      displayName: player.displayName,
-      // La presencia no se guarda: es un dato en memoria (ADR-009, regla 7.24).
-      connected: isConnected(player.playerId),
-      clockRemainingMs: clocks[playerSeat] ?? 0,
-      // La derrota por abandono llega en el Hito 4 (ADR-014, decisión K13).
-      abandonAt: null,
-    })),
+    players: snapshot.players.map((player, playerSeat): MatchPlayerView => {
+      const presence = presenceOf(player.playerId);
+      return {
+        seat: playerSeat,
+        playerId: player.playerId,
+        username: player.username,
+        displayName: player.displayName,
+        connected: presence.connected,
+        clockRemainingMs: clocks[playerSeat] ?? 0,
+        // Solo mientras la partida sigue en curso (ADR-015, decisión V8).
+        abandonAt:
+          snapshot.status === 'IN_PROGRESS' ? (presence.abandonAt?.toISOString() ?? null) : null,
+      };
+    }),
     activeSeats: [...snapshot.activeSeats],
     turnDeadlineAt: snapshot.turnDeadlineAt?.toISOString() ?? null,
     view: snapshot.views[seat] ?? null,

@@ -12,6 +12,7 @@ import type { Failure } from '../../utils/api';
 import { failureText } from '../../utils/errors';
 import { formatDuration } from '../../utils/format';
 import {
+  abandonAfter,
   clockAfter,
   endReasonText,
   formatClock,
@@ -20,6 +21,7 @@ import {
   rivalNames,
   shouldRefreshAfter,
   supersedes,
+  youAbandoned,
 } from '../../utils/matches';
 import type { CommandResult } from '../../utils/realtime-client';
 
@@ -27,8 +29,16 @@ useSignedInOnly();
 
 type MatchState =
   | { readonly status: 'loading' }
-  /** `receivedAt` es el instante, en el reloj del navegador, en que llegó la partida. */
-  | { readonly status: 'ready'; readonly match: MatchView; readonly receivedAt: number }
+  /**
+   * `receivedAt` es el instante, en el reloj del navegador, en que llegó la
+   * partida, y `serverTime`, la hora del servidor con la que llegó.
+   */
+  | {
+      readonly status: 'ready';
+      readonly match: MatchView;
+      readonly receivedAt: number;
+      readonly serverTime: string;
+    }
   | { readonly status: 'failed'; readonly failure: Failure };
 
 /** Cada cuánto se redibujan los relojes. */
@@ -79,6 +89,12 @@ const players = computed(() => {
       current.match.status === 'IN_PROGRESS' && current.match.activeSeats.includes(player.seat),
     seatName: ui.value?.seatNames[player.seat] ?? null,
     clock: formatClock(clockAfter(current.match, player, elapsedMs)),
+    // La cuenta atrás del abandono se ve en la tarjeta del rival (ADR-015, decisión V8).
+    abandonIn: (() => {
+      if (player.seat === current.match.yourSeat) return null;
+      const remaining = abandonAfter(current.match, player, current.serverTime, elapsedMs);
+      return remaining === null ? null : formatClock(remaining);
+    })(),
   }));
 });
 
@@ -108,11 +124,16 @@ useHead({ title: () => `${title.value} · ${es.app.name}` });
 
 // --- Carga y cambios en vivo -----------------------------------------------
 
-/** Muestra un estado de la partida, salvo que sea más antiguo que el que ya se ve. */
-function show(next: MatchView): void {
+/**
+ * Muestra un estado de la partida, salvo que sea más antiguo que el que ya
+ * se ve. Lo que llega por la API no trae la hora del servidor: se toma la
+ * del navegador hasta que llegue el estado por el canal.
+ */
+function show(next: MatchView, serverTime = new Date().toISOString()): void {
   if (!supersedes(match.value, next)) return;
-  state.value = { status: 'ready', match: next, receivedAt: performance.now() };
+  state.value = { status: 'ready', match: next, receivedAt: performance.now(), serverTime };
   now.value = performance.now();
+  realtime.track(next);
   if (next.status !== 'IN_PROGRESS') confirmingResign.value = false;
 }
 
@@ -127,8 +148,8 @@ function stopListening(): void {
 function listen(): void {
   if (unsubscribe) return;
   unsubscribe = realtime.subscribeMatch(matchId.value, {
-    onMatch: (next) => {
-      show(next);
+    onMatch: (next, _events, serverTime) => {
+      show(next, serverTime);
       if (next.status !== 'IN_PROGRESS') unsubscribe = null;
     },
     onRejected: () => {
@@ -254,6 +275,14 @@ onBeforeUnmount(() => {
               {{ player.connected ? es.room.connected : es.room.disconnected }}
             </span>
           </span>
+          <span
+            v-if="player.abandonIn"
+            class="abandon-countdown"
+            role="timer"
+            :data-abandon-seat="player.seat"
+          >
+            {{ es.match.abandonIn(player.abandonIn) }}
+          </span>
         </li>
       </ul>
     </section>
@@ -288,6 +317,13 @@ onBeforeUnmount(() => {
       >
         {{ sending === 'resign' ? es.match.resign.sending : es.match.resign.action }}
       </button>
+    </section>
+
+    <section v-else-if="youAbandoned(match)">
+      <p class="hint">{{ es.match.after.leftRoomHint }}</p>
+      <div class="room-actions">
+        <NuxtLink class="button quiet" to="/partidas">{{ es.match.after.allMatches }}</NuxtLink>
+      </div>
     </section>
 
     <section v-else>

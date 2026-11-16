@@ -9,10 +9,12 @@ import type {
   TimeControl,
 } from '@gameboard/contracts';
 import type { AnyGameEngine, SeatRetirementReason } from '@gameboard/game-engine';
-import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
+import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { Clock } from '../../common/clock.js';
 import { AppError } from '../../common/errors/app-error.js';
 import { CommandRejection } from '../../common/errors/command-rejection.js';
+import type { AppConfig } from '../../config/config.js';
+import { APP_CONFIG } from '../../config/config.module.js';
 import { decodePageCursor, encodePageCursor } from '../../common/http/page-cursor.js';
 import {
   DatabaseService,
@@ -20,6 +22,7 @@ import {
   type Transaction,
 } from '../../database/database.service.js';
 import type { MatchSnapshot } from '../broadcast/match-snapshot.js';
+import { Presence } from '../broadcast/presence.js';
 import { RealtimeEvents } from '../broadcast/realtime-events.js';
 import { GamesService, type GameVersion } from '../games/games.service.js';
 import type { MatchRecord, MatchResultRecord } from '../matches/match-record.js';
@@ -32,6 +35,7 @@ import {
   type RoomReadyToStart,
 } from '../rooms/match-starter.js';
 import { RoomsService } from '../rooms/rooms.service.js';
+import { AbandonmentWatch } from './abandonment-watch.js';
 import {
   type GameSessionChange,
   type GameSessionRow,
@@ -44,7 +48,7 @@ import {
   deadlineOf,
   expiredSeats,
 } from './match-clock.js';
-import { type MatchOutline, toMatchSummary } from './match-views.js';
+import { type MatchOutline, type PlayerPresence, toMatchSummary } from './match-views.js';
 import { Randomness } from './randomness.js';
 import { assignSeats } from './seats.js';
 import { TurnTimers } from './turn-timers.js';
@@ -117,14 +121,15 @@ function initialClockMs(timeControl: TimeControl): number {
  *
  * No guarda nada de la partida en memoria: cada operación lee la sesión de
  * la base de datos con su fila bloqueada, aplica el cambio y lo guarda
- * (decisión K2). En memoria viven solo los temporizadores. El bloqueo de la
- * sesión va siempre antes que el de la sala (decisión K10).
+ * (decisión K2). En memoria viven solo los temporizadores y la cuenta de
+ * los jugadores ausentes (ADR-015, decisión V1). El bloqueo de la sesión
+ * va siempre antes que el de la sala (decisión K10).
  *
  * Nada se anuncia a los clientes hasta que la transacción se confirma
  * (ADR-010, regla 8.9).
  */
 @Injectable()
-export class GameSessionsService implements MatchStarter, OnApplicationBootstrap {
+export class GameSessionsService implements MatchStarter, OnModuleInit {
   private readonly logger = new Logger(GameSessionsService.name);
 
   constructor(
@@ -137,11 +142,14 @@ export class GameSessionsService implements MatchStarter, OnApplicationBootstrap
     private readonly players: PlayersService,
     private readonly events: RealtimeEvents,
     private readonly timers: TurnTimers,
+    private readonly absences: AbandonmentWatch,
+    private readonly presence: Presence,
     private readonly randomness: Randomness,
     private readonly clock: Clock,
+    @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {}
 
-  async onApplicationBootstrap(): Promise<void> {
+  onModuleInit(): void {
     this.starterSlot.register(this);
     this.timers.listen((matchId) => {
       this.expireIfDue(matchId).catch((error: unknown) => {
@@ -149,10 +157,30 @@ export class GameSessionsService implements MatchStarter, OnApplicationBootstrap
         this.logger.error(`Falló el vencimiento del reloj de ${matchId}: ${String(error)}`);
       });
     });
+    this.absences.listen((matchId) => {
+      this.abandonIfDue(matchId).catch((error: unknown) => {
+        // Se vuelve a mirar cuando alguien de la partida se conecte.
+        this.logger.error(`Falló el abandono en la partida ${matchId}: ${String(error)}`);
+      });
+    });
+  }
 
-    // Los temporizadores no sobreviven a un reinicio: se vuelven a poner.
+  /**
+   * Al arrancar, ya ajustados los relojes, vuelve a poner lo que vive en
+   * memoria y se perdió al pararse: el temporizador de cada partida en
+   * curso y la cuenta de ausencias de cada participante de una partida en
+   * tiempo real, porque todavía no hay nadie conectado (ADR-015, decisiones
+   * V1 y V10; regla 7.29).
+   */
+  async resume(): Promise<void> {
     for (const { matchId, turnDeadlineAt } of await this.repository.listActiveDeadlines()) {
       this.timers.arm(matchId, turnDeadlineAt);
+    }
+    const abandonAt = this.abandonAtFrom(this.clock.now());
+    for (const { matchId, playerId } of await this.matches.listInProgressParticipants('REALTIME')) {
+      if (!this.presence.isConnected(playerId)) {
+        this.absences.markAbsent(matchId, playerId, abandonAt);
+      }
     }
   }
 
@@ -400,6 +428,120 @@ export class GameSessionsService implements MatchStarter, OnApplicationBootstrap
     return expired;
   }
 
+  // --- Presencia y abandono ------------------------------------------------
+
+  /**
+   * El canal de tiempo real avisa de que un jugador se dio por
+   * desconectado, pasado el margen (ADR-015, decisiones V1 y V3). Empieza
+   * a contar su plazo de abandono en cada partida en tiempo real en curso
+   * en la que juega (regla 7.26).
+   */
+  async playerDisconnected(playerId: string): Promise<void> {
+    const matchIds = await this.matches.findInProgressIdsOf(playerId, 'REALTIME');
+    // Mientras se buscaban sus partidas pudo volver.
+    if (this.presence.isConnected(playerId)) return;
+    const abandonAt = this.abandonAtFrom(this.clock.now());
+    for (const matchId of matchIds) this.absences.markAbsent(matchId, playerId, abandonAt);
+  }
+
+  /**
+   * El canal de tiempo real avisa de que un jugador volvió. Deja de contar
+   * su ausencia y, ahora que hay un rival conectado, pierde quien lleve ya
+   * su plazo vencido (ADR-015, decisión V2).
+   */
+  async playerConnected(playerId: string): Promise<void> {
+    const matchIds = await this.matches.findInProgressIdsOf(playerId, 'REALTIME');
+    if (!this.presence.isConnected(playerId)) return;
+    for (const matchId of matchIds) {
+      this.absences.markPresent(matchId, playerId);
+      try {
+        await this.abandonIfDue(matchId);
+      } catch (error) {
+        this.logger.error(`Falló el abandono en la partida ${matchId}: ${String(error)}`);
+      }
+    }
+  }
+
+  /**
+   * Si en la partida hay algún ausente con el plazo vencido y algún rival
+   * conectado, el ausente pierde por abandono (reglas 7.26 y 7.32; ADR-015,
+   * decisiones V1 y V2). Si no queda nadie conectado, todavía no pierde
+   * nadie: decide el reloj, o el primero que vuelva. Antes se aplican los
+   * vencimientos de reloj pendientes, igual que en la rendición. Devuelve
+   * si aplicó el abandono.
+   */
+  async abandonIfDue(matchId: string): Promise<boolean> {
+    if (this.absences.dueAbsentees(matchId, this.clock.now()).length === 0) return false;
+
+    return this.database.transaction(async (tx) => {
+      const session = await this.repository.lockSession(matchId, tx);
+      if (!session || session.status !== 'ACTIVE') return false;
+      const record = await this.matches.find(matchId, tx);
+      if (!record) throw new Error(`La sesión ${matchId} no tiene partida`);
+
+      // Con la fila bloqueada se vuelve a mirar quién falta y quién está.
+      const now = this.clock.now();
+      const absent = new Set(this.absences.dueAbsentees(matchId, now));
+      const rivalConnected = record.playerIds.some(
+        (playerId) => !absent.has(playerId) && this.presence.isConnected(playerId),
+      );
+      if (absent.size === 0 || !rivalConnected) return false;
+
+      const loaded = await this.load(record, session, tx);
+      const retirements: SeatRetirement[] = [
+        ...this.dueTimeouts(loaded, now),
+        ...record.playerIds.flatMap((playerId, seat): SeatRetirement[] =>
+          absent.has(playerId) ? [{ seat, reason: 'ABANDONMENT' }] : [],
+        ),
+      ];
+      await this.retire(loaded, retirements, now, null, tx);
+      return true;
+    });
+  }
+
+  /**
+   * Revisa las partidas con algún ausente de plazo vencido. Cubre un
+   * aviso que falló, igual que la revisión de relojes cubre a sus
+   * temporizadores. Devuelve cuántos abandonos aplicó.
+   */
+  async abandonDueMatches(): Promise<number> {
+    let abandoned = 0;
+    for (const matchId of this.absences.dueMatchIds(this.clock.now())) {
+      try {
+        if (await this.abandonIfDue(matchId)) abandoned += 1;
+      } catch (error) {
+        this.logger.error(`Falló el abandono en la partida ${matchId}: ${String(error)}`);
+      }
+    }
+    return abandoned;
+  }
+
+  /**
+   * Cómo está cada jugador de una partida para quien la ve: si está
+   * conectado y, si falta en una partida en tiempo real, cuándo pierde por
+   * abandono (protocolo, `abandonAt`).
+   */
+  presenceIn(matchId: string): (playerId: string) => PlayerPresence {
+    return (playerId) => ({
+      connected: this.presence.isConnected(playerId),
+      abandonAt: this.absences.abandonAtOf(matchId, playerId),
+    });
+  }
+
+  /** Empieza a contar la ausencia de los participantes que no están conectados. */
+  private countAbsences(snapshot: MatchSnapshot): void {
+    const abandonAt = this.abandonAtFrom(this.clock.now());
+    for (const { playerId } of snapshot.players) {
+      if (!this.presence.isConnected(playerId)) {
+        this.absences.markAbsent(snapshot.matchId, playerId, abandonAt);
+      }
+    }
+  }
+
+  private abandonAtFrom(now: Date): Date {
+    return new Date(now.getTime() + this.config.matches.abandonMs);
+  }
+
   // --- Consultas -----------------------------------------------------------
 
   /**
@@ -613,6 +755,8 @@ export class GameSessionsService implements MatchStarter, OnApplicationBootstrap
     let endReason: MatchEndReason = 'COMPLETED';
     const events: GameEventView[] = [];
     const retired = new Set<number>();
+    // Quien pierde por abandono sale de la sala al terminar la partida (regla 7.32).
+    const departing: string[] = [];
 
     for (const { seat, reason } of retirements) {
       if (retired.has(seat) || game.engine.getStatus(state).finished) continue;
@@ -623,6 +767,8 @@ export class GameSessionsService implements MatchStarter, OnApplicationBootstrap
       endReason = reason;
       retired.add(seat);
       events.push(...(retirement.events as readonly GameEventView[]));
+      const playerId = loaded.record.playerIds[seat];
+      if (reason === 'ABANDONMENT' && playerId !== undefined) departing.push(playerId);
     }
 
     const snapshot = await this.save(
@@ -630,6 +776,7 @@ export class GameSessionsService implements MatchStarter, OnApplicationBootstrap
       { engine: game.engine, state, stateVersion, clocks: this.clocksOf(loaded, now), now },
       endReason,
       tx,
+      departing,
     );
     this.announce(tx, snapshot, events, origin);
     return snapshot;
@@ -651,13 +798,14 @@ export class GameSessionsService implements MatchStarter, OnApplicationBootstrap
     },
     endReason: MatchEndReason,
     tx: Transaction,
+    departing: readonly string[] = [],
   ): Promise<MatchSnapshot> {
     const { now } = next;
     const status = next.engine.getStatus(next.state);
 
     if (status.finished) {
       const seats = [...status.results].sort((a, b) => a.seat - b.seat);
-      return this.finish(loaded, next, { reason: endReason, seats }, tx);
+      return this.finish(loaded, next, { reason: endReason, seats }, tx, departing);
     }
 
     const session = await this.updateSession(
@@ -681,7 +829,8 @@ export class GameSessionsService implements MatchStarter, OnApplicationBootstrap
    * El final de partida, en una sola transacción: cierra la sesión, anota
    * el resultado y devuelve la sala a la espera o la cierra (ADR-010,
    * reglas 8.14 a 8.16). Vale igual para el final natural, el tiempo
-   * agotado y la rendición.
+   * agotado, la rendición y el abandono. Quien perdió por abandono sale de
+   * la sala en la misma transacción (regla 7.32).
    */
   private async finish(
     loaded: LoadedMatch,
@@ -693,6 +842,7 @@ export class GameSessionsService implements MatchStarter, OnApplicationBootstrap
     },
     result: MatchResultRecord,
     tx: Transaction,
+    departing: readonly string[],
   ): Promise<MatchSnapshot> {
     const { now } = final;
     const session = await this.updateSession(
@@ -710,7 +860,7 @@ export class GameSessionsService implements MatchStarter, OnApplicationBootstrap
       tx,
     );
     await this.matches.finish(loaded.record, result, now, tx);
-    await this.rooms.matchEnded(loaded.record.roomId, now, tx);
+    await this.rooms.matchEnded(loaded.record.roomId, now, tx, departing);
 
     const record: MatchRecord = { ...loaded.record, status: 'FINISHED', endedAt: now, result };
     return this.snapshotOf({ ...loaded, record, session });
@@ -814,7 +964,8 @@ export class GameSessionsService implements MatchStarter, OnApplicationBootstrap
   /**
    * Cuando la transacción se confirme, anuncia el cambio y pone el
    * temporizador de la partida a su nueva fecha límite, o lo quita si la
-   * partida ya no está en curso.
+   * partida ya no está en curso. Una partida en tiempo real recién empezada
+   * cuenta ya la ausencia de quien no esté conectado.
    */
   private announce(
     tx: Transaction,
@@ -825,8 +976,10 @@ export class GameSessionsService implements MatchStarter, OnApplicationBootstrap
     this.database.afterCommit(tx, () => {
       if (snapshot.status === 'IN_PROGRESS' && snapshot.turnDeadlineAt) {
         this.timers.arm(snapshot.matchId, snapshot.turnDeadlineAt);
+        if (snapshot.mode === 'REALTIME') this.countAbsences(snapshot);
       } else {
         this.timers.cancel(snapshot.matchId);
+        this.absences.forget(snapshot.matchId);
       }
       this.events.publish({ type: 'MATCH_CHANGED', snapshot, events, origin });
     });

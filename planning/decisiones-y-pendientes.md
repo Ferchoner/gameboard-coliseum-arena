@@ -30,7 +30,8 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | ADR-011 | Convenciones de nombres y glosario |
 | ADR-012 | Decisiones de arranque del Hito 1 (S1 a S25): herramientas, versiones, validación, sesiones y entorno local |
 | ADR-013 | Decisiones del Hito 2 (H1 a H20): salas, canal de tiempo real, avisos tras guardar y tareas periódicas. Incluye las elecciones C1 a C5, confirmadas después |
-| ADR-014 | Decisiones del Hito 3 (K1 a K22): quién dirige la partida, estado siempre en la base de datos, relojes, el juego Cuatro en raya, frontend y pruebas en navegador |
+| ADR-014 | Decisiones del Hito 3 (K1 a K22): quién dirige la partida, estado siempre en la base de datos, relojes, el juego Cuatro en raya, frontend y pruebas en navegador. Incluye las elecciones L1 a L7, confirmadas el 2026-11-16 |
+| ADR-015 | Decisiones del Hito 4 (V1 a V12): abandono por desconexión con margen de 5 segundos, no descontar el tiempo de una caída del servidor y pruebas de reinicio y de corte de red |
 
 ### Contratos y modelo, versión 1
 
@@ -50,6 +51,7 @@ Tomadas por quien decide fuera de un ADR. No cambian ningún contrato.
 
 | Fecha | Asunto | Decisión | Se aplica en |
 |---|---|---|---|
+| 2026-11-16 | Reparto del resto del MVP en hitos (B1) | Cuatro hitos, en este orden: reconexión y recuperación, modalidad por turnos, cuenta y administración, y preparación para publicar | [`backlog-mvp.md`](backlog-mvp.md) |
 | 2026-11-16 | Alta de juegos y versiones nuevos en el catálogo | Un juego o una versión nuevos llegan con su motor, mediante una migración, y quedan **inactivos**. Desde administración se activan, se desactivan y se elige la versión vigente. El alta no se hace por la API, como ya decía A5. Precisa K5 de ADR-014, que solo decidía el alta de Cuatro en raya, el primer juego, que entró ya activo | Cada juego o versión nuevos, y la administración del Hito 6 |
 
 ---
@@ -84,10 +86,9 @@ Las inconsistencias que el registro inicial pedía normalizar están resueltas. 
 
 No son decisiones. No deben tratarse como aprobadas.
 
-| Propuesta | Dónde |
-|---|---|
-| B1: reparto del resto del MVP en hitos. El corte vertical terminó el 2026-11-16 con el Hito 3, así que toca decidirlo | [`backlog-mvp.md`](backlog-mvp.md) |
-| L1 a L7: siete elecciones menores tomadas al construir el Hito 3. Están aplicadas como recomendaciones. L3 se aparta de la decisión K15 y L4 adelanta un punto del Hito 4 | [ADR-014](../docs/adr/0014-decisiones-del-hito-3.md), sección 13 |
+- **W1 a W9**: elecciones menores tomadas al construir el Hito 4, en [ADR-015, sección 13](../docs/adr/0015-decisiones-del-hito-4.md#13-lo-que-resultó-al-construir). W2 precisa V1: la revisión periódica de relojes aplica también los abandonos pendientes.
+
+B1, el reparto del resto del MVP en hitos, se aceptó el 2026-11-16.
 
 ---
 
@@ -118,12 +119,14 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 
 | Asunto | Cuándo | Dónde está anotado |
 |---|---|---|
-| No descontar el tiempo de una parada del servidor. Hasta entonces se descuenta a quien le tocaba | Hito 4 | ADR-014, decisión K3 |
 | Controles de tiempo por turnos de Cuatro en raya | Hito 5 | ADR-014, decisión K6 |
 | Crear las estadísticas y rellenarlas con los resultados ya guardados | Hito 6 | ADR-014, decisión K4 |
+| Caída solo de la base de datos con el servidor en marcha: su tiempo se descuenta | Con el alojamiento y la supervisión, en el Hito 7 | ADR-015, sección 11 |
+| Abandono en el móvil al pasar a otra aplicación | Al hacer la aplicación instalable, en el Hito 5 | ADR-015, sección 11 |
+| Sacar de la sala a quien abandona una partida de más de dos jugadores que sigue en curso | Con el primer juego de más de dos jugadores | ADR-015, sección 13, W6 |
+| Precisar en el protocolo el margen de desconexión y el abandono cuando faltan todos | La próxima vez que se autorice cambiar los contratos | ADR-015, sección 13 |
 | Pruebas en navegador en otros navegadores además de Chromium, y en el modo HTTPS | Con la preparación para publicar, en el Hito 7 | ADR-014, sección 13 |
 | Librería de componentes del frontend | Con la administración visual o un segundo juego | ADR-014, decisión K7 |
-| Margen de espera antes de dar a un jugador por desconectado | Con la reconexión, en el Hito 4 | ADR-013, decisión H13 |
 | Cierre de la conexión con el código 1008 cuando un cliente incumple el protocolo de forma repetida. Hoy cada mensaje inválido se rechaza, pero la conexión sigue abierta | Con los límites de frecuencia, en el Hito 7 | ADR-013, decisión H9 y sección 13 |
 | Paso de Drizzle a la versión 1.0 definitiva, cuando se publique. Hoy se usa la candidata `1.0.0-rc.5` | Cuando salga | ADR-012, decisión S8 |
 | Paso a TypeScript 7, cuando las herramientas lo admitan | Cuando salga la 7.1 | ADR-012, decisión S5 |
@@ -163,4 +166,4 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 - Toda propuesta se presenta con sus alternativas, sus consecuencias y una recomendación.
 - Una decisión aceptada no se reescribe. Si cambia, se anota el cambio con su fecha en el documento que la contiene, o se añade un ADR que la sustituye.
 - No se añade ninguna dependencia, no se cambia ningún contrato y no se implementa nada fuera del alcance sin aprobación previa.
-- No se escribe código de un hito hasta recibir su autorización explícita. Los Hitos 1, 2 y 3 están autorizados desde el 2026-11-16. El Hito 4 y los siguientes no lo están.
+- No se escribe código de un hito hasta recibir su autorización explícita. Los Hitos 1 a 4 están autorizados, todos desde el 2026-11-16. El Hito 5 y los siguientes no lo están.

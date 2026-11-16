@@ -1,26 +1,21 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  type OnApplicationBootstrap,
-  type OnApplicationShutdown,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger, type OnApplicationShutdown } from '@nestjs/common';
 import type { AppConfig } from '../../config/config.js';
 import { APP_CONFIG } from '../../config/config.module.js';
 import { GameSessionsService } from './game-sessions.service.js';
 
 /**
  * Revisa cada pocos segundos si hay partidas con el reloj vencido y les
- * aplica el vencimiento (ADR-010, regla 8.17; ADR-014, decisión K3). Cubre
+ * aplica el vencimiento, y si quedó algún abandono sin aplicar (ADR-010, regla 8.17; ADR-014, decisión K3). Cubre
  * a los temporizadores de cada partida, que viven en memoria y se pierden
  * si el servidor se reinicia.
  *
  * Es un temporizador propio, sin librería (ADR-013, decisión H8): la lógica
  * está en `GameSessionsService.expireDueMatches`, que las pruebas llaman
- * directamente.
+ * directamente. La pone en marcha el arranque, después de ajustar los
+ * relojes (ADR-015, decisión V10).
  */
 @Injectable()
-export class ClockSweeper implements OnApplicationBootstrap, OnApplicationShutdown {
+export class ClockSweeper implements OnApplicationShutdown {
   private readonly logger = new Logger(ClockSweeper.name);
   private timer: NodeJS.Timeout | null = null;
   private running = false;
@@ -30,7 +25,7 @@ export class ClockSweeper implements OnApplicationBootstrap, OnApplicationShutdo
     @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {}
 
-  onApplicationBootstrap(): void {
+  start(): void {
     // Las pruebas llaman a la revisión cuando les conviene.
     if (this.config.environment === 'test') return;
     this.timer = setInterval(() => void this.run(), this.config.matches.clockCheckIntervalMs);
@@ -50,6 +45,9 @@ export class ClockSweeper implements OnApplicationBootstrap, OnApplicationShutdo
     try {
       const expired = await this.sessions.expireDueMatches();
       if (expired > 0) this.logger.log(`Se aplicaron ${expired} vencimientos de reloj.`);
+      // De paso, los abandonos cuyo aviso no llegó a aplicarse (ADR-015, decisión V1).
+      const abandoned = await this.sessions.abandonDueMatches();
+      if (abandoned > 0) this.logger.log(`Se aplicaron ${abandoned} abandonos.`);
     } catch (error) {
       this.logger.error(`Falló la revisión de relojes vencidos: ${String(error)}`);
     } finally {

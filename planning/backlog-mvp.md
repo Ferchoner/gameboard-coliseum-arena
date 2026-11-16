@@ -2,13 +2,13 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1. Los hitos 0 a 3 siguen el alcance aceptado. El reparto de los hitos 4 a 7 es una propuesta |
+| **Estado** | Versión 1. Los hitos 0 a 3 siguen el alcance aceptado. El reparto de los hitos 4 a 7 se aceptó el 2026-11-16 (B1) |
 | **Sustituye a** | El backlog inicial |
 | **Recoge** | ADR-008 (alcance del MVP) y los contratos, versión 1 |
 
-**Cómo leer este documento.** El contenido de cada hito sale del alcance aceptado en ADR-008. Lo que este documento propone por su cuenta es **cómo se reparte el resto del MVP en los hitos 4 a 7**. Es una propuesta sin confirmar: el 2026-11-16 se decidió dejarla así y resolverla al terminar el corte vertical ([sección final](#propuesta-pendiente)).
+**Cómo leer este documento.** El contenido de cada hito sale del alcance aceptado en ADR-008. Lo que este documento decide por su cuenta es **cómo se reparte el resto del MVP en los hitos 4 a 7** (B1, [sección final](#reparto-del-resto-del-mvp)). Se propuso al cerrar el Hito 0 y se aceptó el 2026-11-16, al terminar el corte vertical.
 
-El Hito 1 está autorizado desde el 2026-11-16. Ninguna tarea de los hitos 2 a 7 puede empezar sin una autorización explícita.
+Los hitos 1 a 4 están autorizados, todos el 2026-11-16. Ninguna tarea de los hitos 5 a 7 puede empezar sin una autorización explícita.
 
 ---
 
@@ -73,7 +73,7 @@ Construido el 2026-11-16. Lo que resultó al construir, incluidas cinco eleccion
 
 Decisiones del hito en [ADR-014](../docs/adr/0014-decisiones-del-hito-3.md). Cuatro en raya se ofrece solo en tiempo real hasta el Hito 5 (K6). Las estadísticas no se escriben todavía: el Hito 6 las rellena con los resultados guardados (K4). Hasta el Hito 4, el tiempo de una parada del servidor se descuenta a quien le tocaba jugar (K3).
 
-Construido el 2026-11-16. Lo que resultó al construir, incluidas siete elecciones menores que no estaban en ADR-014 y están pendientes de confirmación, está en su sección 13.
+Construido el 2026-11-16. Lo que resultó al construir, incluidas siete elecciones menores que no estaban en ADR-014 y se confirmaron el 2026-11-16, está en su sección 13.
 
 ### Criterios de aceptación del corte vertical
 
@@ -98,12 +98,17 @@ Dos personas, cada una en su navegador:
 
 ### Hito 4. Reconexión y recuperación
 
-- [ ] Reconexión del cliente con espera progresiva y nueva suscripción (7.28). El reenvío de la orden sin respuesta ya está hecho, pendiente de confirmación (ADR-014, sección 13, L4).
-- [ ] Abandono en tiempo real tras 2 minutos sin conexión (7.26).
-- [ ] Anotación periódica de actividad del servidor y ajuste de relojes al arrancar (8.18, 7.29).
+- [x] Reconexión del cliente con espera progresiva y nueva suscripción (7.28). Hecha en el Hito 2, y el reenvío de la orden sin respuesta en el Hito 3 (ADR-014, L4).
+- [x] Reconexión inmediata al volver la red o la pestaña (ADR-015, V7).
+- [x] Abandono en tiempo real tras 2 minutos sin conexión (7.26), con un margen de 5 segundos al desconectarse (ADR-015, V2 y V3), y salida de la sala de quien abandona (7.32).
+- [x] Anotación periódica de actividad del servidor y ajuste de relojes al arrancar (8.18, 7.29).
 - [x] Carga de la sesión de juego desde la base de datos cuando hace falta (7.22). Hecha en el Hito 3: no hay copia en memoria (ADR-014, K2).
 - Revisión periódica de relojes vencidos (8.17): pasó al Hito 3 (ADR-014, K3).
-- [ ] Pruebas: reinicio del servidor a mitad de partida y corte de red de un jugador.
+- [x] Pruebas: reinicio del servidor a mitad de partida y corte de red de un jugador.
+
+Decisiones del hito en [ADR-015](../docs/adr/0015-decisiones-del-hito-4.md).
+
+Construido el 2026-11-16. Lo que resultó al construir, incluidas las elecciones menores que no estaban en ADR-015 y esperan confirmación, está en su sección 13. El criterio de aceptación se comprueba en cada pull request con una prueba en navegador que reinicia la API de verdad a mitad de partida.
 
 **Criterio de aceptación:** tras reiniciar el servidor después de una jugada confirmada, los dos jugadores reconectan, ven el mismo estado y a ninguno se le ha descontado el tiempo de la caída.
 
@@ -111,7 +116,7 @@ Dos personas, cada una en su navegador:
 
 - [ ] Salas por turnos: inicio al completarse la sala y revancha opcional (7.10, 7.31).
 - [ ] Controles de tiempo de 12, 24 y 36 horas, y límite de 20 partidas simultáneas (7.2, 7.30).
-- [ ] Lista de "mis partidas en curso", que indica en cuáles te toca. Hay una primera versión en la página `/partidas` desde el Hito 3, pendiente de confirmación (ADR-014, sección 13, L3).
+- [ ] Lista de "mis partidas en curso", que indica en cuáles te toca. Hay una primera versión en la página `/partidas` desde el Hito 3 (ADR-014, sección 13, L3).
 - [ ] Aviso de turno dentro de la aplicación.
 - [ ] Aplicación instalable como PWA.
 
@@ -143,10 +148,10 @@ Notificaciones push, puntuación y clasificación, panel visual de administraci�
 
 ---
 
-## Propuesta pendiente
+## Reparto del resto del MVP
 
-No es una decisión. Se resuelve al terminar el corte vertical.
+**Aceptado el 2026-11-16** por quien decide, al terminar el corte vertical, tal como se recomendaba.
 
-| ID | Recomendación | Alternativa | Motivo |
+| ID | Decisión | Alternativa | Motivo |
 |---|---|---|---|
 | B1 | **El resto del MVP se reparte en cuatro hitos, en este orden:** reconexión y recuperación, modalidad por turnos, cuenta y administración, y preparación para publicar | Otro orden, o un solo hito con todo | La modalidad por turnos se apoya en la recuperación desde la base de datos, así que va después de ella (ADR-008, punto 8). Lo que depende del alojamiento va al final porque esa decisión está aplazada |

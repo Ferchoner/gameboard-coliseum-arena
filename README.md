@@ -2,14 +2,14 @@
 
 Una plataforma web para jugar juegos de mesa en línea contra otras personas, en tiempo real o por turnos. El primer juego es Cuatro en raya.
 
-**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **corte vertical** completo: el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo); el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo), y el **Hito 3**, Cuatro en raya en tiempo real (la partida empieza sola cuando todos están listos, con tablero, relojes, rendición, resultado, historial y revancha). Falta el resto del MVP: recuperación ante cortes y reinicios, modalidad por turnos, cuenta, estadísticas y administración. Cada hito se implementa solo cuando se autoriza de forma explícita.
+**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **corte vertical** completo: el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo); el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo), y el **Hito 3**, Cuatro en raya en tiempo real (la partida empieza sola cuando todos están listos, con tablero, relojes, rendición, resultado, historial y revancha). Está construido también el **Hito 4**, la recuperación ante cortes y reinicios (quien pasa 2 minutos sin conexión pierde por abandono, y un reinicio del servidor no descuenta a nadie el tiempo parado), pendiente de revisión. Falta el resto del MVP: modalidad por turnos, cuenta, estadísticas y administración. El reparto del resto del MVP en hitos se aceptó al terminar el corte vertical. Cada hito se implementa solo cuando se autoriza de forma explícita.
 
 ## Qué hay aquí
 
 | Carpeta | Contenido |
 |---|---|
 | [`docs/`](docs/) | Visión, arquitectura, modelo de datos y flujos |
-| [`docs/adr/`](docs/adr/README.md) | Las catorce decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
+| [`docs/adr/`](docs/adr/README.md) | Las quince decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
 | [`docs/auditoria/`](docs/auditoria/README.md) | El análisis que precedió a las decisiones. Es histórico y no se mantiene al día |
 | [`contracts/`](contracts/) | La API, el protocolo de tiempo real, el contrato del motor de juego, el catálogo de errores y la matriz de permisos |
 | [`planning/`](planning/) | El backlog por hitos y el registro de lo decidido y lo abierto |
@@ -54,7 +54,7 @@ Nada es obligatorio en local. Para cambiar la base de datos, el registro de acti
 | `pnpm db:up`, `pnpm db:down` | Arranca o detiene la base de datos |
 | `pnpm db:migrate` | Aplica las migraciones pendientes |
 | `pnpm test` | Ejecuta las pruebas. Las del backend usan la base de datos `gameboard_test`, que `pnpm db:up` crea |
-| `pnpm test:e2e` | Ejecuta las pruebas en navegador. Antes hay que construir con `pnpm build`, tener la base de datos en marcha y `pnpm dev` parado, porque usan sus mismos puertos. La primera vez hay que descargar el navegador con `pnpm --filter @gameboard/e2e exec playwright install chromium`. Usan su propia base de datos, `gameboard_e2e`, que crean de cero cada vez |
+| `pnpm test:e2e` | Ejecuta las pruebas en navegador. Antes hay que construir con `pnpm build`, tener la base de datos en marcha y `pnpm dev` parado, porque usan sus mismos puertos. La primera vez hay que descargar el navegador con `pnpm --filter @gameboard/e2e exec playwright install chromium`. Usan su propia base de datos, `gameboard_e2e`, que crean de cero cada vez, y el puerto 3010 para que una prueba pueda reiniciar la API. La prueba del reinicio va en su propio grupo, después de las demás |
 | `pnpm check` | Todo lo que se comprueba en cada pull request: formato, análisis, reglas de dependencias, compilación, tipos y pruebas |
 | `pnpm build` | Compila los paquetes y el backend, y genera el frontend como archivos estáticos en `apps/frontend/.output/public` |
 | `pnpm format` | Da formato al código |
@@ -91,7 +91,6 @@ Para saber por qué se decidió algo, el ADR correspondiente está en [`docs/adr
 ## Qué no está decidido
 
 - El alojamiento, las copias de seguridad y la supervisión. Están aplazados y de momento se trabaja en local.
-- El reparto del resto del MVP en hitos, que es una propuesta hasta que termine el corte vertical.
 
 La lista completa está en [`planning/decisiones-y-pendientes.md`](planning/decisiones-y-pendientes.md).
 

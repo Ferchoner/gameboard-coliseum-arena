@@ -1,15 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { and, asc, eq, inArray, lte } from 'drizzle-orm';
+import { and, asc, eq, inArray, lte, sql } from 'drizzle-orm';
 import {
   DatabaseService,
   type DbExecutor,
   type Transaction,
 } from '../../database/database.service.js';
-import { gameSessions, matchActions } from './game-sessions.schema.js';
+import { gameSessions, matchActions, serverLiveness } from './game-sessions.schema.js';
 
 export type GameSessionRow = typeof gameSessions.$inferSelect;
 export type NewGameSessionRow = typeof gameSessions.$inferInsert;
 export type NewMatchActionRow = typeof matchActions.$inferInsert;
+export type ServerLivenessRow = typeof serverLiveness.$inferSelect;
+
+/** La fila única de `server_liveness`. */
+const LIVENESS_ID = 1;
 
 /** Lo que cambia de una sesión al aplicar una jugada, una retirada o un final. */
 export type GameSessionChange = Pick<
@@ -24,7 +28,7 @@ export type GameSessionChange = Pick<
   | 'updatedAt'
 >;
 
-/** Único punto de acceso a las tablas `game_sessions` y `match_actions`. */
+/** Único punto de acceso a las tablas `game_sessions`, `match_actions` y `server_liveness`. */
 @Injectable()
 export class GameSessionsRepository {
   constructor(private readonly database: DatabaseService) {}
@@ -149,5 +153,61 @@ export class GameSessionsRepository {
       )
       .limit(1);
     return rows.length > 0;
+  }
+
+  // --- Anotación de actividad del servidor ---------------------------------
+
+  /** Lee la anotación y bloquea su fila. `null` si el servidor nunca arrancó con ella. */
+  async lockLiveness(tx: Transaction): Promise<ServerLivenessRow | null> {
+    const [row] = await tx
+      .select()
+      .from(serverLiveness)
+      .where(eq(serverLiveness.id, LIVENESS_ID))
+      .for('update');
+    return row ?? null;
+  }
+
+  /** Anota un arranque: crea la fila si no existe. */
+  async recordStart(now: Date, tx: Transaction): Promise<void> {
+    await tx
+      .insert(serverLiveness)
+      .values({ id: LIVENESS_ID, startedAt: now, lastAliveAt: now })
+      .onConflictDoUpdate({
+        target: serverLiveness.id,
+        set: { startedAt: now, lastAliveAt: now },
+      });
+  }
+
+  /** Anota que el servidor sigue en marcha. */
+  async recordAlive(now: Date, executor: DbExecutor = this.database.db): Promise<void> {
+    await executor
+      .update(serverLiveness)
+      .set({ lastAliveAt: now })
+      .where(eq(serverLiveness.id, LIVENESS_ID));
+  }
+
+  /**
+   * Desplaza el turno de cada sesión activa por el tiempo que el servidor
+   * estuvo parado: desde su último instante conocido, que es la última
+   * anotación o el inicio del turno si es posterior, hasta `now` (ADR-015,
+   * decisión V4). No toca la versión del estado. Devuelve cuántas desplazó.
+   */
+  async shiftActiveTurns(lastAliveAt: Date, now: Date, tx: Transaction): Promise<number> {
+    const lastKnown = sql`greatest(${gameSessions.turnStartedAt}, ${lastAliveAt.toISOString()}::timestamptz)`;
+    const downtime = sql`(${now.toISOString()}::timestamptz - ${lastKnown})`;
+    const shifted = await tx
+      .update(gameSessions)
+      .set({
+        turnStartedAt: sql`${gameSessions.turnStartedAt} + ${downtime}`,
+        turnDeadlineAt: sql`${gameSessions.turnDeadlineAt} + ${downtime}`,
+      })
+      .where(
+        and(
+          eq(gameSessions.status, 'ACTIVE'),
+          sql`${lastKnown} < ${now.toISOString()}::timestamptz`,
+        ),
+      )
+      .returning({ matchId: gameSessions.matchId });
+    return shifted.length;
   }
 }

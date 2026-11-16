@@ -179,7 +179,7 @@ El protocolo fija seis límites (sección 9). El backlog sitúa los límites de 
 | H10 | Dependencias nuevas | En el backend, `@nestjs/websockets` y `@nestjs/platform-ws` 12.5.0, que trae `ws` 8.22.1. En el frontend, ninguna: el WebSocket del navegador y código propio para reconectar, como pide ADR-003 (condición 5.6) | Una librería de reconexión en el frontend |
 | H11 | Validación de las órdenes del protocolo | Esquemas de Zod en el paquete de contratos, comprobados contra los tipos del protocolo, igual que los de la API | Validar a mano en `realtime` |
 | H12 | Órdenes de partida antes del Hito 3 | `SUBSCRIBE_MATCH`, `SUBMIT_ACTION` y `RESIGN_MATCH` se responden con `COMMAND_REJECTED` y `MATCH_NOT_FOUND`, que es cierto: no existe ninguna partida | Tratarlas como mensaje inválido |
-| H13 | Presencia al recargar la página | Sin margen de espera. Recargar cierra y abre la conexión, y los demás ven al jugador desconectarse y volver. Se revisa con la reconexión, en el Hito 4 | Esperar unos segundos antes de dar a alguien por desconectado. El protocolo no lo contempla |
+| H13 | Presencia al recargar la página | Sin margen de espera. Recargar cierra y abre la conexión, y los demás ven al jugador desconectarse y volver. Se revisa con la reconexión, en el Hito 4. *Cerrada el 2026-11-16 por ADR-015, V3: un margen de 5 segundos* | Esperar unos segundos antes de dar a alguien por desconectado. El protocolo no lo contempla |
 | H14 | Qué cuenta como actividad de una sala | Lo que dice el modelo de datos: entrar, salir, marcarse listo y el final de una partida. Tener la sala abierta en pantalla no cuenta | Contar también la presencia de sus miembros. Cambiaría la regla 7.14 |
 | H15 | Lista de salas | Las más recientes primero, 20 por página, con un cursor opaco sobre la fecha de creación y el identificador | Paginar por número de página. El contrato ya pide cursor |
 | H16 | Configuración nueva | Variables de entorno para los límites de partidas simultáneas, los plazos de inactividad y los límites e intervalos del canal, con los valores iniciales de las reglas y del protocolo | Dejarlos fijos en el código. Las reglas 7.14 y 7.30 piden que sean configurables |
@@ -224,7 +224,7 @@ Si alguno falla, se avisa antes de cambiar de opción.
 |---|---|
 | Forma definitiva de la interfaz entre `rooms` y `matches` | Hito 3, al implementarla |
 | Librería de componentes del frontend y uso del motor en el navegador | Hito 3 (ADR-012, S24 y S25) |
-| Margen de espera en la presencia y abandono por desconexión | Hito 4 |
+| Margen de espera en la presencia y abandono por desconexión | Hito 4. Decidido en ADR-015 |
 | Límites de frecuencia de la API y del canal | Hito 7 |
 | Cierre de salas por un administrador | Con la administración, en el resto del MVP |
 

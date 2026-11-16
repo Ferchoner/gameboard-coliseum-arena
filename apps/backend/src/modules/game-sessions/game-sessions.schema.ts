@@ -103,3 +103,22 @@ export const matchActions = pgTable(
     check('match_actions_sequence_valid', sql`${table.sequence} >= 1`),
   ],
 );
+
+/**
+ * La anotación de actividad del servidor: una sola fila, con `id` 1
+ * (modelo de datos, sección 3.7). El servidor anota cada pocos segundos
+ * que sigue en marcha, y otra vez al apagarse en orden, para saber al
+ * arrancar cuánto tiempo estuvo parado (ADR-010, regla 8.18; ADR-015,
+ * decisión V4).
+ */
+export const serverLiveness = pgTable(
+  'server_liveness',
+  {
+    id: smallint('id').primaryKey(),
+    /** Último arranque. */
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
+    /** Última anotación. */
+    lastAliveAt: timestamp('last_alive_at', { withTimezone: true }).notNull(),
+  },
+  (table) => [check('server_liveness_single_row', sql`${table.id} = 1`)],
+);

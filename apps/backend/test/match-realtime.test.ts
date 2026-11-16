@@ -450,7 +450,12 @@ describe('partidas por el canal de tiempo real', () => {
       await secondSocket.close();
       const left = await firstSocket.nextOfType('MATCH_UPDATED');
       expect(left.payload.match.players.map((player) => player.connected)).toEqual([true, false]);
-      expect(left.payload.match.players[1]?.abandonAt).toBeNull();
+      // Desde que se le da por desconectado corre su plazo de abandono (regla 7.26).
+      const abandonAt = Date.parse(left.payload.match.players[1]?.abandonAt ?? '');
+      const sentAt = Date.parse(left.serverTime);
+      expect(abandonAt - sentAt).toBeGreaterThan(2 * MINUTE_MS - 1000);
+      expect(abandonAt - sentAt).toBeLessThanOrEqual(2 * MINUTE_MS);
+      expect(arrived.payload.match.players[1]?.abandonAt).toBeNull();
     });
 
     it('al empezar la partida, cada jugador recibe su aviso personal sin suscribirse', async () => {

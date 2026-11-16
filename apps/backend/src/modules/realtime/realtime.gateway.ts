@@ -107,8 +107,15 @@ export class RealtimeGateway
   /** Las órdenes de juego que se están atendiendo, por jugador y petición. */
   private readonly inFlight = new Map<string, CommandInFlight>();
 
+  /**
+   * Los jugadores que se quedaron sin conexiones y todavía están dentro del
+   * margen antes de darlos por desconectados (ADR-015, decisión V3).
+   */
+  private readonly departures = new Map<string, NodeJS.Timeout>();
+
   private stopListening: (() => void) | null = null;
   private timers: NodeJS.Timeout[] = [];
+  private stopping = false;
 
   constructor(
     private readonly handshake: RealtimeHandshake,
@@ -138,6 +145,10 @@ export class RealtimeGateway
 
   /** Al apagar, avisa a los clientes de que el servidor se reinicia, para que reconecten. */
   async beforeApplicationShutdown(): Promise<void> {
+    // Al apagar nadie se da por desconectado: tras arrancar, la cuenta empieza de nuevo (regla 7.29).
+    this.stopping = true;
+    for (const timer of this.departures.values()) clearTimeout(timer);
+    this.departures.clear();
     for (const timer of this.timers) clearInterval(timer);
     this.timers = [];
     this.stopListening?.();
@@ -204,7 +215,8 @@ export class RealtimeGateway
       },
     });
 
-    if (this.presence.connectionOpened(auth.playerId)) this.announcePresence(auth.playerId);
+    this.cancelDeparture(auth.playerId);
+    if (this.presence.connectionOpened(auth.playerId)) this.playerArrived(auth.playerId);
   }
 
   handleDisconnect(socket: WebSocket): void {
@@ -222,7 +234,7 @@ export class RealtimeGateway
 
     const { playerId } = connection.auth;
     removeFrom(this.playerConnections, playerId, connection);
-    if (this.presence.connectionClosed(playerId)) this.announcePresence(playerId);
+    if (this.presence.connectionClosed(playerId)) this.scheduleDeparture(playerId);
   }
 
   /**
@@ -614,7 +626,56 @@ export class RealtimeGateway
   }
 
   private matchViewFor(snapshot: MatchSnapshot, seat: number, now: Date) {
-    return toMatchView(snapshot, seat, now, (playerId) => this.presence.isConnected(playerId));
+    return toMatchView(snapshot, seat, now, this.gameSessions.presenceIn(snapshot.matchId));
+  }
+
+  // --- Presencia ------------------------------------------------------------
+
+  /**
+   * Un jugador se quedó sin conexiones. Se le da por desconectado si sigue
+   * así pasado el margen (ADR-015, decisión V3).
+   */
+  private scheduleDeparture(playerId: string): void {
+    if (this.stopping) return;
+    const { disconnectGraceMs } = this.config.realtime;
+    this.cancelDeparture(playerId);
+    if (disconnectGraceMs === 0) {
+      this.playerDeparted(playerId);
+      return;
+    }
+    const timer = setTimeout(() => {
+      this.departures.delete(playerId);
+      this.playerDeparted(playerId);
+    }, disconnectGraceMs);
+    timer.unref();
+    this.departures.set(playerId, timer);
+  }
+
+  private cancelDeparture(playerId: string): void {
+    const timer = this.departures.get(playerId);
+    if (timer) clearTimeout(timer);
+    this.departures.delete(playerId);
+  }
+
+  /** Un jugador pasa a estar presente: deja de contar su ausencia y lo ven los demás. */
+  private playerArrived(playerId: string): void {
+    this.gameSessions
+      .playerConnected(playerId)
+      .catch((error: unknown) => {
+        this.logger.error(`No se pudo anotar la vuelta de un jugador: ${String(error)}`);
+      })
+      .finally(() => this.announcePresence(playerId));
+  }
+
+  /** Pasado el margen, un jugador sin conexiones se da por desconectado (regla 7.26). */
+  private playerDeparted(playerId: string): void {
+    if (!this.presence.markAbsent(playerId)) return;
+    this.gameSessions
+      .playerDisconnected(playerId)
+      .catch((error: unknown) => {
+        this.logger.error(`No se pudo anotar la ausencia de un jugador: ${String(error)}`);
+      })
+      .finally(() => this.announcePresence(playerId));
   }
 
   /**

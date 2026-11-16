@@ -32,7 +32,18 @@ export async function signUp(
   const cookie = setCookie?.map((value) => value.split(';')[0]).join('; ');
   if (!cookie) throw new Error('El registro de prueba no devolvió la cookie de sesión');
 
-  const me = response.body.data as Me;
+  return actAs(t, response.body.data as Me, cookie);
+}
+
+/**
+ * La misma persona, con la misma sesión, haciendo peticiones a otra
+ * aplicación: la que arranca tras un reinicio.
+ */
+export function reconnect(t: TestApp, player: TestPlayer): TestPlayer {
+  return actAs(t, player.me, player.cookie);
+}
+
+function actAs(t: TestApp, me: Me, cookie: string): TestPlayer {
   const send = (test: Test) => test.set('Cookie', cookie).set('Origin', FRONTEND_ORIGIN);
 
   return {
