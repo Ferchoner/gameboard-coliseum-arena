@@ -273,5 +273,5 @@ Ninguna estaba en las veinte decisiones y ninguna cambia un contrato. Se aplicar
 | Asunto | Cuándo |
 |---|---|
 | Cierre con el código 1008 por incumplir el protocolo de forma repetida. El protocolo lo liga a los límites de frecuencia, que H9 dejó fuera de este hito. Hoy cada mensaje inválido se rechaza y la conexión sigue abierta | Hito 7 |
-| El texto "Todos están listos. La partida empezará enseguida" se queda en pantalla, porque todavía nada inicia la partida (H2) | Hito 3 |
+| El texto "Todos están listos. La partida empezará enseguida" se queda en pantalla, porque todavía nada inicia la partida (H2) | Hito 3. **Resuelto el 2026-11-16:** la partida empieza y la página pasa a ella |
 | Prueba en Windows. Todo se ejecutó en Linux | Al probarlo en el equipo de quien decide |

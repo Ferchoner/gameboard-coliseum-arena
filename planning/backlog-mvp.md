@@ -60,20 +60,24 @@ Construido el 2026-11-16. Lo que resultó al construir, incluidas cinco eleccion
 
 ### Hito 3. Cuatro en raya en tiempo real
 
-- [ ] Motor de Cuatro en raya, con pruebas de sus reglas.
-- [ ] Inicio de partida automático y atómico, con sorteo de asientos (7.9, 9.19).
-- [ ] Jugadas con versión del estado, control de repetidas, transacción única y registro de jugadas (8.6 a 8.13).
-- [ ] Relojes: descuento, vencimiento y jugada con el reloj agotado (7.2 a 7.5).
-- [ ] Rendición (7.19).
-- [ ] Final de partida en la misma transacción, con resultado, y vuelta de la sala a la espera para la revancha (8.14, 7.11).
-- [ ] Frontend: tablero, relojes, resultado e historial.
-- [ ] Prueba de extremo a extremo de una partida completa y de las jugadas rechazadas.
-- [ ] Revisión periódica de relojes vencidos (8.17). Adelantada del Hito 4 (ADR-014, K3).
-- [ ] Prueba en navegador de los diez criterios de aceptación, con Playwright (ADR-014, K8).
+- [x] Motor de Cuatro en raya, con pruebas de sus reglas.
+- [x] Inicio de partida automático y atómico, con sorteo de asientos (7.9, 9.19).
+- [x] Jugadas con versión del estado, control de repetidas, transacción única y registro de jugadas (8.6 a 8.13).
+- [x] Relojes: descuento, vencimiento y jugada con el reloj agotado (7.2 a 7.5).
+- [x] Rendición (7.19).
+- [x] Final de partida en la misma transacción, con resultado, y vuelta de la sala a la espera para la revancha (8.14, 7.11).
+- [x] Frontend: tablero, relojes, resultado e historial.
+- [x] Prueba de extremo a extremo de una partida completa y de las jugadas rechazadas.
+- [x] Revisión periódica de relojes vencidos (8.17). Adelantada del Hito 4 (ADR-014, K3).
+- [x] Prueba en navegador de los diez criterios de aceptación, con Playwright (ADR-014, K8).
 
 Decisiones del hito en [ADR-014](../docs/adr/0014-decisiones-del-hito-3.md). Cuatro en raya se ofrece solo en tiempo real hasta el Hito 5 (K6). Las estadísticas no se escriben todavía: el Hito 6 las rellena con los resultados guardados (K4). Hasta el Hito 4, el tiempo de una parada del servidor se descuenta a quien le tocaba jugar (K3).
 
+Construido el 2026-11-16. Lo que resultó al construir, incluidas siete elecciones menores que no estaban en ADR-014 y están pendientes de confirmación, está en su sección 13.
+
 ### Criterios de aceptación del corte vertical
+
+Los diez se comprueban de forma automática con las pruebas en navegador (`pnpm test:e2e`), en cada pull request.
 
 Dos personas, cada una en su navegador:
 
@@ -94,7 +98,7 @@ Dos personas, cada una en su navegador:
 
 ### Hito 4. Reconexión y recuperación
 
-- [ ] Reconexión del cliente con espera progresiva y nueva suscripción (7.28).
+- [ ] Reconexión del cliente con espera progresiva y nueva suscripción (7.28). El reenvío de la orden sin respuesta ya está hecho, pendiente de confirmación (ADR-014, sección 13, L4).
 - [ ] Abandono en tiempo real tras 2 minutos sin conexión (7.26).
 - [ ] Anotación periódica de actividad del servidor y ajuste de relojes al arrancar (8.18, 7.29).
 - [x] Carga de la sesión de juego desde la base de datos cuando hace falta (7.22). Hecha en el Hito 3: no hay copia en memoria (ADR-014, K2).
@@ -107,7 +111,7 @@ Dos personas, cada una en su navegador:
 
 - [ ] Salas por turnos: inicio al completarse la sala y revancha opcional (7.10, 7.31).
 - [ ] Controles de tiempo de 12, 24 y 36 horas, y límite de 20 partidas simultáneas (7.2, 7.30).
-- [ ] Lista de "mis partidas en curso", que indica en cuáles te toca.
+- [ ] Lista de "mis partidas en curso", que indica en cuáles te toca. Hay una primera versión en la página `/partidas` desde el Hito 3, pendiente de confirmación (ADR-014, sección 13, L3).
 - [ ] Aviso de turno dentro de la aplicación.
 - [ ] Aplicación instalable como PWA.
 

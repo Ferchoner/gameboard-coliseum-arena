@@ -285,3 +285,65 @@ Hechos al aceptarse las decisiones. Ninguno cambia un contrato.
 | `planning/backlog-mvp.md` | La revisión periódica de relojes y la carga de la sesión desde la base de datos pasan del Hito 4 al Hito 3 (K2, K3). Se anota que las estadísticas se rellenan en el Hito 6 (K4) |
 | `contracts/03-game-engine.md` | Se cierran dos de sus asuntos abiertos: los controles de tiempo de Cuatro en raya (K6) y el uso del motor en el frontend (K7) |
 | `planning/decisiones-y-pendientes.md` y `docs/adr/README.md` | Se ponen al día |
+
+## 13. Lo que resultó al construir
+
+Añadido el 2026-11-16, al terminar el hito. No cambia ninguna decisión aceptada ni ningún contrato.
+
+### Supuestos de la sección 10
+
+| Supuesto | Resultado |
+|---|---|
+| Leer y bloquear la sesión de juego en cada jugada es rápido de sobra para una partida en tiempo real | **Se cumple.** En la prueba en navegador, una partida de 42 jugadas, cada una pulsada en el tablero y esperada en las dos pantallas, tarda 2,7 segundos: unos 65 milisegundos por jugada de extremo a extremo, con la base de datos en la misma máquina. No hace falta la copia en memoria |
+| La regla de solo tipos se puede comprobar también en los archivos `.vue` del frontend | **Se cumple.** Una importación de código del motor desde un archivo `.vue` o `.ts` del frontend falla en el análisis del código y en las reglas de dependencias, y una importación con `import type` pasa. No hizo falta la entrada sin código |
+| La prueba en navegador tarda pocos minutos en GitHub | RESULTADO_EN_GITHUB |
+| Un temporizador del servidor puede dispararse un poco antes de la fecha límite | **Se cumple con la salida prevista.** La operación de vencimiento vuelve a comprobar el reloj dentro de la transacción y, si aún no venció, programa otro temporizador. Hay una prueba de ese caso |
+
+### Cómo se comprueban los diez criterios de aceptación
+
+El paquete `e2e` levanta la API compilada, con una base de datos propia que crea de cero, y el frontend construido como archivos estáticos. Cada prueba crea sus cuentas desde la página de registro y usa un navegador por persona. Son siete pruebas independientes, y no una sola, para que un fallo señale el criterio que se rompe.
+
+| Criterio | Prueba |
+|---|---|
+| 1 | Crear la cuenta, salir, fallar la contraseña y volver a entrar |
+| 2, 3, 4, 8 y 9, y el final por cuatro en línea del 7 | Una partida entera: sala creada y encontrada en la lista, marcas de listo, jugadas alternas con el tablero y los dos relojes al día en las dos pantallas, resultado, historial con el tablero final, vuelta a la sala y revancha con los asientos cambiados |
+| 5 y 6 | Jugada fuera de turno, en columna llena, en una columna que no existe y sobre un estado antiguo, cada una con su código; y la misma jugada enviada dos veces con el mismo identificador, que se aplica una vez |
+| 7 | Tres pruebas más, una por final: rendición, tiempo agotado y tablero lleno |
+| 10 | Una tercera persona no puede jugar, rendir, seguir ni ver la partida; quien no tiene el turno no puede jugar diciendo que es el otro asiento o la otra persona; sin sesión no se llega a la página |
+
+Dos cosas se hacen por debajo de la página, porque la aplicación no las permite:
+
+- **Órdenes inválidas.** Para los criterios 5, 6 y 10, la prueba abre una conexión propia desde la página de cada persona, que lleva su sesión, y envía la orden a mano. Así se comprueba que decide el servidor, envíe lo que envíe el navegador.
+- **Tiempo agotado.** El reloj más corto es de tres minutos. La prueba retrasa diez minutos, en la base de datos, el inicio del turno de quien tiene que jugar. A partir de ahí el servidor detecta el vencimiento por su cuenta con la revisión periódica (K3), que en estas pruebas pasa cada segundo.
+
+Además, una partida entera se jugó con dos navegadores en `pnpm dev:https`, con la cookie `__Host-session` marcada como `Secure`.
+
+Las pruebas del servidor cubren lo que el navegador no ve bien, como preveía K8: jugadas simultáneas, el vencimiento con el tiempo controlado, el final en una sola transacción, la anulación por fallo y la migración que da de alta el juego, que se aplica sobre una base de datos recién creada.
+
+### Elecciones menores tomadas al construir
+
+Ninguna estaba en las veintidós decisiones y ninguna cambia un contrato. Están aplicadas como recomendaciones y **están pendientes de confirmación**.
+
+| ID | Asunto | Lo que se hizo | Alternativa |
+|---|---|---|---|
+| L1 | Rendición que llega con un reloj ya agotado | Antes de aplicar una rendición se aplican los vencimientos pendientes. Si el reloj de alguien ya se había agotado, la partida termina por tiempo | Aplicar la rendición tal cual. Quien ya perdió por tiempo podría cambiar el motivo del final, y quien iba a ganar por el tiempo del rival podría perder por rendirse un instante tarde |
+| L2 | Respuesta a la orden que provoca una anulación por fallo (K12) | Quien la envió recibe `MATCH_NOT_IN_PROGRESS`, y todos los suscritos reciben la partida ya anulada | No responder a esa orden y dejar solo el aviso general. El cliente se queda esperando una respuesta que no llega |
+| L3 | Partidas en curso en la página `/partidas`. **Se aparta de K15**, que dejaba esa lista para el Hito 5 | Además del historial (K16), la página muestra las partidas en curso, con a quién le toca y un enlace para volver a cada una. La API ya las daba (K15). Sin esto, quien cierra la pestaña en mitad de una partida no tiene cómo volver a ella: la sala ya no sale en la lista de salas en espera, y el límite de una partida simultánea le impide empezar otra | Cumplir K15 al pie de la letra y quitar la lista hasta el Hito 5. Mientras tanto, para volver a una partida hay que conservar su dirección |
+| L4 | Orden de juego que se queda sin respuesta al cortarse la conexión. **Adelanta un punto que la sección 11 dejaba para el Hito 4** | El frontend la vuelve a enviar al reconectar, con el mismo identificador de petición, y el servidor no la aplica dos veces. Se hizo ya porque, sin ello, el tablero se queda bloqueado esperando una respuesta | Esperar al Hito 4. Mientras tanto, dar la orden por fallida al cortarse la conexión y pedir a la persona que repita la jugada |
+| L5 | Quien abre la sala cuando la partida ya empezó. Precisa K18, que solo habla de quien está en la sala en ese momento | Ve un enlace "Ir a la partida" y no pasa sola a ella. Solo pasa sola quien está en la página de la sala en el momento en que la partida empieza | Llevar siempre a la partida a quien abre una sala que tiene una en curso. Impide ver la sala mientras se juega |
+| L6 | Bloqueo de la fila del jugador al comprobar su límite de partidas (ADR-013, H7) | Pasa de `FOR UPDATE` a `FOR NO KEY UPDATE`. El bloqueo fuerte chocaba con la comprobación de claves foráneas al guardar los jugadores de una partida que empieza, y dos transacciones podían quedar esperándose una a la otra | Mantener `FOR UPDATE` y reintentar la transacción cuando PostgreSQL detecte el interbloqueo |
+| L7 | Puertos de las pruebas en navegador | Usan los de `pnpm dev`, 3000 y 3001, porque el frontend construido lleva dentro el origen de la API. No se pueden ejecutar con `pnpm dev` en marcha: avisan y no arrancan | Construir el frontend una segunda vez con otro origen. Permite ejecutarlas junto a `pnpm dev`, a cambio de una segunda construcción y una segunda carpeta de salida |
+
+### Otras notas
+
+- El paquete de contratos tiene un esquema nuevo, `listMyMatchesQuerySchema`, para los parámetros de `GET /me/matches`. Sigue lo que ya decía el contrato de la API, que no cambia.
+- Variables de entorno nuevas: `MATCH_CLOCK_CHECK_SECONDS` en el backend (K22), y `E2E_DATABASE_URL` y `E2E_CHROMIUM_PATH` en las pruebas en navegador.
+- Las pruebas del backend vacían la base de datos después de migrar, para que cada una parta de un catálogo vacío.
+
+### Lo que queda sin hacer, y dónde
+
+| Asunto | Cuándo |
+|---|---|
+| Reparto del resto del MVP en hitos (B1). El corte vertical está terminado | Ahora |
+| Pruebas en navegador con otros navegadores además de Chromium, y en el modo HTTPS, que se recorrió a mano | Con la preparación para publicar, en el Hito 7 |
+| Prueba en Windows. Todo se ejecutó en Linux | Al probarlo en el equipo de quien decide |

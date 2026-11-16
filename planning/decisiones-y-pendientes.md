@@ -78,7 +78,8 @@ No son decisiones. No deben tratarse como aprobadas.
 
 | Propuesta | Dónde |
 |---|---|
-| B1: reparto del resto del MVP en hitos. Se decide al terminar el corte vertical | [`backlog-mvp.md`](backlog-mvp.md) |
+| B1: reparto del resto del MVP en hitos. El corte vertical terminó el 2026-11-16 con el Hito 3, así que toca decidirlo | [`backlog-mvp.md`](backlog-mvp.md) |
+| L1 a L7: siete elecciones menores tomadas al construir el Hito 3. Están aplicadas como recomendaciones. L3 se aparta de la decisión K15 y L4 adelanta un punto del Hito 4 | [ADR-014](../docs/adr/0014-decisiones-del-hito-3.md), sección 13 |
 
 ---
 
@@ -109,10 +110,10 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 
 | Asunto | Cuándo | Dónde está anotado |
 |---|---|---|
-| Conectar el inicio de partida a las salas. Hasta entonces una sala completa se queda en espera | Hito 3, en construcción | ADR-013, decisión H2; ADR-014, decisión K1 |
 | No descontar el tiempo de una parada del servidor. Hasta entonces se descuenta a quien le tocaba | Hito 4 | ADR-014, decisión K3 |
 | Controles de tiempo por turnos de Cuatro en raya | Hito 5 | ADR-014, decisión K6 |
 | Crear las estadísticas y rellenarlas con los resultados ya guardados | Hito 6 | ADR-014, decisión K4 |
+| Pruebas en navegador en otros navegadores además de Chromium, y en el modo HTTPS | Con la preparación para publicar, en el Hito 7 | ADR-014, sección 13 |
 | Librería de componentes del frontend | Con la administración visual o un segundo juego | ADR-014, decisión K7 |
 | Margen de espera antes de dar a un jugador por desconectado | Con la reconexión, en el Hito 4 | ADR-013, decisión H13 |
 | Cierre de la conexión con el código 1008 cuando un cliente incumple el protocolo de forma repetida. Hoy cada mensaje inválido se rechaza, pero la conexión sigue abierta | Con los límites de frecuencia, en el Hito 7 | ADR-013, decisión H9 y sección 13 |
