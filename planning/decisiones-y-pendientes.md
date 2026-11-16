@@ -77,6 +77,7 @@ No son decisiones. No deben tratarse como aprobadas.
 | Propuesta | Dónde |
 |---|---|
 | B1: reparto del resto del MVP en hitos. Se decide al terminar el corte vertical | [`backlog-mvp.md`](backlog-mvp.md) |
+| H1 a H20: decisiones del Hito 2, salas y tiempo real. Se presentaron el 2026-11-16 | [ADR-013](../docs/adr/0013-decisiones-del-hito-2.md) |
 
 ---
 
