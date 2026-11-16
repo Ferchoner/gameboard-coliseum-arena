@@ -8,7 +8,7 @@
 
 **Cómo leer este documento.** El contenido de cada hito sale del alcance aceptado en ADR-008. Lo que este documento propone por su cuenta es **cómo se reparte el resto del MVP en los hitos 4 a 7**. Es una propuesta sin confirmar: el 2026-11-16 se decidió dejarla así y resolverla al terminar el corte vertical ([sección final](#propuesta-pendiente)).
 
-Ninguna tarea de los hitos 1 a 7 puede empezar sin la autorización explícita para implementar.
+El Hito 1 está autorizado desde el 2026-11-16. Ninguna tarea de los hitos 2 a 7 puede empezar sin una autorización explícita.
 
 ---
 
@@ -23,7 +23,7 @@ Ninguna tarea de los hitos 1 a 7 puede empezar sin la autorización explícita p
 - [x] Catálogo único de errores y matriz de permisos.
 - [x] Documentos de arquitectura, backlog y README al día.
 - [x] Revisión de cierre del Hito 0, en [`cierre-hito-0.md`](cierre-hito-0.md).
-- [ ] Autorización para implementar.
+- [x] Autorización para implementar. Concedida el 2026-11-16 solo para el Hito 1.
 
 Los diagramas de arquitectura están en [`docs/02-arquitectura.md`](../docs/02-arquitectura.md), y el de entidades, en [`docs/03-dominio-datos.md`](../docs/03-dominio-datos.md).
 
@@ -33,7 +33,7 @@ Los diagramas de arquitectura están en [`docs/02-arquitectura.md`](../docs/02-a
 
 ### Hito 1. Base de la plataforma
 
-- [ ] Tomar las decisiones de arranque aplazadas en los ADR (lista en `docs/02-arquitectura.md`, sección 8).
+- [ ] Tomar las decisiones de arranque aplazadas en los ADR (lista en `docs/02-arquitectura.md`, sección 8). Propuestas en [ADR-012](../docs/adr/0012-decisiones-de-arranque.md), pendientes de aceptación.
 - [ ] Repositorio con espacios de trabajo: backend, frontend, contratos y motor (ADR-005).
 - [ ] Comprobación automática de que el motor no depende de nada del servidor (ADR-001, condición 5.5).
 - [ ] Tipos de la API, del protocolo y del catálogo de errores en el paquete de contratos.

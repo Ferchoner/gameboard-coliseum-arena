@@ -17,6 +17,7 @@ Cada archivo de esta carpeta recoge una decisión de arquitectura aceptada, con 
 | [ADR-009](0009-reglas-de-dominio.md) | Reglas de dominio de salas, partidas y relojes | Aceptada |
 | [ADR-010](0010-persistencia-de-partida.md) | Persistencia de partida | Aceptada |
 | [ADR-011](0011-convenciones-y-glosario.md) | Convenciones de nombres, identificadores y glosario | Aceptada |
+| [ADR-012](0012-decisiones-de-arranque.md) | Decisiones de arranque del Hito 1 | **Propuesta** |
 
 ## Decisiones aplazadas
 
