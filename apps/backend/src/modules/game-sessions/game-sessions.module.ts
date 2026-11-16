@@ -3,11 +3,14 @@ import { GamesModule } from '../games/games.module.js';
 import { MatchesModule } from '../matches/matches.module.js';
 import { PlayersModule } from '../players/players.module.js';
 import { RoomsModule } from '../rooms/rooms.module.js';
+import { AbandonmentWatch } from './abandonment-watch.js';
 import { ClockSweeper } from './clock-sweeper.js';
 import { GameSessionsRepository } from './game-sessions.repository.js';
 import { GameSessionsService } from './game-sessions.service.js';
+import { GameSessionsStartup } from './game-sessions.startup.js';
 import { MatchesController } from './matches.controller.js';
 import { Randomness } from './randomness.js';
+import { ServerLiveness } from './server-liveness.js';
 import { TurnTimers } from './turn-timers.js';
 
 /**
@@ -18,7 +21,16 @@ import { TurnTimers } from './turn-timers.js';
 @Module({
   imports: [GamesModule, MatchesModule, PlayersModule, RoomsModule],
   controllers: [MatchesController],
-  providers: [GameSessionsRepository, GameSessionsService, TurnTimers, Randomness, ClockSweeper],
+  providers: [
+    GameSessionsRepository,
+    GameSessionsService,
+    TurnTimers,
+    AbandonmentWatch,
+    Randomness,
+    ClockSweeper,
+    ServerLiveness,
+    GameSessionsStartup,
+  ],
   exports: [GameSessionsService],
 })
 export class GameSessionsModule {}

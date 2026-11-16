@@ -268,9 +268,15 @@ describe('partidas', () => {
       });
       expect(second.yourSeat).toBe(1);
       expect(first.players).toMatchObject([
-        { seat: 0, playerId: match.first.playerId, abandonAt: null },
-        { seat: 1, playerId: match.second.playerId, abandonAt: null },
+        { seat: 0, playerId: match.first.playerId, connected: false },
+        { seat: 1, playerId: match.second.playerId, connected: false },
       ]);
+      // Nadie está conectado al canal: los dos cuentan ya su plazo de abandono (regla 7.26).
+      for (const player of first.players) {
+        const delay = Date.parse(player.abandonAt ?? '') - Date.parse(first.startedAt);
+        expect(delay).toBeGreaterThanOrEqual(2 * MINUTE_MS);
+        expect(delay).toBeLessThan(2 * MINUTE_MS + 1000);
+      }
       expect(first.view).toMatchObject({
         columnCount: 7,
         rowCount: 6,

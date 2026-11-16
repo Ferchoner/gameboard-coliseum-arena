@@ -12,7 +12,6 @@ import { UuidParam } from '../../common/http/uuid-param.pipe.js';
 import { ZodQuery } from '../../common/http/zod-query.pipe.js';
 import { CurrentAuth } from '../auth/session.guard.js';
 import type { AuthContext } from '../auth/sessions.service.js';
-import { Presence } from '../broadcast/presence.js';
 import { GameSessionsService } from './game-sessions.service.js';
 import { toMatchView } from './match-views.js';
 
@@ -25,7 +24,6 @@ import { toMatchView } from './match-views.js';
 export class MatchesController {
   constructor(
     private readonly sessions: GameSessionsService,
-    private readonly presence: Presence,
     private readonly clock: Clock,
   ) {}
 
@@ -45,8 +43,6 @@ export class MatchesController {
     @Param('matchId', new UuidParam('MATCH_NOT_FOUND')) matchId: string,
   ): Promise<MatchView> {
     const { snapshot, seat } = await this.sessions.getForPlayer(matchId, auth.playerId);
-    return toMatchView(snapshot, seat, this.clock.now(), (playerId) =>
-      this.presence.isConnected(playerId),
-    );
+    return toMatchView(snapshot, seat, this.clock.now(), this.sessions.presenceIn(matchId));
   }
 }

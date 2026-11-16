@@ -1,4 +1,4 @@
-import type { MatchAbortReason, MatchEndReason } from '@gameboard/contracts';
+import type { MatchAbortReason, MatchEndReason, MatchMode } from '@gameboard/contracts';
 import { Injectable } from '@nestjs/common';
 import { and, asc, desc, eq, inArray, lt, or, type SQL } from 'drizzle-orm';
 import {
@@ -145,14 +145,33 @@ export class MatchesRepository {
   /** Las partidas en curso en las que participa el jugador. */
   async findInProgressIdsOfPlayer(
     playerId: string,
+    mode: MatchMode | undefined,
     executor: DbExecutor = this.database.db,
   ): Promise<string[]> {
     const rows = await executor
       .select({ id: matches.id })
       .from(matchPlayers)
       .innerJoin(matches, eq(matches.id, matchPlayers.matchId))
-      .where(and(eq(matchPlayers.playerId, playerId), eq(matches.status, 'IN_PROGRESS')));
+      .where(
+        and(
+          eq(matchPlayers.playerId, playerId),
+          eq(matches.status, 'IN_PROGRESS'),
+          mode === undefined ? undefined : eq(matches.mode, mode),
+        ),
+      );
     return rows.map((row) => row.id);
+  }
+
+  /** Los participantes de todas las partidas en curso de esa modalidad. */
+  listInProgressParticipants(
+    mode: MatchMode,
+    executor: DbExecutor = this.database.db,
+  ): Promise<{ matchId: string; playerId: string }[]> {
+    return executor
+      .select({ matchId: matchPlayers.matchId, playerId: matchPlayers.playerId })
+      .from(matchPlayers)
+      .innerJoin(matches, eq(matches.id, matchPlayers.matchId))
+      .where(and(eq(matches.status, 'IN_PROGRESS'), eq(matches.mode, mode)));
   }
 
   // --- Resultados ----------------------------------------------------------

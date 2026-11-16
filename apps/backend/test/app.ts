@@ -16,7 +16,13 @@ export const API = '/api/v1';
 
 /** Un reloj que las pruebas pueden adelantar. */
 export class TestClock extends Clock {
-  private offsetMs = 0;
+  private offsetMs: number;
+
+  /** `initialOffsetMs`: cuánto va adelantado desde el principio. */
+  constructor(private readonly initialOffsetMs = 0) {
+    super();
+    this.offsetMs = initialOffsetMs;
+  }
 
   override now(): Date {
     return new Date(Date.now() + this.offsetMs);
@@ -26,8 +32,9 @@ export class TestClock extends Clock {
     this.offsetMs += ms;
   }
 
+  /** Vuelve a la hora con la que se creó la aplicación. */
   reset(): void {
-    this.offsetMs = 0;
+    this.offsetMs = this.initialOffsetMs;
   }
 }
 
@@ -50,6 +57,11 @@ export interface TestApp {
 export interface TestAppOptions {
   readonly env?: Record<string, string>;
   readonly engines?: readonly AnyGameEngine[];
+  /**
+   * Cuánto adelanta el reloj desde el arranque. Sirve para simular que el
+   * servidor estuvo parado ese tiempo antes de arrancar.
+   */
+  readonly clockOffsetMs?: number;
 }
 
 /**
@@ -62,9 +74,11 @@ export async function createTestApp(options: TestAppOptions = {}): Promise<TestA
     DATABASE_URL: TEST_DATABASE_URL,
     FRONTEND_ORIGIN,
     SESSION_COOKIE_SECURE: 'false',
+    // Sin margen, una desconexión se ve en cuanto se cierra la conexión (ADR-015, decisión V3).
+    REALTIME_DISCONNECT_GRACE_SECONDS: '0',
     ...options.env,
   });
-  const clock = new TestClock();
+  const clock = new TestClock(options.clockOffsetMs);
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule.forRoot(config)] })
     .overrideProvider(Clock)

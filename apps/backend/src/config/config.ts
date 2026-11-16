@@ -53,6 +53,10 @@ const envSchema = z
 
     /** Cada cuánto se buscan partidas con el reloj vencido (ADR-014, decisiones K3 y K22). */
     MATCH_CLOCK_CHECK_SECONDS: z.coerce.number().int().min(1).default(10),
+    /** Tiempo sin conexión tras el que se pierde una partida en tiempo real (regla 7.26; ADR-015, V9). */
+    MATCH_ABANDON_SECONDS: z.coerce.number().int().min(1).default(120),
+    /** Cada cuánto anota el servidor que sigue en marcha (regla 8.18; ADR-015, V4). */
+    SERVER_LIVENESS_SECONDS: z.coerce.number().int().min(1).default(10),
 
     /** Límites e intervalos del canal de tiempo real (protocolo, sección 9). */
     REALTIME_MAX_MESSAGE_BYTES: z.coerce
@@ -63,6 +67,12 @@ const envSchema = z
     REALTIME_MAX_CONNECTIONS_PER_PLAYER: z.coerce.number().int().min(1).default(5),
     REALTIME_MAX_SUBSCRIPTIONS_PER_CONNECTION: z.coerce.number().int().min(1).default(20),
     REALTIME_HEARTBEAT_SECONDS: z.coerce.number().int().min(1).default(25),
+    /**
+     * Tiempo sin ninguna conexión tras el que un jugador se da por
+     * desconectado (ADR-015, decisión V3). Admite fracciones de segundo, y
+     * 0 lo da por desconectado al cerrarse su última conexión.
+     */
+    REALTIME_DISCONNECT_GRACE_SECONDS: z.coerce.number().min(0).default(5),
     REALTIME_SESSION_CHECK_SECONDS: z.coerce.number().int().min(1).default(60),
 
     LOG_FORMAT: z.enum(['json', 'text']).default('json'),
@@ -125,6 +135,10 @@ export interface AppConfig {
   };
   readonly matches: {
     readonly clockCheckIntervalMs: number;
+    /** Plazo de abandono de una partida en tiempo real (regla 7.26). */
+    readonly abandonMs: number;
+    /** Intervalo de la anotación de actividad del servidor (regla 8.18). */
+    readonly livenessIntervalMs: number;
   };
   readonly realtime: {
     readonly maxMessageBytes: number;
@@ -132,6 +146,8 @@ export interface AppConfig {
     readonly maxSubscriptionsPerConnection: number;
     readonly heartbeatIntervalMs: number;
     readonly sessionCheckIntervalMs: number;
+    /** Margen sin conexiones antes de dar a un jugador por desconectado (ADR-015, V3). */
+    readonly disconnectGraceMs: number;
   };
   readonly logging: {
     readonly format: 'json' | 'text';
@@ -194,6 +210,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     },
     matches: {
       clockCheckIntervalMs: value.MATCH_CLOCK_CHECK_SECONDS * 1000,
+      abandonMs: value.MATCH_ABANDON_SECONDS * 1000,
+      livenessIntervalMs: value.SERVER_LIVENESS_SECONDS * 1000,
     },
     realtime: {
       maxMessageBytes: value.REALTIME_MAX_MESSAGE_BYTES,
@@ -201,6 +219,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
       maxSubscriptionsPerConnection: value.REALTIME_MAX_SUBSCRIPTIONS_PER_CONNECTION,
       heartbeatIntervalMs: value.REALTIME_HEARTBEAT_SECONDS * 1000,
       sessionCheckIntervalMs: value.REALTIME_SESSION_CHECK_SECONDS * 1000,
+      disconnectGraceMs: Math.round(value.REALTIME_DISCONNECT_GRACE_SECONDS * 1000),
     },
     logging: {
       format: value.LOG_FORMAT,

@@ -1,4 +1,4 @@
-import type { MatchAbortReason } from '@gameboard/contracts';
+import type { MatchAbortReason, MatchMode } from '@gameboard/contracts';
 import { Injectable } from '@nestjs/common';
 import type { DbExecutor, Transaction } from '../../database/database.service.js';
 import type {
@@ -153,8 +153,20 @@ export class MatchesService {
     return this.findMany(matchIds, executor);
   }
 
-  /** Las partidas en curso en las que participa el jugador. */
-  findInProgressIdsOf(playerId: string, executor?: DbExecutor): Promise<string[]> {
-    return this.repository.findInProgressIdsOfPlayer(playerId, executor);
+  /** Las partidas en curso en las que participa el jugador, de cualquier modalidad o de una. */
+  findInProgressIdsOf(
+    playerId: string,
+    mode?: MatchMode,
+    executor?: DbExecutor,
+  ): Promise<string[]> {
+    return this.repository.findInProgressIdsOfPlayer(playerId, mode, executor);
+  }
+
+  /** Quién juega cada partida en curso de esa modalidad. */
+  listInProgressParticipants(
+    mode: MatchMode,
+    executor?: DbExecutor,
+  ): Promise<{ matchId: string; playerId: string }[]> {
+    return this.repository.listInProgressParticipants(mode, executor);
   }
 }

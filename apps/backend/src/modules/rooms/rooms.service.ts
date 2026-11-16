@@ -341,12 +341,26 @@ export class RoomsService {
    * la que la termina (ADR-014, decisión K1). Quien la llama ya tiene
    * bloqueada la sesión de juego: ese bloqueo va siempre antes que el de la
    * sala (decisión K10).
+   *
+   * Quienes perdieron por abandono, en `departing`, salen de la sala. Si
+   * entre ellos está el anfitrión, la sala se cierra, como cuando el
+   * anfitrión sale (reglas 7.12 y 7.32).
    */
-  async matchEnded(roomId: string, now: Date, tx: Transaction): Promise<void> {
+  async matchEnded(
+    roomId: string,
+    now: Date,
+    tx: Transaction,
+    departing: readonly string[] = [],
+  ): Promise<void> {
     const room = await this.repository.lockRoom(roomId, tx);
     // Una sala que ya no está en partida no cambia.
     if (!room || room.status !== 'IN_MATCH') return;
 
+    for (const playerId of departing) await this.repository.deleteMember(roomId, playerId, tx);
+    if (departing.includes(room.ownerPlayerId)) {
+      await this.close(roomId, 'OWNER_LEFT', now, tx);
+      return;
+    }
     if (!room.rematchEnabled) {
       await this.close(roomId, 'MATCH_ENDED', now, tx);
       return;

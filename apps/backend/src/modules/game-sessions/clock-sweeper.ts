@@ -1,10 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  type OnApplicationBootstrap,
-  type OnApplicationShutdown,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger, type OnApplicationShutdown } from '@nestjs/common';
 import type { AppConfig } from '../../config/config.js';
 import { APP_CONFIG } from '../../config/config.module.js';
 import { GameSessionsService } from './game-sessions.service.js';
@@ -17,10 +11,11 @@ import { GameSessionsService } from './game-sessions.service.js';
  *
  * Es un temporizador propio, sin librería (ADR-013, decisión H8): la lógica
  * está en `GameSessionsService.expireDueMatches`, que las pruebas llaman
- * directamente.
+ * directamente. La pone en marcha el arranque, después de ajustar los
+ * relojes (ADR-015, decisión V10).
  */
 @Injectable()
-export class ClockSweeper implements OnApplicationBootstrap, OnApplicationShutdown {
+export class ClockSweeper implements OnApplicationShutdown {
   private readonly logger = new Logger(ClockSweeper.name);
   private timer: NodeJS.Timeout | null = null;
   private running = false;
@@ -30,7 +25,7 @@ export class ClockSweeper implements OnApplicationBootstrap, OnApplicationShutdo
     @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {}
 
-  onApplicationBootstrap(): void {
+  start(): void {
     // Las pruebas llaman a la revisión cuando les conviene.
     if (this.config.environment === 'test') return;
     this.timer = setInterval(() => void this.run(), this.config.matches.clockCheckIntervalMs);
