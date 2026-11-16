@@ -149,13 +149,37 @@ module.exports = {
       to: { path: '^apps/backend/src/modules/', pathNot: '^apps/backend/src/modules/broadcast/' },
     },
     {
-      name: 'rooms-no-conoce-matches',
+      name: 'rooms-no-conoce-las-partidas',
       severity: 'error',
       comment:
-        '`rooms` define la interfaz con la que pide el inicio de una partida y `matches` la ' +
-        'implementa. La dependencia va en un solo sentido (ADR-013, decisión H1).',
+        '`rooms` define la interfaz con la que pide el inicio de una partida y `game-sessions` ' +
+        'la implementa. La dependencia va en un solo sentido (ADR-013, decisión H1; ADR-014, ' +
+        'decisión K1).',
       from: { path: '^apps/backend/src/modules/rooms/' },
-      to: { path: '^apps/backend/src/modules/matches/' },
+      to: { path: '^apps/backend/src/modules/(matches|game-sessions)/' },
+    },
+    {
+      name: 'matches-solo-registra',
+      severity: 'error',
+      comment:
+        '`matches` es el registro de las partidas: no conoce ni las salas ni la sesión de ' +
+        'juego, que es quien la dirige. Solo nombra la tabla de salas para su clave ajena ' +
+        '(ADR-014, decisión K1).',
+      from: { path: '^apps/backend/src/modules/matches/', pathNot: '\\.schema\\.ts$' },
+      to: { path: '^apps/backend/src/modules/(rooms|game-sessions)/' },
+    },
+    {
+      name: 'solo-realtime-conoce-game-sessions',
+      severity: 'error',
+      comment:
+        '`game-sessions` conoce a `rooms`, `matches`, `games` y `players`, y ninguno de ellos ' +
+        'la conoce a ella. Solo el canal de tiempo real le pasa las órdenes de juego ' +
+        '(ADR-014, decisión K1).',
+      from: {
+        path: '^apps/backend/src/modules/',
+        pathNot: '^apps/backend/src/modules/(game-sessions|realtime)/',
+      },
+      to: { path: '^apps/backend/src/modules/game-sessions/' },
     },
     {
       name: 'infraestructura-no-depende-de-modulos',

@@ -334,6 +334,28 @@ export class RoomsService {
     return closed;
   }
 
+  /**
+   * La partida de la sala terminó o se anuló. La sala vuelve a la espera
+   * sin marcas de "listo" o, si no admite revancha, se cierra (reglas 7.11
+   * y 7.31). Lo llama quien dirige la partida, dentro de la transacción en
+   * la que la termina (ADR-014, decisión K1). Quien la llama ya tiene
+   * bloqueada la sesión de juego: ese bloqueo va siempre antes que el de la
+   * sala (decisión K10).
+   */
+  async matchEnded(roomId: string, now: Date, tx: Transaction): Promise<void> {
+    const room = await this.repository.lockRoom(roomId, tx);
+    // Una sala que ya no está en partida no cambia.
+    if (!room || room.status !== 'IN_MATCH') return;
+
+    if (!room.rematchEnabled) {
+      await this.close(roomId, 'MATCH_ENDED', now, tx);
+      return;
+    }
+    await this.repository.backToWaiting(roomId, now, tx);
+    await this.repository.clearReadyMarks(roomId, tx);
+    this.announceChange(roomId, tx);
+  }
+
   // --- Piezas --------------------------------------------------------------
 
   /** El límite cuenta las pertenencias a salas no cerradas de esa modalidad (decisión R7). */

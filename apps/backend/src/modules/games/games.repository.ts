@@ -18,6 +18,14 @@ export interface ActiveVersionRow {
   readonly version: string;
 }
 
+/** Una versión de un juego, con el juego al que pertenece. */
+export interface GameVersionRow {
+  readonly gameVersionId: string;
+  readonly gameId: string;
+  readonly slug: string;
+  readonly version: string;
+}
+
 /** Único punto de acceso a las tablas `games` y `game_versions`. */
 @Injectable()
 export class GamesRepository {
@@ -73,6 +81,39 @@ export class GamesRepository {
     return row?.id ?? null;
   }
 
+  /** La versión vigente de un juego: la que toman las partidas nuevas (ADR-011, 9.8). */
+  async findCurrentVersionOfGame(
+    gameId: string,
+    executor: DbExecutor = this.database.db,
+  ): Promise<GameVersionRow | null> {
+    const [row] = await this.versionQuery(executor)
+      .where(and(eq(gameVersions.gameId, gameId), eq(gameVersions.isCurrent, true)))
+      .limit(1);
+    return row ?? null;
+  }
+
+  /** Esas versiones, con el juego al que pertenecen, estén activas o no. */
+  findVersionsByIds(
+    ids: readonly string[],
+    executor: DbExecutor = this.database.db,
+  ): Promise<GameVersionRow[]> {
+    if (ids.length === 0) return Promise.resolve([]);
+    return this.versionQuery(executor).where(inArray(gameVersions.id, [...ids]));
+  }
+
+  /** Todas las versiones del juego con ese nombre corto, estén activas o no. */
+  async findVersionIdsBySlug(
+    slug: string,
+    executor: DbExecutor = this.database.db,
+  ): Promise<string[]> {
+    const rows = await executor
+      .select({ id: gameVersions.id })
+      .from(gameVersions)
+      .innerJoin(games, eq(games.id, gameVersions.gameId))
+      .where(eq(games.slug, slug));
+    return rows.map((row) => row.id);
+  }
+
   /** Todas las versiones activas. Cada una debe tener un motor registrado (decisión R1). */
   listActiveVersions(executor: DbExecutor = this.database.db): Promise<ActiveVersionRow[]> {
     return executor
@@ -81,6 +122,18 @@ export class GamesRepository {
       .innerJoin(games, eq(games.id, gameVersions.gameId))
       .where(eq(gameVersions.status, 'ACTIVE'))
       .orderBy(asc(games.slug), asc(gameVersions.version));
+  }
+
+  private versionQuery(executor: DbExecutor) {
+    return executor
+      .select({
+        gameVersionId: gameVersions.id,
+        gameId: games.id,
+        slug: games.slug,
+        version: gameVersions.version,
+      })
+      .from(gameVersions)
+      .innerJoin(games, eq(games.id, gameVersions.gameId));
   }
 
   private catalogQuery(executor: DbExecutor) {

@@ -46,7 +46,9 @@ export class PlayersRepository {
       .select({ id: players.id })
       .from(players)
       .where(eq(players.id, id))
-      .for('update');
+      // `no key update`: quien inserta una fila que hace referencia al jugador, como
+      // un asiento de una partida que empieza, no tiene que esperar a este bloqueo.
+      .for('no key update');
     return rows.length > 0;
   }
 }

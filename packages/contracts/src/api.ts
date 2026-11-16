@@ -397,6 +397,18 @@ export const listRoomsQuerySchema = z.object({
 });
 export type ListRoomsQuery = z.infer<typeof listRoomsQuerySchema>;
 
+/**
+ * Parámetros de `GET /me/matches`. Sin `status`, la lista es la de las
+ * partidas en curso.
+ */
+export const listMyMatchesQuerySchema = z.object({
+  status: matchStatusSchema.default('IN_PROGRESS'),
+  gameSlug: z.string().min(1).exactOptional(),
+  cursor: z.string().min(1).exactOptional(),
+  limit: z.coerce.number().int().min(1).max(PAGE_LIMIT_MAX).default(PAGE_LIMIT_DEFAULT),
+});
+export type ListMyMatchesQuery = z.infer<typeof listMyMatchesQuerySchema>;
+
 export const setUserStatusRequestSchema = z.strictObject({
   status: userStatusSchema,
 });

@@ -3,7 +3,7 @@ import type { AnyGameEngine, GameEngineRegistry } from '@gameboard/game-engine';
 import { Inject, Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { AppError } from '../../common/errors/app-error.js';
 import type { DbExecutor } from '../../database/database.service.js';
-import { type CatalogEntryRow, GamesRepository } from './games.repository.js';
+import { type CatalogEntryRow, GamesRepository, type GameVersionRow } from './games.repository.js';
 
 /** Con esta clave se inyecta el registro de motores (acuerdo B3). */
 export const GAME_ENGINE_REGISTRY = Symbol('GAME_ENGINE_REGISTRY');
@@ -14,6 +14,19 @@ export interface PlayableGame {
   readonly gameSlug: string;
   readonly gameVersion: string;
   readonly engine: AnyGameEngine;
+}
+
+/**
+ * Una versión concreta de un juego, que es lo que una partida fija al
+ * empezar (ADR-009, regla 7.23). `engine` falta si esa versión ya no tiene
+ * motor registrado.
+ */
+export interface GameVersion {
+  readonly gameVersionId: string;
+  readonly gameId: string;
+  readonly gameSlug: string;
+  readonly gameVersion: string;
+  readonly engine: AnyGameEngine | undefined;
 }
 
 /**
@@ -81,6 +94,31 @@ export class GamesService implements OnApplicationBootstrap {
     return { gameId: row.gameId, gameSlug: row.slug, gameVersion: row.version, engine };
   }
 
+  /** La versión vigente de un juego, que es la que toma una partida al empezar. */
+  async findCurrentVersion(gameId: string, executor?: DbExecutor): Promise<GameVersion | null> {
+    const row = await this.repository.findCurrentVersionOfGame(gameId, executor);
+    return row ? this.toGameVersion(row) : null;
+  }
+
+  /** Esas versiones, por su identificador. Incluye las inactivas: una partida conserva la suya. */
+  async findVersions(
+    gameVersionIds: readonly string[],
+    executor?: DbExecutor,
+  ): Promise<Map<string, GameVersion>> {
+    const rows = await this.repository.findVersionsByIds([...new Set(gameVersionIds)], executor);
+    return new Map(rows.map((row) => [row.gameVersionId, this.toGameVersion(row)]));
+  }
+
+  async findVersion(gameVersionId: string, executor?: DbExecutor): Promise<GameVersion | null> {
+    const versions = await this.findVersions([gameVersionId], executor);
+    return versions.get(gameVersionId) ?? null;
+  }
+
+  /** Todas las versiones del juego con ese nombre corto. Vacía si el juego no existe. */
+  findVersionIdsOfGame(gameSlug: string, executor?: DbExecutor): Promise<string[]> {
+    return this.repository.findVersionIdsBySlug(gameSlug, executor);
+  }
+
   /** El nombre corto de cada juego, por su identificador. Incluye los inactivos. */
   async findSlugs(gameIds: readonly string[], executor?: DbExecutor): Promise<Map<string, string>> {
     const rows = await this.repository.findSlugsByIds([...new Set(gameIds)], executor);
@@ -90,6 +128,16 @@ export class GamesService implements OnApplicationBootstrap {
   /** El identificador del juego con ese nombre corto, o `null` si no existe. */
   findGameId(gameSlug: string, executor?: DbExecutor): Promise<string | null> {
     return this.repository.findIdBySlug(gameSlug, executor);
+  }
+
+  private toGameVersion(row: GameVersionRow): GameVersion {
+    return {
+      gameVersionId: row.gameVersionId,
+      gameId: row.gameId,
+      gameSlug: row.slug,
+      gameVersion: row.version,
+      engine: this.engines.resolve(row.slug, row.version),
+    };
   }
 
   private toGame(row: CatalogEntryRow): Game | null {
