@@ -5,10 +5,15 @@
  * La semántica, los ejemplos y las decisiones de diseño están en
  * `02-realtime.md`.
  *
- * No importa nada del contrato del motor: el paquete de contratos y el del
- * motor no dependen entre sí (ADR-005). Los pocos tipos comunes, como la
- * modalidad o el control de tiempo, se repiten aquí con la misma forma.
+ * Los cuatro tipos que el protocolo comparte con el motor de juego (la
+ * modalidad, el control de tiempo, el resultado de un asiento y el motivo
+ * del final) se toman del paquete del motor, que es donde se definen
+ * (ADR-012, decisión S2).
  */
+
+import type { MatchEndReason, MatchMode, SeatOutcome, TimeControl } from '@gameboard/game-engine/shared';
+
+export type { MatchEndReason, MatchMode, SeatOutcome, TimeControl };
 
 // ---------------------------------------------------------------------------
 // Tipos básicos
@@ -23,20 +28,11 @@ export type Uuid = string;
 /** Fecha y hora en formato ISO 8601, en UTC (ADR-011, convención 9.3). */
 export type IsoDateTime = string;
 
-export type MatchMode = 'REALTIME' | 'TURN_BASED';
-
-export interface TimeControl {
-  readonly type: 'TOTAL_PER_PLAYER';
-  readonly totalMs: number;
-}
-
 export type RoomStatus = 'WAITING' | 'IN_MATCH' | 'CLOSED';
 export type RoomCloseReason = 'OWNER_LEFT' | 'IDLE' | 'MATCH_ENDED' | 'ADMIN';
 
 export type MatchStatus = 'IN_PROGRESS' | 'FINISHED' | 'ABORTED';
 export type MatchAbortReason = 'ADMIN' | 'FAILURE';
-export type MatchEndReason = 'COMPLETED' | 'TIMEOUT' | 'RESIGNATION' | 'ABANDONMENT';
-export type SeatOutcome = 'WIN' | 'LOSS' | 'DRAW';
 
 // ---------------------------------------------------------------------------
 // Vistas

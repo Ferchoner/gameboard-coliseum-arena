@@ -1,0 +1,33 @@
+{
+  "name": "@gameboard/game-engine",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Contrato del motor de juego, registro de motores y motores concretos. No depende de nada.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./shared": {
+      "types": "./dist/shared.d.ts",
+      "default": "./dist/shared.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/fake-engine.d.ts",
+      "default": "./dist/testing/fake-engine.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

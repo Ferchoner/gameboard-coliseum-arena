@@ -272,11 +272,7 @@ export interface GameEngine<TSettings, TState, TAction, TEvent extends GameEvent
    * La plataforma solo la llama con un juego en curso y un asiento que
    * sigue participando, así que no admite rechazo.
    */
-  retireSeat(
-    state: TState,
-    seat: Seat,
-    reason: SeatRetirementReason,
-  ): Retirement<TState, TEvent>;
+  retireSeat(state: TState, seat: Seat, reason: SeatRetirementReason): Retirement<TState, TEvent>;
 
   /**
    * Lo que un asiento puede ver del estado. Con `null`, lo que puede ver
