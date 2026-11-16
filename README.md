@@ -9,7 +9,7 @@ Una plataforma web para jugar juegos de mesa en línea contra otras personas, en
 | Carpeta | Contenido |
 |---|---|
 | [`docs/`](docs/) | Visión, arquitectura, modelo de datos y flujos |
-| [`docs/adr/`](docs/adr/README.md) | Las trece decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
+| [`docs/adr/`](docs/adr/README.md) | Las catorce decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
 | [`docs/auditoria/`](docs/auditoria/README.md) | El análisis que precedió a las decisiones. Es histórico y no se mantiene al día |
 | [`contracts/`](contracts/) | La API, el protocolo de tiempo real, el contrato del motor de juego, el catálogo de errores y la matriz de permisos |
 | [`planning/`](planning/) | El backlog por hitos y el registro de lo decidido y lo abierto |

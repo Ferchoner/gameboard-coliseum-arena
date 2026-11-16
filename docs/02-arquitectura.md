@@ -129,7 +129,7 @@ Las 17 tablas del [modelo de datos](03-dominio-datos.md) tienen un único módul
 |---|---|---|
 | Conexiones abiertas y suscripciones | `realtime` | Los clientes reconectan y se vuelven a suscribir (ADR-003, condición 5.7) |
 | Presencia: quién tiene una conexión abierta | `realtime` | Se recalcula con las conexiones nuevas (ADR-009, regla 7.24) |
-| Sesiones de juego cargadas | `game-sessions` | Se vuelven a cargar desde la base de datos al necesitarlas (ADR-009, regla 7.22) |
+| Sesiones de juego cargadas | `game-sessions` | No hay copia en memoria: cada jugada lee la sesión de la base de datos con un bloqueo de fila (ADR-014, decisión K2). Si algún juego lo pide, la copia se puede añadir sin cambiar contratos |
 | Temporizadores de reloj y de abandono | `game-sessions` | Una revisión periódica de la base de datos cubre los que se pierdan (ADR-010, regla 8.17) |
 | Contadores de los límites de frecuencia | Entrada | Se reinician |
 
@@ -144,7 +144,7 @@ Un solo repositorio con espacios de trabajo (ADR-005). Los nombres de carpeta y 
 | Carpeta | Contenido | Puede depender de |
 |---|---|---|
 | `apps/backend` | El backend, con los módulos de la sección 4 | `packages/contracts`, `packages/game-engine` |
-| `apps/frontend` | La aplicación Nuxt | `packages/contracts` |
+| `apps/frontend` | La aplicación Nuxt | `packages/contracts`. De `packages/game-engine`, solo tipos (ADR-014, decisión K7) |
 | `packages/contracts` | Tipos y esquemas de la API y del protocolo, y el catálogo de errores | `packages/game-engine`, solo para los tipos y las listas de valores que comparten |
 | `packages/game-engine` | Contrato del motor y motores concretos | Nada |
 | `docs/`, `contracts/`, `planning/` | Documentación, contratos escritos y plan | |
@@ -183,6 +183,19 @@ Se decidió el 2026-11-16 en [ADR-013](adr/0013-decisiones-del-hito-2.md).
 | Capacidad y límite de partidas simultáneas | Bloqueo de fila: primero la del jugador y después la de la sala, siempre en ese orden | H7 |
 | Tareas periódicas | Temporizadores propios en el módulo dueño de cada tarea, sin librería | H8 |
 | Servidor WebSocket | El adaptador oficial de NestJS sobre `ws`, con la sesión y el origen comprobados antes de aceptar la conexión | H4 |
+
+### Lo que se decidió al iniciar el Hito 3
+
+Se decidió el 2026-11-16 en [ADR-014](adr/0014-decisiones-del-hito-3.md).
+
+| Asunto | Decisión | Dónde |
+|---|---|---|
+| Qué módulo dirige una partida | `game-sessions` dirige el inicio, las jugadas y el final, se registra como iniciador en `rooms` y usa a `matches` como registro. `game-sessions` conoce a `matches`, `rooms`, `games` y `players`, y ninguno de ellos lo conoce a él | K1 |
+| Dónde está el estado de una partida en curso | Siempre en la base de datos. Cada jugada lo lee con un bloqueo de fila, que da el orden de las jugadas. En memoria solo hay temporizadores, conexiones y presencia | K2 |
+| Relojes vencidos | Un temporizador exacto por partida y una revisión periódica de la base de datos. Los dos llaman a la misma operación | K3 |
+| Orden de los bloqueos | El final de partida bloquea primero la sesión de juego y después la sala. Nadie los toma al revés | K10 |
+| Frontend y motor | El frontend no ejecuta el motor. Importa de él solo tipos, y la regla se comprueba de forma automática | K7 |
+| Pruebas en navegador | Playwright, en un trabajo aparte de las comprobaciones | K8 |
 
 ---
 

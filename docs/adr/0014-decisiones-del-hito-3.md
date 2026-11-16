@@ -2,10 +2,10 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Propuesta. Ninguna de sus decisiones está aceptada |
+| **Estado** | Aceptada |
 | **Fecha** | 2026-11-16 |
-| **Decide** | Fernando Hernandez Argueta |
-| **Cerraría** | La forma de la interfaz entre salas y partidas (ADR-013, H1), la librería de componentes y el uso del motor en el navegador (ADR-012, S24 y S25), las pruebas en navegador (ADR-012, S18) y los controles de tiempo de Cuatro en raya (notas del motor, sección 7) |
+| **Decidida por** | Fernando Hernandez Argueta |
+| **Cierra** | La forma de la interfaz entre salas y partidas (ADR-013, H1), la librería de componentes y el uso del motor en el navegador (ADR-012, S24 y S25), las pruebas en navegador (ADR-012, S18) y los controles de tiempo de Cuatro en raya (notas del motor, sección 7) |
 | **Depende de** | ADR-009, ADR-010, ADR-012, ADR-013, el modelo de datos, el contrato del motor y los contratos de la API y de tiempo real |
 
 ---
@@ -32,7 +32,7 @@ Las reglas, el modelo de datos y los contratos ya dicen qué tiene que pasar. Lo
 - Cada decisión tiene un identificador (K1 a K22), sus alternativas y una recomendación.
 - Las decisiones K1 a K8 afectan a la arquitectura, al alcance o cuesta deshacerlas. Van explicadas una a una.
 - Las decisiones K9 a K22 son menores y fáciles de cambiar. Van en una tabla.
-- **Todo es recomendación.** Nada se construye hasta que se acepte.
+- **Las 22 se aceptaron el 2026-11-16 tal como se recomendaban.** Donde el texto dice "recomendación", léase "decisión".
 - Tres decisiones cambian algo ya aceptado y por eso piden atención: **K1** precisa la decisión H1 de ADR-013, **K3** adelanta al Hito 3 una tarea que el backlog pone en el Hito 4, y **K7** relaja una regla de dependencias de ADR-012.
 
 ## 3. Resumen
@@ -276,7 +276,7 @@ Si alguno falla, se avisa antes de cambiar de opción.
 
 ## 12. Efecto sobre los documentos
 
-Se harían al aceptarse las decisiones. Ninguno cambia un contrato.
+Hechos al aceptarse las decisiones. Ninguno cambia un contrato.
 
 | Documento | Cambio |
 |---|---|

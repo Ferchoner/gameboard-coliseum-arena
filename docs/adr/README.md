@@ -19,7 +19,7 @@ Cada archivo de esta carpeta recoge una decisión de arquitectura aceptada, con 
 | [ADR-011](0011-convenciones-y-glosario.md) | Convenciones de nombres, identificadores y glosario | Aceptada |
 | [ADR-012](0012-decisiones-de-arranque.md) | Decisiones de arranque del Hito 1 | Aceptada |
 | [ADR-013](0013-decisiones-del-hito-2.md) | Decisiones del Hito 2, salas y tiempo real | Aceptada |
-| [ADR-014](0014-decisiones-del-hito-3.md) | Decisiones del Hito 3, Cuatro en raya en tiempo real | Propuesta |
+| [ADR-014](0014-decisiones-del-hito-3.md) | Decisiones del Hito 3, Cuatro en raya en tiempo real | Aceptada |
 
 ## Decisiones aplazadas
 
@@ -27,10 +27,7 @@ El alojamiento del backend, el de PostgreSQL, las copias de seguridad, la superv
 
 ## Propuestas pendientes de confirmación
 
-- [ADR-014](0014-decisiones-del-hito-3.md), con las decisiones K1 a K22 del Hito 3. Ninguna está aceptada.
-- Las cinco elecciones menores C1 a C5 tomadas al construir el Hito 2, en la sección 13 de [ADR-013](0013-decisiones-del-hito-2.md).
-
-Las dos que había antes, el alcance de la cookie de sesión (ADR-004) y los nombres de las carpetas (ADR-005), se confirmaron el 2026-11-16 en ADR-012, decisiones S13 y S1.
+No queda ninguna dentro de los ADR. Las decisiones K1 a K22 de ADR-014 y las elecciones menores C1 a C5 de ADR-013 se aceptaron el 2026-11-16.
 
 ## Convenciones
 

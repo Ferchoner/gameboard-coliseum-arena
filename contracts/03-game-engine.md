@@ -147,8 +147,8 @@ La nota de la documentación inicial que decía que el motor incluía `initializ
 
 | Asunto | Situación |
 |---|---|
-| **Valores concretos del control de tiempo en Cuatro en raya.** La regla 7.2 fija hasta 30 minutos en tiempo real, y 12, 24 o 36 horas por turnos. Falta decidir qué opciones de tiempo real se ofrecen | Se decide al implementar el juego |
+| **Valores concretos del control de tiempo en Cuatro en raya.** | Cerrado el 2026-11-16: 3, 5 y 10 minutos por jugador en tiempo real. Los de la modalidad por turnos se añaden en el Hito 5 (ADR-014, decisión K6) |
 | **Juegos con jugadas simultáneas.** El contrato y el modelo de datos ya los admiten. Falta precisar cómo se aplica la regla 8.11 cuando dos asientos juegan sobre la misma versión del estado: tal como está, la segunda jugada se rechaza como obsoleta y hay que reenviarla | Se precisa cuando llegue el primer juego de ese tipo |
 | **Jugador retirado en una partida que continúa.** El contrato ya lo admite. Faltan las reglas de la plataforma para ese caso, que solo se da con más de dos jugadores: cuándo puede salir de la sala, cuándo deja de contar para sus límites de partidas, cuándo se anotan sus estadísticas y cómo se marca en el modelo de datos | Se define cuando llegue el primer juego de más de dos jugadores |
-| **Uso del motor en el frontend** para mostrar jugadas válidas sin duplicar reglas | Se decide al iniciar el Hito 1 (ADR-005). El contrato no lo impide: el motor no depende de nada del servidor |
+| **Uso del motor en el frontend** | Cerrado el 2026-11-16: el frontend no ejecuta el motor. Toma de él solo los tipos de cada juego (ADR-014, decisión K7) |
 | **Comprobación automática de las seis reglas**, en especial el aislamiento y el determinismo | La herramienta se elige al iniciar el Hito 1 (ADR-001) |

@@ -68,6 +68,10 @@ Construido el 2026-11-16. Lo que resultó al construir, incluidas cinco eleccion
 - [ ] Final de partida en la misma transacción, con resultado, y vuelta de la sala a la espera para la revancha (8.14, 7.11).
 - [ ] Frontend: tablero, relojes, resultado e historial.
 - [ ] Prueba de extremo a extremo de una partida completa y de las jugadas rechazadas.
+- [ ] Revisión periódica de relojes vencidos (8.17). Adelantada del Hito 4 (ADR-014, K3).
+- [ ] Prueba en navegador de los diez criterios de aceptación, con Playwright (ADR-014, K8).
+
+Decisiones del hito en [ADR-014](../docs/adr/0014-decisiones-del-hito-3.md). Cuatro en raya se ofrece solo en tiempo real hasta el Hito 5 (K6). Las estadísticas no se escriben todavía: el Hito 6 las rellena con los resultados guardados (K4). Hasta el Hito 4, el tiempo de una parada del servidor se descuenta a quien le tocaba jugar (K3).
 
 ### Criterios de aceptación del corte vertical
 
@@ -93,8 +97,8 @@ Dos personas, cada una en su navegador:
 - [ ] Reconexión del cliente con espera progresiva y nueva suscripción (7.28).
 - [ ] Abandono en tiempo real tras 2 minutos sin conexión (7.26).
 - [ ] Anotación periódica de actividad del servidor y ajuste de relojes al arrancar (8.18, 7.29).
-- [ ] Carga de la sesión de juego desde la base de datos cuando hace falta (7.22).
-- [ ] Revisión periódica de relojes vencidos (8.17).
+- [x] Carga de la sesión de juego desde la base de datos cuando hace falta (7.22). Hecha en el Hito 3: no hay copia en memoria (ADR-014, K2).
+- Revisión periódica de relojes vencidos (8.17): pasó al Hito 3 (ADR-014, K3).
 - [ ] Pruebas: reinicio del servidor a mitad de partida y corte de red de un jugador.
 
 **Criterio de aceptación:** tras reiniciar el servidor después de una jugada confirmada, los dos jugadores reconectan, ven el mismo estado y a ninguno se le ha descontado el tiempo de la caída.
@@ -113,7 +117,7 @@ Dos personas, cada una en su navegador:
 
 - [ ] Edición del perfil y cambio de contraseña.
 - [ ] Recuperación de contraseña, con el envío de correo simulado en local.
-- [ ] Perfil público y estadísticas básicas por juego, actualizadas en la transacción del final de partida (8.15).
+- [ ] Perfil público y estadísticas básicas por juego, actualizadas en la transacción del final de partida (8.15). La tabla se crea aquí y se rellena con los resultados de las partidas ya jugadas (ADR-014, K4).
 - [ ] Administración mínima por API: suspender y reactivar cuentas, cerrar salas, anular partidas, y activar o desactivar juegos y versiones.
 
 ### Hito 7. Preparación para publicar
