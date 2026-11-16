@@ -78,6 +78,8 @@ No son decisiones. No deben tratarse como aprobadas.
 | Propuesta | Dónde |
 |---|---|
 | B1: reparto del resto del MVP en hitos. Se decide al terminar el corte vertical | [`backlog-mvp.md`](backlog-mvp.md) |
+| K1 a K22: decisiones del Hito 3. Presentadas el 2026-11-16 | [ADR-014](../docs/adr/0014-decisiones-del-hito-3.md) |
+| C1 a C5: elecciones menores tomadas al construir el Hito 2 | [ADR-013](../docs/adr/0013-decisiones-del-hito-2.md), sección 13 |
 
 ---
 
@@ -112,7 +114,6 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 | Conectar el inicio de partida a las salas. Hasta entonces una sala completa se queda en espera | Hito 3 | ADR-013, decisión H2 |
 | Margen de espera antes de dar a un jugador por desconectado | Con la reconexión, en el Hito 4 | ADR-013, decisión H13 |
 | Cierre de la conexión con el código 1008 cuando un cliente incumple el protocolo de forma repetida. Hoy cada mensaje inválido se rechaza, pero la conexión sigue abierta | Con los límites de frecuencia, en el Hito 7 | ADR-013, decisión H9 y sección 13 |
-| Confirmar las cinco elecciones menores tomadas al construir el Hito 2 | Al revisar su pull request | ADR-013, sección 13 |
 | Paso de Drizzle a la versión 1.0 definitiva, cuando se publique. Hoy se usa la candidata `1.0.0-rc.5` | Cuando salga | ADR-012, decisión S8 |
 | Paso a TypeScript 7, cuando las herramientas lo admitan | Cuando salga la 7.1 | ADR-012, decisión S5 |
 | Librería de componentes del frontend y uso del motor en el navegador | Al iniciar el Hito 3 | ADR-012, decisiones S24 y S25 |
@@ -153,4 +154,4 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 - Toda propuesta se presenta con sus alternativas, sus consecuencias y una recomendación.
 - Una decisión aceptada no se reescribe. Si cambia, se anota el cambio con su fecha en el documento que la contiene, o se añade un ADR que la sustituye.
 - No se añade ninguna dependencia, no se cambia ningún contrato y no se implementa nada fuera del alcance sin aprobación previa.
-- No se escribe código de un hito hasta recibir su autorización explícita. El Hito 1 y el Hito 2 están autorizados desde el 2026-11-16. El Hito 3 y los siguientes no lo están.
+- No se escribe código de un hito hasta recibir su autorización explícita. Los Hitos 1, 2 y 3 están autorizados desde el 2026-11-16. El Hito 3, con la condición de aceptar antes sus decisiones (ADR-014). El Hito 4 y los siguientes no lo están.
