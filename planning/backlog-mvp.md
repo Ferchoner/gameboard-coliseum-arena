@@ -108,7 +108,7 @@ Dos personas, cada una en su navegador:
 
 Decisiones del hito en [ADR-015](../docs/adr/0015-decisiones-del-hito-4.md).
 
-Construido el 2026-11-16. Lo que resultó al construir, incluidas las elecciones menores que no estaban en ADR-015 y esperan confirmación, está en su sección 13. El criterio de aceptación se comprueba en cada pull request con una prueba en navegador que reinicia la API de verdad a mitad de partida.
+Construido el 2026-11-16. Lo que resultó al construir, incluidas nueve elecciones menores que no estaban en ADR-015 y se confirmaron el 2026-11-16, está en su sección 13. El criterio de aceptación se comprueba en cada pull request con una prueba en navegador que reinicia la API de verdad a mitad de partida.
 
 **Criterio de aceptación:** tras reiniciar el servidor después de una jugada confirmada, los dos jugadores reconectan, ven el mismo estado y a ninguno se le ha descontado el tiempo de la caída.
 

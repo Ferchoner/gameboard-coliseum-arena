@@ -86,9 +86,7 @@ Las inconsistencias que el registro inicial pedía normalizar están resueltas. 
 
 No son decisiones. No deben tratarse como aprobadas.
 
-- **W1 a W9**: elecciones menores tomadas al construir el Hito 4, en [ADR-015, sección 13](../docs/adr/0015-decisiones-del-hito-4.md#13-lo-que-resultó-al-construir). W2 precisa V1: la revisión periódica de relojes aplica también los abandonos pendientes.
-
-B1, el reparto del resto del MVP en hitos, se aceptó el 2026-11-16.
+Ninguna. Las elecciones W1 a W9 del Hito 4 ([ADR-015, sección 13](../docs/adr/0015-decisiones-del-hito-4.md#13-lo-que-resultó-al-construir)) se confirmaron el 2026-11-16. B1, el reparto del resto del MVP en hitos, se aceptó el 2026-11-16.
 
 ---
 

@@ -238,7 +238,7 @@ En las pruebas en navegador el abandono llega a los 10 segundos, el margen de de
 
 ### Elecciones menores tomadas al construir
 
-Ninguna estaba en las doce decisiones y ninguna cambia un contrato. Se aplicaron como recomendaciones y **esperan confirmación**.
+Ninguna estaba en las doce decisiones y ninguna cambia un contrato. Se aplicaron como recomendaciones y **quedaron confirmadas el 2026-11-16** por quien decide, las nueve. Con W2, la revisión periódica de relojes aplica también los abandonos pendientes, lo que precisa V1.
 
 | ID | Asunto | Lo que se hizo | Alternativa |
 |---|---|---|---|
