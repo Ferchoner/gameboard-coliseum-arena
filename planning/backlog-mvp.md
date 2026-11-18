@@ -8,7 +8,7 @@
 
 **Cómo leer este documento.** El contenido de cada hito sale del alcance aceptado en ADR-008. Lo que este documento decide por su cuenta es **cómo se reparte el resto del MVP en los hitos 4 a 7** (B1, [sección final](#reparto-del-resto-del-mvp)). Se propuso al cerrar el Hito 0 y se aceptó el 2026-11-16, al terminar el corte vertical.
 
-Los hitos 1 a 4 están autorizados, todos el 2026-11-16. Ninguna tarea de los hitos 5 a 7 puede empezar sin una autorización explícita.
+Los hitos 1 a 4 están autorizados, todos el 2026-11-16, y el Hito 5, el 2026-11-18. Ninguna tarea de los hitos 6 y 7 puede empezar sin una autorización explícita.
 
 ---
 
@@ -119,6 +119,8 @@ Construido el 2026-11-16. Lo que resultó al construir, incluidas nueve eleccion
 - [ ] Lista de "mis partidas en curso", que indica en cuáles te toca. Hay una primera versión en la página `/partidas` desde el Hito 3 (ADR-014, sección 13, L3).
 - [ ] Aviso de turno dentro de la aplicación.
 - [ ] Aplicación instalable como PWA.
+
+Decisiones del hito propuestas en [ADR-016](../docs/adr/0016-decisiones-del-hito-5.md), pendientes de aceptación. No se escribe código hasta que se acepten.
 
 **Criterio de aceptación:** dos personas juegan una partida completa sin coincidir conectadas en ningún momento, y cada una ve al entrar que le toca.
 
