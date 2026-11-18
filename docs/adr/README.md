@@ -29,7 +29,7 @@ El alojamiento del backend, el de PostgreSQL, las copias de seguridad, la superv
 
 ## Propuestas pendientes de confirmación
 
-Las elecciones Q1 a Q6 de [ADR-016](0016-decisiones-del-hito-5.md), sección 14, tomadas al construir el Hito 5. Sus decisiones N1 a N12 se aceptaron el 2026-11-18. Las decisiones V1 a V12 de ADR-015 con sus elecciones W1 a W9, K1 a K22 de ADR-014 con sus elecciones L1 a L7, y las elecciones C1 a C5 de ADR-013 se aceptaron el 2026-11-16.
+Ninguna. Las decisiones N1 a N12 de [ADR-016](0016-decisiones-del-hito-5.md) con sus elecciones Q1 a Q6 se aceptaron el 2026-11-18. Las decisiones V1 a V12 de ADR-015 con sus elecciones W1 a W9, K1 a K22 de ADR-014 con sus elecciones L1 a L7, y las elecciones C1 a C5 de ADR-013 se aceptaron el 2026-11-16.
 
 ## Convenciones
 

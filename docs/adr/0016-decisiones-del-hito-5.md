@@ -220,7 +220,7 @@ Hechos al aceptarse las decisiones, salvo el backlog, que se marca al construir.
 
 ## 14. Lo que resultó al construir
 
-Añadido el 2026-11-18, al terminar el hito. No cambia ninguna decisión aceptada ni ningún contrato.
+Añadido el 2026-11-18, al terminar el hito. No cambia ninguna decisión aceptada ni ningún contrato. Las elecciones Q1 a Q6 se confirmaron el mismo día.
 
 ### Supuestos de la sección 11
 
@@ -242,7 +242,7 @@ Añadido el 2026-11-18, al terminar el hito. No cambia ninguna decisión aceptad
 
 ### Elecciones menores tomadas al construir
 
-Ninguna estaba en las doce decisiones y ninguna cambia un contrato. Se aplicaron como recomendaciones y quedan **pendientes de confirmar** por quien decide.
+Ninguna estaba en las doce decisiones y ninguna cambia un contrato. Se aplicaron como recomendaciones y **quedaron confirmadas el 2026-11-18** por quien decide, las seis.
 
 | ID | Asunto | Lo que se hizo | Alternativa |
 |---|---|---|---|

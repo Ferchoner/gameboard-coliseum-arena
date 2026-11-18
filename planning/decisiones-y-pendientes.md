@@ -87,7 +87,7 @@ Las inconsistencias que el registro inicial pedía normalizar están resueltas. 
 
 No son decisiones. No deben tratarse como aprobadas.
 
-Las elecciones Q1 a Q6 del Hito 5, tomadas al construir ([ADR-016, sección 14](../docs/adr/0016-decisiones-del-hito-5.md#14-lo-que-resultó-al-construir)). Las decisiones N1 a N12 se aceptaron el 2026-11-18, y las elecciones W1 a W9 del Hito 4, el 2026-11-16.
+Ninguna. Las decisiones N1 a N12 del Hito 5 y sus elecciones Q1 a Q6 ([ADR-016, sección 14](../docs/adr/0016-decisiones-del-hito-5.md#14-lo-que-resultó-al-construir)) se confirmaron el 2026-11-18, y las elecciones W1 a W9 del Hito 4, el 2026-11-16.
 
 ---
 
