@@ -148,6 +148,8 @@ El motor es TypeScript puro en `packages/game-engine`, sin dependencias, con el 
 | Retirada de un asiento | El juego termina: pierde el retirado y gana el otro (7.18) |
 | Versión | 1.0.0 |
 
+*Anotado el 2026-11-18:* los controles de tiempo por turnos, 12, 24 y 36 horas, los fija ADR-016, decisión N1, en la misma versión 1.0.0.
+
 Controles de tiempo. La regla 7.2 admite hasta 30 minutos por jugador en tiempo real. Una partida tiene como mucho 21 jugadas por jugador.
 
 | Opción | A favor | En contra |

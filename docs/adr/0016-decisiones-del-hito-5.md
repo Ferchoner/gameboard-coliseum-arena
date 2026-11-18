@@ -2,9 +2,9 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Propuesta |
+| **Estado** | Aceptada |
 | **Fecha** | 2026-11-18 |
-| **Propuesta para** | Fernando Hernandez Argueta |
+| **Decidida por** | Fernando Hernandez Argueta |
 | **Cierra** | Los controles de tiempo por turnos de Cuatro en raya (ADR-014, K6) y el abandono en el móvil (ADR-015, sección 11) |
 | **Depende de** | ADR-008 (puntos 9 a 11), ADR-009 (reglas 7.2, 7.10, 7.14, 7.27, 7.30 y 7.31), ADR-013, ADR-014, ADR-015, el protocolo de tiempo real y la API |
 
@@ -45,7 +45,7 @@ Todo eso se probó con un juego de pruebas, no con Cuatro en raya, que hoy no ad
 - Cada decisión tiene un identificador (N1 a N12), sus alternativas y una recomendación.
 - Las decisiones N1 a N6 afectan a la experiencia, a la arquitectura o cuesta deshacerlas. Van explicadas una a una.
 - Las decisiones N7 a N12 son menores y fáciles de cambiar. Van en una tabla.
-- Nada de esto está aprobado hasta que quien decide lo confirme.
+- **Las doce se aceptaron el 2026-11-18 tal como se recomendaban.** Donde el texto dice "recomendación", léase "decisión".
 - **Ninguna cambia un contrato ni una regla aceptada, y ninguna añade dependencias.** Una pide atención: **N1** precisa qué cuenta como versión nueva de un juego en el catálogo.
 
 ## 3. Resumen
@@ -208,7 +208,7 @@ Si alguno falla, se avisa antes de cambiar de opción.
 
 ## 13. Efecto sobre los documentos
 
-Se harán al aceptarse las decisiones. Ninguno cambia un contrato.
+Hechos al aceptarse las decisiones, salvo el backlog, que se marca al construir. Ninguno cambia un contrato.
 
 | Documento | Cambio |
 |---|---|

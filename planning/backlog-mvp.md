@@ -120,7 +120,7 @@ Construido el 2026-11-16. Lo que resultó al construir, incluidas nueve eleccion
 - [ ] Aviso de turno dentro de la aplicación.
 - [ ] Aplicación instalable como PWA.
 
-Decisiones del hito propuestas en [ADR-016](../docs/adr/0016-decisiones-del-hito-5.md), pendientes de aceptación. No se escribe código hasta que se acepten.
+Decisiones del hito en [ADR-016](../docs/adr/0016-decisiones-del-hito-5.md), aceptadas el 2026-11-18.
 
 **Criterio de aceptación:** dos personas juegan una partida completa sin coincidir conectadas en ningún momento, y cada una ve al entrar que le toca.
 
