@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MatchView } from '@gameboard/contracts';
+import type { MatchView, RoomView } from '@gameboard/contracts';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useHead, useRoute } from '#imports';
 import { useApi } from '../../composables/useApi';
@@ -10,12 +10,13 @@ import { gameUi } from '../../games';
 import { es } from '../../i18n/es';
 import type { Failure } from '../../utils/api';
 import { failureText } from '../../utils/errors';
-import { formatDuration } from '../../utils/format';
+import { formatDateTime, formatDuration } from '../../utils/format';
 import {
   abandonAfter,
   clockAfter,
   endReasonText,
   formatClock,
+  formatMatchClock,
   outcomeOf,
   rejectionText,
   rivalNames,
@@ -88,7 +89,7 @@ const players = computed(() => {
     hasTurn:
       current.match.status === 'IN_PROGRESS' && current.match.activeSeats.includes(player.seat),
     seatName: ui.value?.seatNames[player.seat] ?? null,
-    clock: formatClock(clockAfter(current.match, player, elapsedMs)),
+    clock: formatMatchClock(current.match.mode, clockAfter(current.match, player, elapsedMs)),
     // La cuenta atrás del abandono se ve en la tarjeta del rival (ADR-015, decisión V8).
     abandonIn: (() => {
       if (player.seat === current.match.yourSeat) return null;
@@ -101,7 +102,13 @@ const players = computed(() => {
 const turnText = computed(() => {
   if (!match.value || !inProgress.value) return null;
   if (sending.value === 'move') return es.match.turn.sending;
-  if (myTurn.value) return es.match.turn.yours;
+  if (myTurn.value) {
+    // Por turnos se dice además hasta cuándo, en la hora de quien juega (ADR-016, decisión N7).
+    const deadline = match.value.mode === 'TURN_BASED' ? match.value.turnDeadlineAt : null;
+    return deadline
+      ? `${es.match.turn.yours} ${es.matches.yourDeadline(formatDateTime(deadline))}`
+      : es.match.turn.yours;
+  }
   const names = match.value.players
     .filter((player) => match.value?.activeSeats.includes(player.seat))
     .map((player) => player.displayName)
@@ -122,6 +129,25 @@ const endTexts = computed(() => {
 
 useHead({ title: () => `${title.value} · ${es.app.name}` });
 
+/**
+ * En el móvil, salir de la aplicación suspende la página y corta la
+ * conexión: en tiempo real cuenta como abandono (regla 7.26; ADR-016,
+ * decisión N5).
+ */
+const onMobile = ref(false);
+const mobileWarning = computed(
+  () => onMobile.value && inProgress.value && match.value?.mode === 'REALTIME',
+);
+
+/** La sala de una partida por turnos terminada, si se cerró al terminar (ADR-016, decisión N8). */
+const roomClosed = ref(false);
+
+async function checkRoom(current: MatchView): Promise<void> {
+  if (current.mode !== 'TURN_BASED' || current.status === 'IN_PROGRESS') return;
+  const result = await api.get<RoomView>(`/rooms/${current.roomId}`);
+  roomClosed.value = result.ok && result.data.status === 'CLOSED';
+}
+
 // --- Carga y cambios en vivo -----------------------------------------------
 
 /**
@@ -134,7 +160,10 @@ function show(next: MatchView, serverTime = new Date().toISOString()): void {
   state.value = { status: 'ready', match: next, receivedAt: performance.now(), serverTime };
   now.value = performance.now();
   realtime.track(next);
-  if (next.status !== 'IN_PROGRESS') confirmingResign.value = false;
+  if (next.status !== 'IN_PROGRESS') {
+    confirmingResign.value = false;
+    void checkRoom(next);
+  }
 }
 
 let unsubscribe: (() => void) | null = null;
@@ -202,6 +231,9 @@ function resign(): void {
 let ticker: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
+  onMobile.value =
+    window.matchMedia('(pointer: coarse)').matches ||
+    window.matchMedia('(display-mode: standalone)').matches;
   void loadCatalog();
   void load();
   ticker = setInterval(() => {
@@ -290,6 +322,9 @@ onBeforeUnmount(() => {
     <section aria-labelledby="board-title">
       <h2 id="board-title" class="visually-hidden">{{ es.match.boardTitle }}</h2>
       <p v-if="turnText" class="turn" role="status">{{ turnText }}</p>
+      <p v-if="mobileWarning" class="notice warning" data-testid="mobile-warning">
+        {{ es.match.mobileWarning }}
+      </p>
 
       <p v-if="!ui" class="notice warning">{{ es.match.unknownGame }}</p>
       <p v-else-if="match.view === null" class="empty">{{ es.match.noBoard }}</p>
@@ -321,6 +356,13 @@ onBeforeUnmount(() => {
 
     <section v-else-if="youAbandoned(match)">
       <p class="hint">{{ es.match.after.leftRoomHint }}</p>
+      <div class="room-actions">
+        <NuxtLink class="button quiet" to="/partidas">{{ es.match.after.allMatches }}</NuxtLink>
+      </div>
+    </section>
+
+    <section v-else-if="roomClosed">
+      <p class="hint">{{ es.match.after.roomClosedHint }}</p>
       <div class="room-actions">
         <NuxtLink class="button quiet" to="/partidas">{{ es.match.after.allMatches }}</NuxtLink>
       </div>

@@ -1,13 +1,62 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { navigateTo } from '#imports';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { navigateTo, useHead, useRoute } from '#imports';
 import { useRealtime } from '../composables/useRealtime';
 import { useSession } from '../composables/useSession';
 import { es } from '../i18n/es';
 import { failureText } from '../utils/errors';
+import { titleWithTurns, yourTurnCount } from '../utils/my-matches';
+
+/** Cuánto se ve el aviso emergente de turno antes de cerrarse solo. */
+const ALERT_MS = 10_000;
 
 const { session, me, signOut } = useSession();
-const { state: connection, realtimeMatches } = useRealtime();
+const { state: connection, realtimeMatches, ongoing, turnAlerts, dismissTurnAlert } = useRealtime();
+const route = useRoute();
+
+// --- Aviso de turno (ADR-016, decisión N2) ---------------------------------
+
+/** En cuántas partidas le toca: va en la cabecera y en el título de la pestaña. */
+const turns = computed(() =>
+  me.value && ongoing.value.status === 'ready' ? yourTurnCount(ongoing.value.items) : 0,
+);
+useHead(() => {
+  const count = turns.value;
+  return { titleTemplate: (title?: string) => titleWithTurns(title ?? es.app.name, count) };
+});
+
+/** La partida que se está mirando no necesita aviso: el tablero ya lo dice. */
+const viewing = computed(() =>
+  route.path.startsWith('/partidas/') ? String(route.params.matchId ?? '') : null,
+);
+const alerts = computed(() => turnAlerts.value.filter((alert) => alert.matchId !== viewing.value));
+watch(viewing, (matchId) => {
+  if (matchId) dismissTurnAlert(matchId);
+});
+
+const timers = new Map<string, ReturnType<typeof setTimeout>>();
+watch(
+  () => turnAlerts.value.map((alert) => alert.matchId),
+  (ids) => {
+    for (const id of ids) {
+      if (!timers.has(id))
+        timers.set(
+          id,
+          setTimeout(() => dismissTurnAlert(id), ALERT_MS),
+        );
+    }
+    for (const [id, timer] of timers) {
+      if (!ids.includes(id)) {
+        clearTimeout(timer);
+        timers.delete(id);
+      }
+    }
+  },
+);
+onBeforeUnmount(() => timers.forEach((timer) => clearTimeout(timer)));
+
+const rivalsOf = (alert: (typeof turnAlerts.value)[number]) =>
+  alert.opponents.map((opponent) => opponent.displayName).join(', ');
 
 /** Lo que hay que contar de la conexión de tiempo real, si hay algo que contar. */
 const connectionNotice = computed(() => {
@@ -50,7 +99,13 @@ async function onSignOut(): Promise<void> {
       <nav class="site-nav" :aria-label="es.app.name">
         <template v-if="me">
           <NuxtLink class="nav-link" to="/salas">{{ es.nav.rooms }}</NuxtLink>
-          <NuxtLink class="nav-link" to="/partidas">{{ es.nav.matches }}</NuxtLink>
+          <NuxtLink class="nav-link" to="/partidas" data-testid="nav-matches">
+            {{ es.nav.matches }}
+            <span v-if="turns > 0" class="turn-count" data-testid="turn-count">
+              <span aria-hidden="true">{{ turns }}</span>
+              <span class="visually-hidden">{{ es.nav.yourTurnIn(turns) }}</span>
+            </span>
+          </NuxtLink>
           <span class="who">
             <span class="visually-hidden">{{ es.nav.signedInAs }}</span>
             {{ me.displayName }}
@@ -72,6 +127,27 @@ async function onSignOut(): Promise<void> {
     </p>
 
     <p v-if="connectionNotice" class="notice warning" role="status">{{ connectionNotice }}</p>
+
+    <div class="turn-alerts" role="status" aria-live="polite">
+      <div v-for="alert in alerts" :key="alert.matchId" class="turn-alert" data-testid="turn-alert">
+        <p>{{ es.turnAlert.text(rivalsOf(alert)) }}</p>
+        <NuxtLink
+          class="button"
+          :to="`/partidas/${alert.matchId}`"
+          @click="dismissTurnAlert(alert.matchId)"
+        >
+          {{ es.turnAlert.go }}
+        </NuxtLink>
+        <button
+          type="button"
+          class="button quiet"
+          :aria-label="es.turnAlert.close"
+          @click="dismissTurnAlert(alert.matchId)"
+        >
+          ×
+        </button>
+      </div>
+    </div>
 
     <main class="content">
       <slot />

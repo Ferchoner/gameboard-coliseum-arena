@@ -875,6 +875,111 @@ describe('partidas', () => {
     });
   });
 
+  // --- Cuatro en raya por turnos (Hito 5) ----------------------------------
+
+  describe('Cuatro en raya por turnos', () => {
+    const TWELVE_HOURS = { type: 'TOTAL_PER_PLAYER', totalMs: 12 * HOUR_MS } as const;
+    const BY_TURNS = { ...FOUR_IN_A_ROW, mode: 'TURN_BASED', timeControl: TWELVE_HOURS };
+
+    /** Ana crea la sala y Bea la completa, con lo que empieza la partida (regla 7.10). */
+    async function startByTurns(rematchEnabled: boolean): Promise<StartedMatch> {
+      const owner = await signUp(t, { displayName: 'Ana' });
+      const guest = await signUp(t, { displayName: 'Bea' });
+      const created = await owner.post('/rooms', { ...BY_TURNS, rematchEnabled });
+      expect(created.status, created.text).toBe(201);
+      const { roomId } = created.body.data as RoomView;
+      const joined = await guest.put(`/rooms/${roomId}/members/me`);
+      expect(joined.status, joined.text).toBe(200);
+      const room = joined.body.data as RoomView;
+      expect(room.status).toBe('IN_MATCH');
+      const matchId = room.currentMatchId as string;
+      const view = await getMatch(owner, matchId);
+      const [first, second] = view.yourSeat === 0 ? [owner, guest] : [guest, owner];
+      return { roomId, matchId, first, second, owner, guest };
+    }
+
+    it('el catálogo ofrece 12, 24 y 36 horas (ADR-016, decisión N1)', async () => {
+      const response = await t.request().get(`${API}/games/four-in-a-row`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.timeControls.TURN_BASED).toEqual(
+        [12, 24, 36].map((hours) => ({ type: 'TOTAL_PER_PLAYER', totalMs: hours * HOUR_MS })),
+      );
+    });
+
+    it('no admite un control de tiempo que el juego no declara', async () => {
+      const owner = await signUp(t);
+      const response = await owner.post('/rooms', {
+        ...BY_TURNS,
+        timeControl: { type: 'TOTAL_PER_PLAYER', totalMs: 6 * HOUR_MS },
+      });
+      expect(response.status).toBe(400);
+      expect(response.body.error).toMatchObject({
+        code: 'UNSUPPORTED_ROOM_OPTIONS',
+        details: { option: 'timeControl' },
+      });
+    });
+
+    it('empieza al completarse la sala, y la lista dice a quién le toca y hasta cuándo', async () => {
+      const match = await startByTurns(false);
+
+      const [mine] = (await listMatches(match.first, '?status=IN_PROGRESS')).items;
+      expect(mine).toMatchObject({ matchId: match.matchId, mode: 'TURN_BASED', yourTurn: true });
+      const deadline = new Date(mine?.turnDeadlineAt as string).getTime();
+      expect(deadline).toBe(new Date(mine?.startedAt as string).getTime() + 12 * HOUR_MS);
+      const [theirs] = (await listMatches(match.second, '?status=IN_PROGRESS')).items;
+      expect(theirs).toMatchObject({ matchId: match.matchId, yourTurn: false });
+
+      // Tras la jugada, le toca a la otra, con su propio reloj completo.
+      t.clock.advance(3 * HOUR_MS);
+      await drop(match.first, match.matchId, 3, 0);
+      const [next] = (await listMatches(match.second, '?status=IN_PROGRESS')).items;
+      expect(next).toMatchObject({ yourTurn: true });
+      // La jugada llegó unas 3 horas después del inicio: el plazo nuevo es 3 horas más tarde.
+      const nextDeadline = new Date(next?.turnDeadlineAt as string).getTime();
+      expect(Math.abs(nextDeadline - deadline - 3 * HOUR_MS)).toBeLessThan(5000);
+      const view = await getMatch(match.first, match.matchId);
+      expect(Math.abs((view.players[0]?.clockRemainingMs ?? 0) - 9 * HOUR_MS)).toBeLessThan(5000);
+    });
+
+    it('el reloj de 12 horas se agota a las 12 horas, no antes', async () => {
+      const match = await startByTurns(false);
+
+      t.clock.advance(12 * HOUR_MS - 1000);
+      expect(await sessions.expireDueMatches()).toBe(0);
+
+      t.clock.advance(1001);
+      expect(await sessions.expireDueMatches()).toBe(1);
+      const view = await getMatch(match.second, match.matchId);
+      expect(view).toMatchObject({ status: 'FINISHED', result: { reason: 'TIMEOUT' } });
+      expect(view.result?.seats).toEqual([
+        { seat: 0, outcome: 'LOSS' },
+        { seat: 1, outcome: 'WIN' },
+      ]);
+      // Sin revancha, la sala se cierra al terminar (regla 7.31).
+      expect(await getRoom(match.owner, match.roomId)).toMatchObject({
+        status: 'CLOSED',
+        closeReason: 'MATCH_ENDED',
+      });
+    });
+
+    it('con revancha, la sala vuelve a la espera y la siguiente partida espera a los dos', async () => {
+      const match = await startByTurns(true);
+      // Cuatro en vertical en la columna 0 para quien empieza.
+      const final = await play(match, [0, 1, 0, 1, 0, 1, 0]);
+      expect(final.status).toBe('FINISHED');
+
+      const room = await getRoom(match.owner, match.roomId);
+      expect(room).toMatchObject({ status: 'WAITING', currentMatchId: null });
+
+      await match.owner.put(`/rooms/${match.roomId}/members/me/ready`, { ready: true });
+      expect((await getRoom(match.owner, match.roomId)).status).toBe('WAITING');
+      const ready = await match.guest.put(`/rooms/${match.roomId}/members/me/ready`, {
+        ready: true,
+      });
+      expect((ready.body.data as RoomView).status).toBe('IN_MATCH');
+    });
+  });
+
   // --- Anulación -----------------------------------------------------------
 
   describe('anulación por fallo', () => {

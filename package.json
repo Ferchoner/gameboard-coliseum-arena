@@ -21,7 +21,8 @@
     "db:migrate": "pnpm --filter @gameboard/backend run db:migrate",
     "dev": "node scripts/dev.mjs http",
     "dev:https": "node scripts/dev.mjs https",
-    "dev:cert": "node scripts/dev-cert.mjs"
+    "dev:cert": "node scripts/dev-cert.mjs",
+    "icons": "node scripts/pwa-icons.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

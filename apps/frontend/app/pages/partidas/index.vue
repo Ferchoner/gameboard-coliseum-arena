@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import type { MatchSummaryView, Page } from '@gameboard/contracts';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useHead } from '#imports';
+import OngoingMatches from '../../components/OngoingMatches.vue';
 import { useApi } from '../../composables/useApi';
 import { useCatalog } from '../../composables/useCatalog';
+import { useRealtime } from '../../composables/useRealtime';
 import { useSignedInOnly } from '../../composables/useSignedInOnly';
 import { es } from '../../i18n/es';
 import type { Failure } from '../../utils/api';
 import { failureText } from '../../utils/errors';
 import { formatDateTime } from '../../utils/format';
+import { sortInProgress } from '../../utils/my-matches';
 
 useSignedInOnly();
 useHead({ title: `${es.matches.title} · ${es.app.name}` });
@@ -25,7 +28,12 @@ type ListState =
 const api = useApi();
 const { load: loadCatalog, gameName } = useCatalog();
 
-const inProgress = ref<ListState>({ status: 'loading' });
+// Las partidas en curso son las que lleva la aplicación, al día con los avisos personales.
+const { ongoing, loadMatches } = useRealtime();
+const inProgress = computed(() => ongoing.value);
+const sortedInProgress = computed(() =>
+  ongoing.value.status === 'ready' ? sortInProgress(ongoing.value.items) : [],
+);
 const history = ref<ListState>({ status: 'loading' });
 const loadingMore = ref(false);
 
@@ -35,15 +43,14 @@ function toState(result: Awaited<ReturnType<typeof fetchPage>>): ListState {
     : { status: 'failed', failure: result.failure };
 }
 
-function fetchPage(status: 'IN_PROGRESS' | 'FINISHED', cursor?: string) {
+function fetchPage(status: 'FINISHED', cursor?: string) {
   const params = new URLSearchParams({ status });
   if (cursor) params.set('cursor', cursor);
   return api.get<Page<MatchSummaryView>>(`/me/matches?${params.toString()}`);
 }
 
 async function load(): Promise<void> {
-  const [current, finished] = await Promise.all([fetchPage('IN_PROGRESS'), fetchPage('FINISHED')]);
-  inProgress.value = toState(current);
+  const [, finished] = await Promise.all([loadMatches(), fetchPage('FINISHED')]);
   history.value = toState(finished);
 }
 
@@ -91,26 +98,10 @@ onMounted(() => {
     </div>
     <p v-else-if="inProgress.items.length === 0" class="empty">{{ es.matches.emptyInProgress }}</p>
 
-    <ul v-else class="rooms">
-      <li v-for="match in inProgress.items" :key="match.matchId" class="room">
-        <div>
-          <h3>{{ gameName(match.gameSlug) }}</h3>
-          <p>{{ rivals(match) }}</p>
-          <p class="muted">
-            {{ es.home.modes[match.mode] }} ·
-            {{ es.matches.startedAt(formatDateTime(match.startedAt)) }}
-          </p>
-        </div>
-        <div class="room-actions">
-          <span class="badge" :class="{ on: match.yourTurn }">
-            {{ match.yourTurn ? es.matches.yourTurn : es.matches.theirTurn }}
-          </span>
-          <NuxtLink class="button" :to="`/partidas/${match.matchId}`">
-            {{ es.matches.play }}
-          </NuxtLink>
-        </div>
-      </li>
-    </ul>
+    <template v-else>
+      <OngoingMatches :items="sortedInProgress" />
+      <p v-if="inProgress.hasMore" class="muted">{{ es.matches.hasMore }}</p>
+    </template>
   </section>
 
   <section aria-labelledby="history-title">

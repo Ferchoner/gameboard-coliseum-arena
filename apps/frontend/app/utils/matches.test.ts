@@ -7,6 +7,8 @@ import {
   clockAfter,
   endReasonText,
   formatClock,
+  formatMatchClock,
+  formatTurnClock,
   outcomeOf,
   rejectionText,
   rivalNames,
@@ -98,6 +100,18 @@ describe('relojes de una partida', () => {
     expect(formatClock(0)).toBe('0:00');
     expect(formatClock(-50)).toBe('0:00');
     expect(formatClock(3 * 3_600_000 + 5 * 60_000 + 7_000)).toBe('3:05:07');
+  });
+
+  it('por turnos se escribe en horas y minutos, y en la última hora como en tiempo real', () => {
+    expect(formatTurnClock(12 * 3_600_000)).toBe('12 h 00 min');
+    expect(formatTurnClock(35 * 3_600_000 + 59 * 60_000 + 59_000)).toBe('35 h 59 min');
+    expect(formatTurnClock(3_600_000)).toBe('1 h 00 min');
+    expect(formatTurnClock(3_600_000 - 1)).toBe('1 h 00 min');
+    expect(formatTurnClock(3_599_000)).toBe('59:59');
+    expect(formatTurnClock(59 * 60_000)).toBe('59:00');
+    expect(formatTurnClock(0)).toBe('0:00');
+    expect(formatMatchClock('TURN_BASED', 2 * 3_600_000)).toBe('2 h 00 min');
+    expect(formatMatchClock('REALTIME', 2 * 3_600_000)).toBe('2:00:00');
   });
 });
 

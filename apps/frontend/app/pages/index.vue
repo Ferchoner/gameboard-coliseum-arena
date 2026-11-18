@@ -1,17 +1,36 @@
 <script setup lang="ts">
 import { MATCH_MODES } from '@gameboard/contracts';
-import { onMounted } from 'vue';
+import { computed, onMounted, watch } from 'vue';
+import OngoingMatches from '../components/OngoingMatches.vue';
 import { useCatalog } from '../composables/useCatalog';
+import { useRealtime } from '../composables/useRealtime';
 import { useSession } from '../composables/useSession';
 import { es } from '../i18n/es';
 import { failureText } from '../utils/errors';
 import { formatDuration, formatPlayers } from '../utils/format';
+import { sortInProgress } from '../utils/my-matches';
 
 const { session, me } = useSession();
 const { catalog, load } = useCatalog();
+const { ongoing, loadMatches } = useRealtime();
+
+/** Al entrar se ven primero las partidas en las que le toca (ADR-016, decisión N3). */
+const yourTurn = computed(() =>
+  me.value && ongoing.value.status === 'ready'
+    ? sortInProgress(ongoing.value.items.filter((match) => match.yourTurn))
+    : [],
+);
 
 // El catálogo puede cambiar sin que se vuelva a construir el sitio: se pide en el navegador.
 onMounted(load);
+// Con sesión, se preguntan sus partidas al llegar, aunque la conexión ya estuviera abierta.
+watch(
+  () => me.value?.userId,
+  (userId) => {
+    if (userId) void loadMatches();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -23,6 +42,14 @@ onMounted(load);
       <NuxtLink to="/salas">{{ es.home.goToRooms }}</NuxtLink>
     </p>
     <p v-else-if="session.status === 'anonymous'" class="muted">{{ es.home.guest }}</p>
+  </section>
+
+  <section v-if="yourTurn.length > 0" aria-labelledby="your-turn-title" data-testid="your-turn">
+    <h2 id="your-turn-title">{{ es.home.yourTurnTitle }}</h2>
+    <OngoingMatches :items="yourTurn" />
+    <p>
+      <NuxtLink to="/partidas">{{ es.home.allMatches }}</NuxtLink>
+    </p>
   </section>
 
   <section aria-labelledby="games-title">

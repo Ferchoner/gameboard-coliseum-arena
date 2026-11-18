@@ -60,6 +60,26 @@ export function formatClock(ms: number): string {
     : `${minutes}:${seconds}`;
 }
 
+const HOUR_MS = 60 * 60 * 1000;
+
+/**
+ * Un reloj de partida por turnos: "11 h 20 min", sin segundos, que con
+ * horas por delante no dicen nada. En la última hora se ve como en tiempo
+ * real, con minutos y segundos (ADR-016, decisión N7).
+ */
+export function formatTurnClock(ms: number): string {
+  // Como en `formatClock`, los segundos se redondean hacia arriba.
+  const totalSeconds = Math.ceil(Math.max(0, ms) / 1000);
+  if (totalSeconds * 1000 < HOUR_MS) return formatClock(ms);
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  return `${Math.floor(totalMinutes / 60)} h ${String(totalMinutes % 60).padStart(2, '0')} min`;
+}
+
+/** El reloj como se muestra en cada modalidad. */
+export function formatMatchClock(mode: MatchView['mode'], ms: number): string {
+  return mode === 'TURN_BASED' ? formatTurnClock(ms) : formatClock(ms);
+}
+
 /**
  * Si un estado recién llegado debe sustituir al que se muestra. Una
  * notificación con una versión menor que la que ya se tiene se descarta
