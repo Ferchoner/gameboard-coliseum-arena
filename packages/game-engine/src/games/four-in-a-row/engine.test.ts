@@ -50,13 +50,17 @@ describe('Cuatro en raya: lo que declara', () => {
     expect(engine.metadata.maxPlayers).toBe(2);
   });
 
-  it('ofrece 3, 5 y 10 minutos en tiempo real y todavía nada por turnos', () => {
+  it('ofrece 3, 5 y 10 minutos en tiempo real y 12, 24 y 36 horas por turnos', () => {
     expect(engine.metadata.timeControls.REALTIME).toEqual([
       { type: 'TOTAL_PER_PLAYER', totalMs: 180_000 },
       { type: 'TOTAL_PER_PLAYER', totalMs: 300_000 },
       { type: 'TOTAL_PER_PLAYER', totalMs: 600_000 },
     ]);
-    expect(engine.metadata.timeControls.TURN_BASED).toEqual([]);
+    expect(engine.metadata.timeControls.TURN_BASED).toEqual([
+      { type: 'TOTAL_PER_PLAYER', totalMs: 12 * 3_600_000 },
+      { type: 'TOTAL_PER_PLAYER', totalMs: 24 * 3_600_000 },
+      { type: 'TOTAL_PER_PLAYER', totalMs: 36 * 3_600_000 },
+    ]);
   });
 
   it('no tiene opciones: solo acepta un objeto vacío', () => {

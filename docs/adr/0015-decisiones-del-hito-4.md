@@ -199,7 +199,7 @@ Si alguno falla, se avisa antes de cambiar de opción.
 | Asunto | Cuándo |
 |---|---|
 | Una caída solo de la base de datos, con el servidor en marcha. Las jugadas fallan mientras dura, y su tiempo se descuenta | Con el alojamiento y la supervisión, en el Hito 7 |
-| Abandono en el móvil al pasar a otra aplicación | Al hacer la aplicación instalable, en el Hito 5 |
+| Abandono en el móvil al pasar a otra aplicación | Al hacer la aplicación instalable, en el Hito 5. *Cerrado el 2026-11-18 por ADR-016, decisión N5: se mantiene la regla 7.26 y se avisa en pantalla* |
 | Más de una instancia del servidor. Los temporizadores y la presencia en memoria suponen una sola, como ya está aceptado | Posterior al MVP |
 
 ## 12. Efecto sobre los documentos

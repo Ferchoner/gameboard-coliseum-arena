@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Versión recortable para Android: el dibujo cabe en el círculo central del 80 %. -->
+  <rect width="512" height="512" fill="#2f5fd0"/>
+  <circle cx="200" cy="200" r="44" fill="#f6f5f1"/>
+  <circle cx="312" cy="200" r="44" fill="#e9b520"/>
+  <circle cx="200" cy="312" r="44" fill="#d6453d"/>
+  <circle cx="312" cy="312" r="44" fill="#d6453d"/>
+</svg>

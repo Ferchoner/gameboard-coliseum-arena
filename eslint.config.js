@@ -69,6 +69,11 @@ export default tseslint.config(
     files: ['apps/backend/**/*.ts', 'packages/**/*.ts', 'scripts/**/*.mjs', '*.{js,cjs,mjs}'],
     languageOptions: { globals: globals.node },
   },
+  // El service worker de la aplicación instalable (ADR-016, decisión N4).
+  {
+    files: ['apps/frontend/service-worker/**/*.js'],
+    languageOptions: { globals: globals.serviceworker },
+  },
   // Pruebas en navegador: se ejecutan en Node y parte de su código, dentro de la página.
   {
     files: ['e2e/**/*.{ts,mjs}'],

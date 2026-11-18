@@ -24,6 +24,15 @@ export const es = {
     signOut: 'Salir',
     signingOut: 'Saliendo…',
     signedInAs: 'Sesión de',
+    yourTurnIn: (count: number) =>
+      count === 1 ? 'Te toca en 1 partida' : `Te toca en ${count} partidas`,
+  },
+
+  /** Aviso emergente cuando empieza tu turno en una partida por turnos (ADR-016, decisión N2). */
+  turnAlert: {
+    text: (rivals: string) => `Te toca contra ${rivals}.`,
+    go: 'Jugar',
+    close: 'Cerrar el aviso',
   },
 
   home: {
@@ -41,6 +50,9 @@ export const es = {
     },
     timePerPlayer: 'por jugador',
     welcome: (name: string) => `Hola, ${name}.`,
+    /** Lo que ve al entrar: las partidas en las que le toca (ADR-016, decisión N3). */
+    yourTurnTitle: 'Te toca',
+    allMatches: 'Ver todas mis partidas',
     goToRooms: 'Ver las salas',
     guest: 'Crea una cuenta o entra para jugar.',
   },
@@ -200,6 +212,8 @@ export const es = {
       leftRoomHint: 'Al perder por abandono saliste de la sala.',
       allMatches: 'Ver mis partidas',
     },
+    /** En el móvil, en tiempo real (ADR-016, decisión N5). */
+    mobileWarning: 'Si sales de la aplicación más de 2 minutos, pierdes la partida por abandono.',
     unknownGame: 'Esta versión de la aplicación no sabe mostrar este juego. Recarga la página.',
     noBoard: 'El tablero de esta partida no se puede mostrar.',
     notConnected: 'No hay conexión con el servidor, así que no se envió. Vuelve a intentarlo.',
@@ -219,6 +233,10 @@ export const es = {
     open: 'Ver',
     yourTurn: 'Te toca',
     theirTurn: 'Le toca a tu rival',
+    yourDeadline: (date: string) => `Tienes hasta el ${date}.`,
+    theirDeadline: (date: string) => `Tiene hasta el ${date}.`,
+    /** Más partidas de las que caben en una página (ADR-016, decisión N3). */
+    hasMore: 'Tienes más partidas en curso de las que se muestran aquí.',
     startedAt: (date: string) => `Empezó el ${date}`,
     endedAt: (date: string) => `Terminó el ${date}`,
     more: 'Ver más partidas',

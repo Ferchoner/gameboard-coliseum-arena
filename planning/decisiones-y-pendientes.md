@@ -13,7 +13,7 @@ Este documento es un índice. No decide nada: dice dónde está cada decisión y
 
 ### Arquitectura
 
-Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron el 2026-11-14, y las tres siguientes, el 2026-11-16.
+Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron el 2026-11-14, las cuatro siguientes, el 2026-11-16, y ADR-016, el 2026-11-18.
 
 | ADR | Decisión |
 |---|---|
@@ -32,6 +32,7 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | ADR-013 | Decisiones del Hito 2 (H1 a H20): salas, canal de tiempo real, avisos tras guardar y tareas periódicas. Incluye las elecciones C1 a C5, confirmadas después |
 | ADR-014 | Decisiones del Hito 3 (K1 a K22): quién dirige la partida, estado siempre en la base de datos, relojes, el juego Cuatro en raya, frontend y pruebas en navegador. Incluye las elecciones L1 a L7, confirmadas el 2026-11-16 |
 | ADR-015 | Decisiones del Hito 4 (V1 a V12): abandono por desconexión con margen de 5 segundos, no descontar el tiempo de una caída del servidor y pruebas de reinicio y de corte de red |
+| ADR-016 | Decisiones del Hito 5 (N1 a N12): Cuatro en raya por turnos sin versión nueva, aviso de turno, lo que se ve al entrar, aplicación instalable sin dependencias, abandono en el móvil y pruebas. Aceptadas el 2026-11-18 |
 
 ### Contratos y modelo, versión 1
 
@@ -52,7 +53,7 @@ Tomadas por quien decide fuera de un ADR. No cambian ningún contrato.
 | Fecha | Asunto | Decisión | Se aplica en |
 |---|---|---|---|
 | 2026-11-16 | Reparto del resto del MVP en hitos (B1) | Cuatro hitos, en este orden: reconexión y recuperación, modalidad por turnos, cuenta y administración, y preparación para publicar | [`backlog-mvp.md`](backlog-mvp.md) |
-| 2026-11-16 | Alta de juegos y versiones nuevos en el catálogo | Un juego o una versión nuevos llegan con su motor, mediante una migración, y quedan **inactivos**. Desde administración se activan, se desactivan y se elige la versión vigente. El alta no se hace por la API, como ya decía A5. Precisa K5 de ADR-014, que solo decidía el alta de Cuatro en raya, el primer juego, que entró ya activo | Cada juego o versión nuevos, y la administración del Hito 6 |
+| 2026-11-16 | Alta de juegos y versiones nuevos en el catálogo | Un juego o una versión nuevos llegan con su motor, mediante una migración, y quedan **inactivos**. Desde administración se activan, se desactivan y se elige la versión vigente. El alta no se hace por la API, como ya decía A5. Precisa K5 de ADR-014, que solo decidía el alta de Cuatro en raya, el primer juego, que entró ya activo. *Precisado el 2026-11-18 (ADR-016, N1):* una versión nueva es un cambio de reglas, de estado o de jugadas; los controles de tiempo que admite un juego pueden cambiar sin versión nueva | Cada juego o versión nuevos, y la administración del Hito 6 |
 
 ---
 
@@ -86,7 +87,7 @@ Las inconsistencias que el registro inicial pedía normalizar están resueltas. 
 
 No son decisiones. No deben tratarse como aprobadas.
 
-Ninguna. Las elecciones W1 a W9 del Hito 4 ([ADR-015, sección 13](../docs/adr/0015-decisiones-del-hito-4.md#13-lo-que-resultó-al-construir)) se confirmaron el 2026-11-16. B1, el reparto del resto del MVP en hitos, se aceptó el 2026-11-16.
+Ninguna. Las decisiones N1 a N12 del Hito 5 y sus elecciones Q1 a Q6 ([ADR-016, sección 14](../docs/adr/0016-decisiones-del-hito-5.md#14-lo-que-resultó-al-construir)) se confirmaron el 2026-11-18, y las elecciones W1 a W9 del Hito 4, el 2026-11-16.
 
 ---
 
@@ -117,10 +118,8 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 
 | Asunto | Cuándo | Dónde está anotado |
 |---|---|---|
-| Controles de tiempo por turnos de Cuatro en raya | Hito 5 | ADR-014, decisión K6 |
 | Crear las estadísticas y rellenarlas con los resultados ya guardados | Hito 6 | ADR-014, decisión K4 |
 | Caída solo de la base de datos con el servidor en marcha: su tiempo se descuenta | Con el alojamiento y la supervisión, en el Hito 7 | ADR-015, sección 11 |
-| Abandono en el móvil al pasar a otra aplicación | Al hacer la aplicación instalable, en el Hito 5 | ADR-015, sección 11 |
 | Sacar de la sala a quien abandona una partida de más de dos jugadores que sigue en curso | Con el primer juego de más de dos jugadores | ADR-015, sección 13, W6 |
 | Precisar en el protocolo el margen de desconexión y el abandono cuando faltan todos | La próxima vez que se autorice cambiar los contratos | ADR-015, sección 13 |
 | Pruebas en navegador en otros navegadores además de Chromium, y en el modo HTTPS | Con la preparación para publicar, en el Hito 7 | ADR-014, sección 13 |
@@ -164,4 +163,4 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 - Toda propuesta se presenta con sus alternativas, sus consecuencias y una recomendación.
 - Una decisión aceptada no se reescribe. Si cambia, se anota el cambio con su fecha en el documento que la contiene, o se añade un ADR que la sustituye.
 - No se añade ninguna dependencia, no se cambia ningún contrato y no se implementa nada fuera del alcance sin aprobación previa.
-- No se escribe código de un hito hasta recibir su autorización explícita. Los Hitos 1 a 4 están autorizados, todos desde el 2026-11-16. El Hito 5 y los siguientes no lo están.
+- No se escribe código de un hito hasta recibir su autorización explícita. Los Hitos 1 a 4 están autorizados, todos desde el 2026-11-16, y el Hito 5, desde el 2026-11-18. El Hito 6 y los siguientes no lo están.

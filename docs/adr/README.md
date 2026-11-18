@@ -21,6 +21,7 @@ Cada archivo de esta carpeta recoge una decisión de arquitectura aceptada, con 
 | [ADR-013](0013-decisiones-del-hito-2.md) | Decisiones del Hito 2, salas y tiempo real | Aceptada |
 | [ADR-014](0014-decisiones-del-hito-3.md) | Decisiones del Hito 3, Cuatro en raya en tiempo real | Aceptada |
 | [ADR-015](0015-decisiones-del-hito-4.md) | Decisiones del Hito 4, reconexión y recuperación | Aceptada |
+| [ADR-016](0016-decisiones-del-hito-5.md) | Decisiones del Hito 5, modalidad por turnos | Aceptada |
 
 ## Decisiones aplazadas
 
@@ -28,7 +29,7 @@ El alojamiento del backend, el de PostgreSQL, las copias de seguridad, la superv
 
 ## Propuestas pendientes de confirmación
 
-Ninguna. Las decisiones V1 a V12 de ADR-015 con sus elecciones W1 a W9, K1 a K22 de ADR-014 con sus elecciones L1 a L7, y las elecciones C1 a C5 de ADR-013 se aceptaron el 2026-11-16.
+Ninguna. Las decisiones N1 a N12 de [ADR-016](0016-decisiones-del-hito-5.md) con sus elecciones Q1 a Q6 se aceptaron el 2026-11-18. Las decisiones V1 a V12 de ADR-015 con sus elecciones W1 a W9, K1 a K22 de ADR-014 con sus elecciones L1 a L7, y las elecciones C1 a C5 de ADR-013 se aceptaron el 2026-11-16.
 
 ## Convenciones
 

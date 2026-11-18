@@ -25,6 +25,7 @@ export const ROW_COUNT = 6;
 const LINE_LENGTH = 4;
 
 const MINUTE_MS = 60_000;
+const HOUR_MS = 60 * MINUTE_MS;
 
 /**
  * Estado del juego. Es un valor JSON plano, y es interno: la plataforma lo
@@ -186,8 +187,12 @@ export const fourInARowEngine: GameEngine<
         type: 'TOTAL_PER_PLAYER',
         totalMs: minutes * MINUTE_MS,
       })),
-      // La modalidad por turnos se ofrece desde el Hito 5 (ADR-014, decisión K6).
-      TURN_BASED: [],
+      // Los controles por turnos no son una regla del juego: se añadieron en
+      // la misma versión, sin cambiar reglas ni estado (ADR-016, decisión N1).
+      TURN_BASED: [12, 24, 36].map((hours) => ({
+        type: 'TOTAL_PER_PLAYER',
+        totalMs: hours * HOUR_MS,
+      })),
     },
   },
 
