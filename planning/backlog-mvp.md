@@ -114,13 +114,16 @@ Construido el 2026-11-16. Lo que resultó al construir, incluidas nueve eleccion
 
 ### Hito 5. Modalidad por turnos
 
-- [ ] Salas por turnos: inicio al completarse la sala y revancha opcional (7.10, 7.31).
-- [ ] Controles de tiempo de 12, 24 y 36 horas, y límite de 20 partidas simultáneas (7.2, 7.30).
-- [ ] Lista de "mis partidas en curso", que indica en cuáles te toca. Hay una primera versión en la página `/partidas` desde el Hito 3 (ADR-014, sección 13, L3).
-- [ ] Aviso de turno dentro de la aplicación.
-- [ ] Aplicación instalable como PWA.
+- [x] Salas por turnos: inicio al completarse la sala y revancha opcional (7.10, 7.31). Hecho en los hitos 2 y 3.
+- [x] Controles de tiempo de 12, 24 y 36 horas (ADR-016, N1), y límite de 20 partidas simultáneas (7.2, 7.30). El límite, hecho en el Hito 2.
+- [x] Lista de "mis partidas en curso", que indica en cuáles te toca, primero las de tu turno y con la hora límite, también en la portada (N3).
+- [x] Aviso de turno dentro de la aplicación: contador en la cabecera, aviso emergente y número en el título de la pestaña (N2).
+- [x] Aplicación instalable como PWA, con manifiesto, iconos y service worker propios (N4).
+- [ ] Probar a mano la instalación en Chrome de escritorio y en un móvil (N6).
 
 Decisiones del hito en [ADR-016](../docs/adr/0016-decisiones-del-hito-5.md), aceptadas el 2026-11-18.
+
+Construido el 2026-11-18. Lo que resultó al construir, incluidas seis elecciones menores que no estaban en ADR-016 y quedan por confirmar, está en su sección 14. El criterio de aceptación se comprueba en cada pull request con una prueba en navegador en la que dos personas se turnan sin coincidir nunca.
 
 **Criterio de aceptación:** dos personas juegan una partida completa sin coincidir conectadas en ningún momento, y cada una ve al entrar que le toca.
 

@@ -217,3 +217,53 @@ Hechos al aceptarse las decisiones, salvo el backlog, que se marca al construir.
 | `docs/adr/0015-decisiones-del-hito-4.md` | Se anota en la sección 11, con fecha, que el abandono en el móvil lo cierra N5 |
 | `planning/backlog-mvp.md` | Se marcan las tareas del Hito 5 que ya están hechas |
 | `docs/adr/README.md` | Se añade este ADR |
+
+## 14. Lo que resultó al construir
+
+Añadido el 2026-11-18, al terminar el hito. No cambia ninguna decisión aceptada ni ningún contrato.
+
+### Supuestos de la sección 11
+
+| Supuesto | Resultado |
+|---|---|
+| Chromium ofrece instalar la aplicación con el manifiesto y el service worker de N4 | **Se cumple lo que se puede comprobar de forma automática:** el manifiesto se sirve con su tipo, tiene los iconos de 192 y 512 píxeles y el recortable, y el service worker queda activo y controla la página. Falta la comprobación a mano de N6 en Chrome de escritorio y en un móvil |
+| El service worker no interfiere con las pruebas en navegador existentes | **Se cumple.** Las 14 pruebas en navegador pasan con el service worker activo, también la del corte de red y la del reinicio |
+| La entrada de la aplicación (`200.html`) se puede guardar y servir sin red | **Se cumple, con un ajuste (Q1).** Guardar solo lo que se iba usando no bastaba: sin red, la página de "Mis partidas" pedía un archivo de la aplicación que nunca se había cargado y fallaba. Lo encontró la prueba de la PWA |
+
+### Cómo se comprueba el criterio de aceptación
+
+| Nivel | Qué se prueba |
+|---|---|
+| Motor | Cuatro en raya declara 12, 24 y 36 horas por turnos |
+| Servidor, con el tiempo controlado (5 pruebas nuevas) | El catálogo ofrece los tres relojes; un reloj no declarado se rechaza; la partida empieza al completarse la sala y la lista dice a quién le toca y hasta cuándo; el reloj de 12 horas se agota a las 12 horas, no antes, y la sala sin revancha se cierra; con revancha la sala vuelve a la espera y la siguiente partida espera a los dos |
+| Navegador, el criterio | Ana crea una sala por turnos de 12 horas y cierra su navegador. Bea entra, la partida empieza, y cierra. Desde ahí se turnan, cada una en un navegador nuevo, sin coincidir nunca: al entrar ven la partida en "Te toca" de la portada, el número en la cabecera y en el título de la pestaña, juegan y cierran. Al terminar con cuatro en línea, quien pierde ve la derrota en su historial y que la sala se cerró |
+| Navegador, el aviso de turno | Con la aplicación abierta en la lista de salas, a quien le toca le llega el aviso emergente, el número en la cabecera y en el título, y el enlace lo lleva a la partida |
+| Navegador, la PWA | El manifiesto y sus iconos; el service worker activo; sin red, "Mis partidas" abre desde lo guardado |
+
+### Elecciones menores tomadas al construir
+
+Ninguna estaba en las doce decisiones y ninguna cambia un contrato. Se aplicaron como recomendaciones y quedan **pendientes de confirmar** por quien decide.
+
+| ID | Asunto | Lo que se hizo | Alternativa |
+|---|---|---|---|
+| Q1 | Qué guarda el service worker (N4) | Al instalarse guarda todos los archivos de `/_nuxt/`, unos 450 KB, además de la portada, la entrada de la aplicación y los iconos. La lista y la versión se escriben en `sw.js` al construir; la versión es una huella de la lista, así que solo cambia si cambian los archivos. Queda fuera `/_nuxt/builds/`, que dice qué versión está publicada y tiene que venir siempre de la red | Guardar solo lo que se va usando. Sin red, abrir una página no visitada antes falla |
+| Q2 | Las páginas en el service worker | No se guarda cada página visitada: todas son la misma entrada de la aplicación, guardada al instalarse | Guardar cada página al visitarla. Repetiría lo mismo una vez por dirección |
+| Q3 | Dónde vive la lista de partidas en curso (N2, N3) | La lleva el canal de tiempo real, junto a la de V8: se pide a la API al conectar y al abrir la portada y "Mis partidas", y la ponen al día los avisos personales. "Mis partidas" la usa también, así que su lista se actualiza sola | Que cada página pida la suya. La cabecera y las páginas podrían decir cosas distintas |
+| Q4 | Cuándo sale el aviso emergente (N2) | Solo por turnos, cuando una partida pasa a ser tu turno, también al empezar si te toca primero. Se cierra solo a los 10 segundos, al pulsarlo o al abrir esa partida | Dejarlo abierto hasta cerrarlo a mano. Con varias partidas se acumularían |
+| Q5 | Dónde sale el aviso de abandono en el móvil (N5) | En una partida en tiempo real en curso, cuando el dispositivo es táctil o la aplicación está instalada | Mostrarlo siempre. En el ordenador no hace falta |
+| Q6 | Los iconos (N10) | Un tablero azul con cuatro fichas, en los colores de la aplicación. `pnpm icons` los dibuja con el Chromium de las pruebas; los PNG, también el de 180 píxeles para el iPhone, se guardan en el repositorio | Otro dibujo |
+
+### Otras notas
+
+- N9 ya estaba hecho: la lista de salas tiene el filtro por modalidad desde el Hito 2. No se tocó.
+- Archivos nuevos del frontend: `public/manifest.webmanifest`, `public/icons/`, `service-worker/sw.js` (la plantilla del service worker) y `app/plugins/service-worker.client.ts`, que lo registra solo en la aplicación construida.
+- El servidor de las pruebas en navegador sirve el manifiesto con su tipo, `application/manifest+json`, como tendrá que hacer el alojamiento.
+- Las pruebas: 5 nuevas en el servidor, 5 en el frontend y 4 en navegador, y la del motor que declara sus relojes, cambiada.
+
+### Lo que queda sin hacer, y dónde
+
+| Asunto | Cuándo |
+|---|---|
+| Probar a mano la instalación en Chrome de escritorio y en un móvil (N6) | Antes de cerrar el hito |
+| Cómo sirve el alojamiento `sw.js`, sin guardarlo en caché, y el manifiesto con su tipo | Con el alojamiento, en el Hito 7 |
+| Aviso de turno con la aplicación cerrada, por notificación push | Después del MVP |
