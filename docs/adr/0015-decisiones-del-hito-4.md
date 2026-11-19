@@ -264,5 +264,5 @@ Ninguna estaba en las doce decisiones y ninguna cambia un contrato. Se aplicaron
 | Asunto | Cuándo |
 |---|---|
 | Lo de la sección 11: caída solo de la base de datos, abandono en el móvil y más de una instancia | Hitos 7 y 5, y después del MVP |
-| Sacar de la sala a quien abandona una partida de más de dos jugadores que sigue (W6) | Con el primer juego de más de dos jugadores |
+| Sacar de la sala a quien abandona una partida de más de dos jugadores que sigue (W6) | *Cerrado el 2026-11-19 (ADR-019, F8; ADR-020, DO20): el retirado sigue en la sala sin contar para su límite y sale al terminar la partida (regla 7.33)* |
 | Precisar en el protocolo el margen de desconexión y el caso de V2 | La próxima vez que se autorice cambiar los contratos |

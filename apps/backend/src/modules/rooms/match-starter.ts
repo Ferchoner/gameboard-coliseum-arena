@@ -36,6 +36,13 @@ export interface MatchStarter {
   startMatch(room: RoomReadyToStart, tx: Transaction): Promise<string | null>;
 
   describeRoom(roomId: string, executor?: DbExecutor): Promise<RoomMatches>;
+
+  /**
+   * En cuántas partidas en curso de esa modalidad está retirado el jugador
+   * mientras siguen sin él. Su sala no cuenta para su límite (ADR-009,
+   * regla 7.33; ADR-020, DO20).
+   */
+  countRetiredMatches(playerId: string, mode: MatchMode, executor?: DbExecutor): Promise<number>;
 }
 
 /**
@@ -46,6 +53,7 @@ export interface MatchStarter {
 export const NO_MATCHES_YET: MatchStarter = {
   startMatch: () => Promise.resolve(null),
   describeRoom: () => Promise.resolve({ currentMatchId: null, hasPlayed: false }),
+  countRetiredMatches: () => Promise.resolve(0),
 };
 
 /**

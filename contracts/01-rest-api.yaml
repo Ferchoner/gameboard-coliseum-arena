@@ -1904,6 +1904,7 @@ components:
       - connected
       - clockRemainingMs
       - abandonAt
+      - retired
       additionalProperties: false
       properties:
         seat:
@@ -1935,6 +1936,10 @@ components:
           - 'null'
           format: date-time
           description: Instante en que perderá por abandono si no vuelve a conectarse. Solo en tiempo real.
+        retired:
+          type: boolean
+          description: Se retiró por tiempo, rendición o abandono y la partida sigue, o siguió, sin él. Solo
+            puede pasar con más de dos jugadores (ADR-020, DO21).
     MatchResult:
       type: object
       required:

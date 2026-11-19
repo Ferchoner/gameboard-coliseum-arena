@@ -36,6 +36,7 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | ADR-017 | Decisiones del Hito 6, cuenta, estadísticas y administración |
 | ADR-018 | Preparación del segundo juego |
 | ADR-019 | Los próximos juegos, Batalla naval y jugadas simultáneas |
+| ADR-020 | Dominó y asientos retirados con más de dos jugadores |
 
 El índice de ADR dice además qué decisiones cambió o precisó cada ADR posterior.
 | ADR-012 | Decisiones de arranque del Hito 1 (S1 a S25): herramientas, versiones, validación, sesiones y entorno local |
@@ -46,6 +47,7 @@ El índice de ADR dice además qué decisiones cambió o precisó cada ADR poste
 | ADR-017 | Decisiones del Hito 6 (U1 a U18): criterio de aceptación, administración solo por API con una guía, orden para el rol, efectos de suspender y de cambiar el catálogo, correo simulado en archivos, recuperación de contraseña, estadísticas, pantallas y pruebas. Aceptadas el 2026-11-19 |
 | ADR-018 | Preparación del segundo juego (Z1 a Z8): semilla, opciones y retiradas guardadas con la partida, comprobación común de los motores, metadatos comprobados al arrancar, el frontend solo ofrece los juegos que sabe mostrar, orden al activar, tablero común y guía para añadir un juego. Aceptadas el 2026-11-19, al autorizar la cuarta tanda del análisis |
 | ADR-019 | Los próximos juegos y Batalla naval: Batalla naval y después Dominó, sin opciones en su versión 1, y una regla de derechos común (F1 a F9); reglas, acciones, vista y tiempos de Batalla naval (X1 a X14); jugadas simultáneas, con la versión desde la que está activo cada asiento y sin rechazar una jugada por el reloj de otro (X15 a X17). Aceptadas el 2026-11-19, con el contrato y el código autorizados |
+| ADR-020 | Dominó y asientos retirados: reglas, acción, vista, tiempos y azar del Dominó (DO1 a DO17); la sesión guarda los asientos retirados, que no vuelven a retirarse, siguen en la sala sin contar para su límite y salen al terminar (regla 7.33), y `MatchPlayer.retired` (DO18 a DO22). Aceptadas el 2026-11-19, con el contrato y el código autorizados |
 
 ### Contratos y modelo, versión 1
 
@@ -132,7 +134,6 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 | Asunto | Cuándo | Dónde está anotado |
 |---|---|---|
 | Caída solo de la base de datos con el servidor en marcha: su tiempo se descuenta | Con el alojamiento y la supervisión, en el Hito 7 | ADR-015, sección 11 |
-| Sacar de la sala a quien abandona una partida de más de dos jugadores que sigue en curso | Con el primer juego de más de dos jugadores | ADR-015, sección 13, W6 |
 | Precisar en el protocolo el margen de desconexión y el abandono cuando faltan todos | La próxima vez que se autorice cambiar los contratos | ADR-015, sección 13 |
 | Pruebas en navegador en otros navegadores además de Chromium, y en el modo HTTPS | Con la preparación para publicar, en el Hito 7 | ADR-014, sección 13 |
 | Librería de componentes del frontend | Con la administración visual o un segundo juego | ADR-014, decisión K7 |
@@ -158,9 +159,7 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 
 ### Cuando llegue el juego que lo necesite
 
-| Asunto | Dónde está anotado |
-|---|---|
-| Jugador retirado en una partida de más de dos que continúa | Notas del motor, sección 7; matriz de permisos, sección 9 |
+Ninguno. El jugador retirado en una partida de más de dos que continúa y la salida de la sala de quien abandona (W6) se cerraron el 2026-11-19 con [ADR-020](../docs/adr/0020-domino-y-asientos-retirados.md) (DO18 a DO22).
 
 ### Posterior al MVP
 

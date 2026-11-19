@@ -62,6 +62,13 @@ export const gameSessions = pgTable(
      * X15). Vacío si está cerrada.
      */
     activeSince: jsonb('active_since').$type<StoredActiveSince>().notNull(),
+    /**
+     * Asientos retirados de una partida que siguió sin ellos, en el orden en
+     * que se retiraron. No vuelven a retirarse, no pierden por abandono y
+     * salen de la sala al terminar la partida (ADR-020, DO18 a DO20). Con
+     * dos jugadores siempre está vacía: toda retirada termina la partida.
+     */
+    retiredSeats: smallint('retired_seats').array().notNull(),
     /** Tiempo restante de cada asiento, medido en `turnStartedAt` (regla 8.4). */
     clocks: jsonb('clocks').$type<StoredClocks>().notNull(),
     /** Instante en que se midieron los relojes. Desde entonces corren los de los asientos activos. */

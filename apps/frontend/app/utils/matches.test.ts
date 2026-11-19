@@ -15,6 +15,7 @@ import {
   shouldRefreshAfter,
   supersedes,
   youAbandoned,
+  youRetired,
 } from './matches';
 
 function player(seat: number, displayName: string, clockRemainingMs = 300_000): MatchPlayerView {
@@ -26,6 +27,7 @@ function player(seat: number, displayName: string, clockRemainingMs = 300_000): 
     connected: true,
     clockRemainingMs,
     abandonAt: null,
+    retired: false,
   };
 }
 
@@ -138,6 +140,17 @@ describe('cuenta atrás del abandono', () => {
     expect(youAbandoned(finished('ABANDONMENT', 1))).toBe(true);
     expect(youAbandoned(finished('ABANDONMENT', 0))).toBe(false);
     expect(youAbandoned(finished('RESIGNATION', 1))).toBe(false);
+  });
+
+  it('sabe si quien mira se retiró de una partida que siguió sin él', () => {
+    const retiredPlayer = { ...player(0, 'Ana'), retired: true };
+    const three = [player(0, 'Ana'), player(1, 'Bea'), player(2, 'Carla')];
+
+    expect(youRetired(match({ players: three }))).toBe(false);
+    expect(youRetired(match({ players: [retiredPlayer, ...three.slice(1)] }))).toBe(true);
+    expect(youRetired(match({ players: [retiredPlayer, ...three.slice(1)], yourSeat: 1 }))).toBe(
+      false,
+    );
   });
 });
 

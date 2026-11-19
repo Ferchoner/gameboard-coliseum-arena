@@ -197,7 +197,8 @@ Es la única notificación con la que cambia una partida. La copia de quien hizo
           "displayName": "Ana",
           "connected": true,
           "clockRemainingMs": 512000,
-          "abandonAt": null
+          "abandonAt": null,
+          "retired": false
         },
         {
           "seat": 1,
@@ -206,7 +207,8 @@ Es la única notificación con la que cambia una partida. La copia de quien hizo
           "displayName": "Luis",
           "connected": true,
           "clockRemainingMs": 498250,
-          "abandonAt": null
+          "abandonAt": null,
+          "retired": false
         }
       ],
       "activeSeats": [1],
@@ -234,6 +236,7 @@ Cómo se lee:
 | `activeSeats` | Asientos que pueden jugar ahora. Sus relojes son los que corren |
 | `clockRemainingMs` | Tiempo que le queda a cada jugador, medido en el instante `serverTime`. El cliente descuenta desde ahí el de los asientos activos. El tiempo válido es siempre el del servidor (7.4) |
 | `abandonAt` | Instante en que un jugador desconectado perderá por abandono. Solo en tiempo real (7.26) |
+| `retired` | El jugador se retiró y la partida sigue, o siguió, sin él. Solo con más de dos jugadores. Ya no juega, no pierde por abandono y no puede rendirse otra vez; sale de la sala al terminar la partida (7.33). *Añadido el 2026-11-19 (ADR-020, DO21)* |
 | `events` | Eventos de juego, para que el cliente pueda mostrar lo ocurrido. Son públicos: todos reciben los mismos |
 | `result` | Tiene valor cuando `status` es `FINISHED`. Lleva el motivo y el resultado de cada asiento |
 

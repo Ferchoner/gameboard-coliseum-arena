@@ -27,6 +27,8 @@ export interface MatchSnapshot {
   readonly players: readonly PlayerRef[];
   /** Asientos que pueden jugar ahora. Vacía si la partida no está en curso. */
   readonly activeSeats: readonly number[];
+  /** Asientos retirados de una partida que siguió sin ellos (ADR-020, DO18). */
+  readonly retiredSeats: readonly number[];
   /** Tiempo que le quedaba a cada asiento, en milisegundos, medido en `turnStartedAt`. */
   readonly clocks: readonly number[];
   /** Desde cuándo corren los relojes de los asientos activos. `null` si ninguno corre. */

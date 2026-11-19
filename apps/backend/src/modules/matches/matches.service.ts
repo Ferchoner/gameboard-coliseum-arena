@@ -164,6 +164,14 @@ export class MatchesService {
     return this.repository.findInProgressIdsOfPlayer(playerId, mode, executor);
   }
 
+  /** Las partidas en curso en las que participa el jugador, con su modalidad y su asiento. */
+  findInProgressSeatsOf(
+    playerId: string,
+    executor?: DbExecutor,
+  ): Promise<{ matchId: string; mode: MatchMode; seat: number }[]> {
+    return this.repository.findInProgressSeatsOfPlayer(playerId, executor);
+  }
+
   /** Quién juega cada partida en curso de esa modalidad. */
   listInProgressParticipants(
     mode: MatchMode,

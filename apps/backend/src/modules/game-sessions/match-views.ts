@@ -65,6 +65,8 @@ export function toMatchView(
         displayName: player.displayName,
         connected: presence.connected,
         clockRemainingMs: clocks[playerSeat] ?? 0,
+        // Se retiró y la partida siguió sin él (ADR-020, DO21).
+        retired: snapshot.retiredSeats.includes(playerSeat),
         // Solo mientras la partida sigue en curso (ADR-015, decisión V8).
         abandonAt:
           snapshot.status === 'IN_PROGRESS' ? (presence.abandonAt?.toISOString() ?? null) : null,

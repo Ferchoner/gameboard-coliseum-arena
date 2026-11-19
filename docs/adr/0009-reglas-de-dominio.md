@@ -44,6 +44,7 @@ Cambio respecto a la documentación inicial: desaparece el estado READY. "Todos 
 | 7.12 | Si el anfitrión sale de una sala EN ESPERA, la sala se cierra. Si sale otro miembro, queda su plaza libre |
 | 7.13 | Durante una partida no se puede "salir de la sala". Quien quiera dejarla debe rendirse |
 | 7.32 | **Quien pierde por abandono sale de la sala**, en la misma transacción que el final de la partida. Si era el anfitrión, la sala se cierra, como en la regla 7.12. *Añadida el 2026-11-16 (ADR-015, V5)* |
+| 7.33 | **En una partida que sigue sin él, el asiento retirado sigue en la sala hasta que la partida termina**, sin contar para su límite de partidas (7.30). Al terminar, sale de la sala, como en la regla 7.32. *Añadida el 2026-11-19 (ADR-020, DO20; cierra W6 de ADR-015 con F8)* |
 | 7.14 | Una sala EN ESPERA sin actividad se cierra sola pasado un plazo. Valor inicial: 30 minutos en tiempo real y 7 días por turnos |
 | 7.15 | La capacidad se comprueba de forma atómica al entrar: dos personas no pueden ocupar la última plaza a la vez |
 | 7.31 | **Revancha por turnos:** por defecto, una sala por turnos se cierra al terminar su partida. Al crear la sala, el anfitrión puede activar la revancha. Si la activa, al terminar la partida la sala vuelve a EN ESPERA como en la regla 7.11, y la siguiente partida empieza cuando la sala está completa y todos sus miembros se han marcado como listos. *(Añadida el 2026-11-14. Resuelve un caso que las reglas 7.10 y 7.11 dejaban sin definir: una sala por turnos que seguía completa al terminar.)* |

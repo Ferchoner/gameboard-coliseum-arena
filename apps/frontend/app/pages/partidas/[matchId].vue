@@ -24,6 +24,7 @@ import {
   shouldRefreshAfter,
   supersedes,
   youAbandoned,
+  youRetired,
 } from '../../utils/matches';
 import type { CommandResult } from '../../utils/realtime-client';
 
@@ -74,6 +75,8 @@ const myTurn = computed(
 const canPlay = computed(
   () => myTurn.value && sending.value === null && realtime.state.value.status === 'open',
 );
+/** Se retiró y la partida sigue, o siguió, sin él (ADR-020, DO21). */
+const retired = computed(() => (match.value ? youRetired(match.value) : false));
 const myOutcome = computed(() =>
   match.value ? outcomeOf(match.value, match.value.yourSeat) : null,
 );
@@ -310,10 +313,17 @@ onBeforeUnmount(() => {
           >
             {{ player.clock }}
           </span>
-          <span v-if="player.isYou || inProgress" class="match-badges">
+          <span v-if="player.isYou || player.retired || inProgress" class="match-badges">
             <span v-if="player.isYou" class="badge">{{ es.match.you }}</span>
             <span v-if="player.hasTurn" class="badge on">{{ es.match.turnBadge }}</span>
-            <span v-if="inProgress" class="badge" :class="{ on: player.connected }">
+            <span v-if="player.retired" class="badge" data-retired>{{
+              es.match.retired.badge
+            }}</span>
+            <span
+              v-if="inProgress && !player.retired"
+              class="badge"
+              :class="{ on: player.connected }"
+            >
               {{ player.connected ? es.room.connected : es.room.disconnected }}
             </span>
           </span>
@@ -354,7 +364,10 @@ onBeforeUnmount(() => {
       <p v-if="actionError" class="notice error" role="alert">{{ actionError }}</p>
     </section>
 
-    <section v-if="inProgress" class="room-actions">
+    <p v-if="inProgress && retired" class="notice" role="status">
+      {{ es.match.retired.notice }}
+    </p>
+    <section v-else-if="inProgress" class="room-actions">
       <template v-if="confirmingResign">
         <p class="resign-question">{{ es.match.resign.question }}</p>
         <button type="button" class="button danger" :disabled="sending !== null" @click="resign">
@@ -375,8 +388,10 @@ onBeforeUnmount(() => {
       </button>
     </section>
 
-    <section v-else-if="youAbandoned(match)">
-      <p class="hint">{{ es.match.after.leftRoomHint }}</p>
+    <section v-else-if="youAbandoned(match) || retired">
+      <p class="hint">
+        {{ retired ? es.match.after.retiredLeftRoomHint : es.match.after.leftRoomHint }}
+      </p>
       <div class="room-actions">
         <NuxtLink class="button quiet" to="/partidas">{{ es.match.after.allMatches }}</NuxtLink>
       </div>

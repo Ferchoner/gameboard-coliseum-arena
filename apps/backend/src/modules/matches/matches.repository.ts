@@ -162,6 +162,18 @@ export class MatchesRepository {
     return rows.map((row) => row.id);
   }
 
+  /** Las partidas en curso en las que participa el jugador, con su modalidad y su asiento. */
+  async findInProgressSeatsOfPlayer(
+    playerId: string,
+    executor: DbExecutor = this.database.db,
+  ): Promise<{ matchId: string; mode: MatchMode; seat: number }[]> {
+    return executor
+      .select({ matchId: matches.id, mode: matches.mode, seat: matchPlayers.seat })
+      .from(matchPlayers)
+      .innerJoin(matches, eq(matches.id, matchPlayers.matchId))
+      .where(and(eq(matchPlayers.playerId, playerId), eq(matches.status, 'IN_PROGRESS')));
+  }
+
   /** Los participantes de todas las partidas en curso de esa modalidad. */
   listInProgressParticipants(
     mode: MatchMode,

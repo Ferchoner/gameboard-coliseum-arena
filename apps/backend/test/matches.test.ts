@@ -580,7 +580,8 @@ describe('partidas', () => {
       const updated = await t.app.get(DatabaseService).transaction(async (tx) => {
         const current = await repository.lockSession(match.matchId, tx);
         if (!current) throw new Error('La partida no tiene sesión');
-        const { status, activeSeats, activeSince, clocks, turnStartedAt, turnDeadlineAt } = current;
+        const { status, activeSeats, activeSince, retiredSeats, clocks } = current;
+        const { turnStartedAt, turnDeadlineAt } = current;
         return repository.updateSession(
           match.matchId,
           0,
@@ -590,6 +591,7 @@ describe('partidas', () => {
             stateVersion: 1,
             activeSeats,
             activeSince,
+            retiredSeats,
             clocks,
             turnStartedAt,
             turnDeadlineAt,

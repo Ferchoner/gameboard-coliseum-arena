@@ -88,6 +88,10 @@ class FakeMatchStarter implements MatchStarter {
       hasPlayed: this.played.has(roomId),
     });
   }
+
+  countRetiredMatches(): Promise<number> {
+    return Promise.resolve(0);
+  }
 }
 
 describe('salas', () => {
