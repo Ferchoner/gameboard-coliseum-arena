@@ -90,6 +90,8 @@ La documentación inicial preveía snapshots y una tabla de eventos sin definir 
 
 **Decisión:** enviar la versión. Es un cambio pequeño en el protocolo que elimina una clase entera de errores difíciles de reproducir.
 
+*Precisada el 2026-11-19 (ADR-019, X15 y X16): con varios asientos activos, a cada uno le vale también la versión desde la que está activo sin interrupción, que se guarda en `game_sessions.active_since`. El asiento que juega y sigue activo vuelve a contar desde su jugada. Con un solo asiento activo, la regla no cambia.*
+
 ### 8.15. Cuándo se actualizan las estadísticas
 
 | Opción | A favor | En contra |

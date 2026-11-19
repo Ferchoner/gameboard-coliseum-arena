@@ -158,6 +158,14 @@ Depende de las decisiones de alojamiento, que están aplazadas.
 
 Las tareas de mejora del [análisis de la aplicación](analisis/informe-de-analisis-y-tareas.md) del 2026-11-19 que tocan este hito (T-06, T-11, T-18, T-19 y T-20) se trabajan cuando se autorice.
 
+### Juegos nuevos, antes de publicar
+
+Decididos el 2026-11-19 ([ADR-019](../docs/adr/0019-batalla-naval-y-jugadas-simultaneas.md), F1): Batalla naval y después Dominó. Se construyen antes de desplegar en servidores.
+
+- [x] Jugadas simultáneas: versión por asiento activo y reloj de otro asiento (T-23; ADR-019, X15 a X17).
+- [ ] Batalla naval: motor, tablero, alta inactiva y pruebas (ADR-019, X1 a X14).
+- [ ] Dominó: su ADR, asientos retirados con más de dos jugadores (T-24; F8), motor, tablero y pruebas.
+
 ---
 
 ## Posterior al MVP

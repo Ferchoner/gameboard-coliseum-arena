@@ -38,6 +38,7 @@ import {
 import { RoomsService } from '../rooms/rooms.service.js';
 import { StatisticsService } from '../statistics/statistics.service.js';
 import { AbandonmentWatch } from './abandonment-watch.js';
+import { acceptsStateVersion, activeSinceAfter, initialActiveSince } from './active-since.js';
 import {
   type GameSessionChange,
   type GameSessionRow,
@@ -246,6 +247,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       state,
       stateVersion: 0,
       activeSeats: [...status.activeSeats],
+      activeSince: initialActiveSince(status.activeSeats),
       clocks: clocksToStored(clocks),
       turnStartedAt: now,
       turnDeadlineAt: deadlineOf(clocks, status.activeSeats, now),
@@ -289,75 +291,117 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
         return { snapshot: this.snapshotOf(loaded) };
       }
       if (session.status !== 'ACTIVE') throw matchNotInProgress();
-      if (expectedStateVersion !== session.stateVersion) {
+      // Con varios asientos activos, vale también una versión anterior desde
+      // la que el asiento sigue activo (ADR-019, decisión X15).
+      if (!acceptsStateVersion(session, seat, expectedStateVersion)) {
         throw new CommandRejection('STALE_STATE_VERSION', {
           currentStateVersion: session.stateVersion,
         });
       }
 
       const now = this.clock.now();
-      if (isDue(session, now)) {
-        // El tiempo se agotó antes de que llegara la jugada: se aplica el vencimiento.
-        const snapshot = await this.applyTimeouts(loaded, now, tx);
+      const timeouts = this.dueTimeouts(loaded, now);
+      if (timeouts.length === 0) {
+        return this.applyPlayerAction(loaded, seat, requestId, action, now, tx);
+      }
+
+      // El tiempo se agotó antes de que llegara la jugada: se aplica el vencimiento.
+      const snapshot = await this.retire(loaded, timeouts, now, null, tx);
+      // Solo el reloj de quien envía rechaza su jugada (ADR-019, decisión X17).
+      if (timeouts.some((timeout) => timeout.seat === seat)) {
         return { snapshot, rejection: new CommandRejection('CLOCK_EXPIRED') };
       }
-
-      const game = this.restore(loaded);
-      if (!game) {
-        const snapshot = await this.abortForFailure(loaded, now, tx);
+      if (snapshot.status !== 'IN_PROGRESS') {
         return { snapshot, rejection: matchNotInProgress() };
       }
-
-      // El motor es la única vía para saber si una jugada es válida.
-      const applied = game.engine.applyAction(game.state, seat, action);
-      if (!applied.ok) {
-        switch (applied.code) {
-          case 'NOT_YOUR_TURN':
-          case 'INVALID_ACTION':
-            throw new CommandRejection(
-              applied.code,
-              applied.reason === undefined ? {} : { reason: applied.reason },
-            );
-          case 'GAME_ALREADY_FINISHED':
-            throw matchNotInProgress();
-          case 'INVALID_GAME_STATE':
-          case 'INVALID_SETTINGS': {
-            const snapshot = await this.abortForFailure(loaded, now, tx);
-            return { snapshot, rejection: matchNotInProgress() };
-          }
-        }
-      }
-
-      // Con cada jugada confirmada se descuenta el tiempo transcurrido a los asientos activos.
-      const clocks = this.clocksOf(loaded, now);
-      const stateVersion = session.stateVersion + 1;
-      await this.repository.insertAction(
-        {
-          matchId,
-          sequence: stateVersion,
-          playerId,
-          requestId,
-          action: applied.value.action,
-          clockRemainingMs: clocks[seat] ?? 0,
-          createdAt: now,
-        },
-        tx,
-      );
-      const snapshot = await this.save(
-        loaded,
-        { engine: game.engine, state: applied.value.state, stateVersion, clocks, now },
-        'COMPLETED',
-        tx,
-      );
-      this.announce(tx, snapshot, applied.value.events as readonly GameEventView[], {
-        playerId,
-        requestId,
-      });
-      return { snapshot };
+      // Se agotó el de otro asiento y la partida sigue: la jugada se evalúa
+      // sobre el estado que dejó el vencimiento.
+      const reloaded = await this.lockMatchOf(matchId, playerId, tx);
+      return this.applyPlayerAction(reloaded.loaded, seat, requestId, action, now, tx);
     });
 
     if (outcome.rejection) throw outcome.rejection;
     return outcome.snapshot;
+  }
+
+  /**
+   * Pasa la jugada al motor y, si la acepta, la guarda. Un rechazo del
+   * motor vuelve como rechazo y no como excepción, para que se confirme lo
+   * que ya se hubiera guardado en la misma transacción, como un vencimiento
+   * de otro asiento (ADR-019, decisión X17).
+   */
+  private async applyPlayerAction(
+    loaded: LoadedMatch,
+    seat: number,
+    requestId: string,
+    action: unknown,
+    now: Date,
+    tx: Transaction,
+  ): Promise<Outcome> {
+    const { matchId } = loaded.record;
+    const playerId = requirePlayer(loaded.record, seat);
+    const game = this.restore(loaded);
+    if (!game) {
+      const snapshot = await this.abortForFailure(loaded, now, tx);
+      return { snapshot, rejection: matchNotInProgress() };
+    }
+
+    // El motor es la única vía para saber si una jugada es válida.
+    const applied = game.engine.applyAction(game.state, seat, action);
+    if (!applied.ok) {
+      switch (applied.code) {
+        case 'NOT_YOUR_TURN':
+        case 'INVALID_ACTION':
+          return {
+            snapshot: this.snapshotOf(loaded),
+            rejection: new CommandRejection(
+              applied.code,
+              applied.reason === undefined ? {} : { reason: applied.reason },
+            ),
+          };
+        case 'GAME_ALREADY_FINISHED':
+          return { snapshot: this.snapshotOf(loaded), rejection: matchNotInProgress() };
+        case 'INVALID_GAME_STATE':
+        case 'INVALID_SETTINGS': {
+          const snapshot = await this.abortForFailure(loaded, now, tx);
+          return { snapshot, rejection: matchNotInProgress() };
+        }
+      }
+    }
+
+    // Con cada jugada confirmada se descuenta el tiempo transcurrido a los asientos activos.
+    const clocks = this.clocksOf(loaded, now);
+    const stateVersion = loaded.session.stateVersion + 1;
+    await this.repository.insertAction(
+      {
+        matchId,
+        sequence: stateVersion,
+        playerId,
+        requestId,
+        action: applied.value.action,
+        clockRemainingMs: clocks[seat] ?? 0,
+        createdAt: now,
+      },
+      tx,
+    );
+    const snapshot = await this.save(
+      loaded,
+      {
+        engine: game.engine,
+        state: applied.value.state,
+        stateVersion,
+        clocks,
+        now,
+        actingSeat: seat,
+      },
+      'COMPLETED',
+      tx,
+    );
+    this.announce(tx, snapshot, applied.value.events as readonly GameEventView[], {
+      playerId,
+      requestId,
+    });
+    return { snapshot };
   }
 
   /**
@@ -821,7 +865,14 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
 
     const snapshot = await this.save(
       loaded,
-      { engine: game.engine, state, stateVersion, clocks: this.clocksOf(loaded, now), now },
+      {
+        engine: game.engine,
+        state,
+        stateVersion,
+        clocks: this.clocksOf(loaded, now),
+        now,
+        actingSeat: null,
+      },
       endReason,
       tx,
       departing,
@@ -843,6 +894,8 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       readonly stateVersion: number;
       readonly clocks: readonly number[];
       readonly now: Date;
+      /** El asiento que jugó, o `null` si el cambio es una retirada (ADR-019, X16). */
+      readonly actingSeat: number | null;
     },
     endReason: MatchEndReason,
     tx: Transaction,
@@ -863,6 +916,12 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
         state: next.state,
         stateVersion: next.stateVersion,
         activeSeats: [...status.activeSeats],
+        activeSince: activeSinceAfter(
+          loaded.session,
+          status.activeSeats,
+          next.stateVersion,
+          next.actingSeat,
+        ),
         clocks: clocksToStored(next.clocks),
         turnStartedAt: now,
         turnDeadlineAt: deadlineOf(next.clocks, status.activeSeats, now),
@@ -900,6 +959,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
         state: final.state,
         stateVersion: final.stateVersion,
         activeSeats: [],
+        activeSince: {},
         clocks: clocksToStored(final.clocks),
         turnStartedAt: null,
         turnDeadlineAt: null,
@@ -958,6 +1018,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
         state: loaded.session.state,
         stateVersion: loaded.session.stateVersion,
         activeSeats: [],
+        activeSince: {},
         clocks: clocksToStored(this.clocksOf(loaded, now)),
         turnStartedAt: null,
         turnDeadlineAt: null,

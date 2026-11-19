@@ -29,6 +29,9 @@ export const SEAT_RETIREMENT_REASONS = [
 /** Tiempo que le queda a cada asiento, en milisegundos, con el asiento como clave. */
 export type StoredClocks = Readonly<Record<string, number>>;
 
+/** Versión del estado desde la que está activo cada asiento, con el asiento como clave. */
+export type StoredActiveSince = Readonly<Record<string, number>>;
+
 /**
  * La sesión de juego: el estado vivo de una partida (modelo de datos,
  * sección 3.5). Hay exactamente una por partida y se crea con ella. Es un
@@ -52,6 +55,13 @@ export const gameSessions = pgTable(
     stateVersion: integer('state_version').notNull(),
     /** Asientos que pueden jugar ahora: sus relojes son los que corren. Vacía si está cerrada. */
     activeSeats: smallint('active_seats').array().notNull(),
+    /**
+     * Desde qué versión del estado está activo cada asiento de `activeSeats`,
+     * sin interrupción. Con varios asientos activos, a cada uno le vale una
+     * jugada hecha sobre esa versión o una posterior (ADR-019, decisión
+     * X15). Vacío si está cerrada.
+     */
+    activeSince: jsonb('active_since').$type<StoredActiveSince>().notNull(),
     /** Tiempo restante de cada asiento, medido en `turnStartedAt` (regla 8.4). */
     clocks: jsonb('clocks').$type<StoredClocks>().notNull(),
     /** Instante en que se midieron los relojes. Desde entonces corren los de los asientos activos. */

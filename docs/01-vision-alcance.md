@@ -113,6 +113,6 @@ La arquitectura no debe impedirlo, pero no se diseña en detalle ahora.
 |---|---|
 | Alojamiento del backend y de la base de datos, copias de seguridad y supervisión | Aplazado hasta que haya algo construido que revisar. Mientras tanto se trabaja en local |
 | Requisitos medibles de capacidad, latencia y disponibilidad | Aplazados junto con el alojamiento |
-| Derechos de arte y selección de los siguientes juegos | Se trata cuando se elija el segundo juego (ADR-008, sección 4) |
+| Derechos de arte y selección de los siguientes juegos | *Cerrado el 2026-11-19 (ADR-019, F1 y F9):* Batalla naval y después Dominó, con una regla de derechos común |
 
 El resto de asuntos abiertos está reunido en [`planning/decisiones-y-pendientes.md`](../planning/decisiones-y-pendientes.md).

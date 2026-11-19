@@ -13,7 +13,7 @@ Este documento es un índice. No decide nada: dice dónde está cada decisión y
 
 ### Arquitectura
 
-Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron el 2026-11-14, las cuatro siguientes, el 2026-11-16, ADR-016, el 2026-11-18, y ADR-017 y ADR-018, el 2026-11-19.
+Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron el 2026-11-14, las cuatro siguientes, el 2026-11-16, ADR-016, el 2026-11-18, y ADR-017 a ADR-019, el 2026-11-19.
 
 | ADR | Decisión |
 |---|---|
@@ -35,6 +35,7 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | ADR-016 | Decisiones del Hito 5, modalidad por turnos |
 | ADR-017 | Decisiones del Hito 6, cuenta, estadísticas y administración |
 | ADR-018 | Preparación del segundo juego |
+| ADR-019 | Los próximos juegos, Batalla naval y jugadas simultáneas |
 
 El índice de ADR dice además qué decisiones cambió o precisó cada ADR posterior.
 | ADR-012 | Decisiones de arranque del Hito 1 (S1 a S25): herramientas, versiones, validación, sesiones y entorno local |
@@ -44,6 +45,7 @@ El índice de ADR dice además qué decisiones cambió o precisó cada ADR poste
 | ADR-016 | Decisiones del Hito 5 (N1 a N12): Cuatro en raya por turnos sin versión nueva, aviso de turno, lo que se ve al entrar, aplicación instalable sin dependencias, abandono en el móvil y pruebas. Aceptadas el 2026-11-18 |
 | ADR-017 | Decisiones del Hito 6 (U1 a U18): criterio de aceptación, administración solo por API con una guía, orden para el rol, efectos de suspender y de cambiar el catálogo, correo simulado en archivos, recuperación de contraseña, estadísticas, pantallas y pruebas. Aceptadas el 2026-11-19 |
 | ADR-018 | Preparación del segundo juego (Z1 a Z8): semilla, opciones y retiradas guardadas con la partida, comprobación común de los motores, metadatos comprobados al arrancar, el frontend solo ofrece los juegos que sabe mostrar, orden al activar, tablero común y guía para añadir un juego. Aceptadas el 2026-11-19, al autorizar la cuarta tanda del análisis |
+| ADR-019 | Los próximos juegos y Batalla naval: Batalla naval y después Dominó, sin opciones en su versión 1, y una regla de derechos común (F1 a F9); reglas, acciones, vista y tiempos de Batalla naval (X1 a X14); jugadas simultáneas, con la versión desde la que está activo cada asiento y sin rechazar una jugada por el reloj de otro (X15 a X17). Aceptadas el 2026-11-19, con el contrato y el código autorizados |
 
 ### Contratos y modelo, versión 1
 
@@ -85,7 +87,7 @@ El registro inicial dejaba quince asuntos por decidir. Así quedaron.
 | 9 | Tiempo agotado, abandono, desconexión y recuperación | Cerrado | ADR-009, reglas 7.16 a 7.29 |
 | 10 | Clasificación | Cerrado: posterior al MVP | ADR-008, punto 14 |
 | 11 | Bots y juego en solitario | Cerrado: posterior al MVP | ADR-008, punto 20 |
-| 12 | Licencias y derechos | Cerrado en parte: el nombre del primer juego. El resto, al elegir el segundo juego | ADR-008, sección 4 |
+| 12 | Licencias y derechos | Cerrado: el nombre del primer juego (ADR-008) y, el 2026-11-19, la selección de los siguientes y una regla de derechos común (ADR-019, F1 y F9) | ADR-008, sección 4; ADR-019, sección 0 |
 | 13 | Seguridad de las jugadas, límites de frecuencia e información oculta | Cerrado | El protocolo, la API, el contrato del motor y la matriz de permisos |
 | 14 | Estadísticas correctas ante reintentos | Cerrado | ADR-010, regla 8.15 |
 | 15 | Requisitos medibles de capacidad, latencia y disponibilidad | **Aplazado** | Sección 4 |
@@ -158,9 +160,7 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 
 | Asunto | Dónde está anotado |
 |---|---|
-| Jugadas simultáneas: hoy la segunda jugada sobre la misma versión del estado se rechaza y hay que reenviarla | Notas del motor, sección 7; protocolo, sección 12 |
 | Jugador retirado en una partida de más de dos que continúa | Notas del motor, sección 7; matriz de permisos, sección 9 |
-| Derechos de arte y selección de juegos | ADR-008, sección 4 |
 
 ### Posterior al MVP
 
