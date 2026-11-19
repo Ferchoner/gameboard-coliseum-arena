@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Aceptada, con un cambio en S14 |
+| **Estado** | Aceptada, con un cambio en S14; modificada por ADR-014 (K7) |
 | **Fecha** | 2026-11-16 |
 | **Decidida por** | Fernando Hernandez Argueta |
 | **Cierra** | Los puntos aplazados al inicio del Hito 1 (`docs/02-arquitectura.md`, sección 8) y las dos propuestas sin confirmar de ADR-004 y ADR-005 |
@@ -67,7 +67,7 @@ Es la propuesta que ADR-005 dejó sin confirmar.
 | B. Se mantienen las dos definiciones, con una comprobación automática de que son iguales | Los dos paquetes siguen siendo independientes | Siguen existiendo dos definiciones. Todo cambio se hace dos veces |
 | C. Un quinto paquete con los tipos comunes | Ningún paquete depende de otro salvo de ese | Un paquete más para cuatro tipos. El motor dejaría de ser un paquete sin dependencias |
 
-**Recomendación: A.** La regla de dependencias queda así: las aplicaciones dependen de los paquetes, `contracts` puede depender de `game-engine` solo para tipos y listas de valores, y `game-engine` no depende de nada. El motor expone esos tipos por una entrada aparte, de modo que al frontend no le llega el código de ningún juego.
+**Recomendación: A.** La regla de dependencias queda así: las aplicaciones dependen de los paquetes, `contracts` puede depender de `game-engine` solo para tipos y listas de valores, y `game-engine` no depende de nada. El motor expone esos tipos por una entrada aparte, de modo que al frontend no le llega el código de ningún juego. *Precisada el 2026-11-16 (ADR-014, K7): el frontend puede importar además directamente del motor, solo tipos; la regla se sigue comprobando de forma automática.*
 
 Las vistas de sala, partida y resumen de partida, que hoy están en la API y en el protocolo, pasan a tener una sola definición en `contracts`, que usan los dos.
 
@@ -301,7 +301,7 @@ No se han probado todavía porque exigen tener el proyecto montado. Si alguno fa
 |---|---|
 | Librería de WebSocket y adaptador de NestJS | Hito 2 |
 | Dirección de la dependencia entre los módulos `rooms` y `matches` | Hito 2 |
-| Librería de componentes del frontend y uso del motor en el navegador | Hito 3 |
+| Librería de componentes del frontend y uso del motor en el navegador | Hito 3. *Cerrado el 2026-11-16 (ADR-014, K7)* |
 | Límites de frecuencia de la API | Hito 7, como fija el backlog |
 | Alojamiento y prueba en Safari con un despliegue real | Aplazado |
 

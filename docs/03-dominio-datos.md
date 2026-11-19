@@ -392,7 +392,7 @@ Una sola fila. El servidor anota de forma periódica que sigue en marcha, para p
 | | `ACTIVE` | Se crea junto con la partida |
 | `ACTIVE` | `CLOSED` | La partida termina o se anula |
 
-Cargar una sesión en memoria o liberarla no cambia su estado guardado (7.22).
+No hay copia de la sesión en memoria: cada orden la lee de la base de datos con su fila bloqueada (ADR-014, K2, que sustituye a la regla 7.22).
 
 ---
 
@@ -411,9 +411,9 @@ Cada operación de esta tabla es una sola transacción: o se guarda todo o no se
 | **Anulación** | Cierra la sesión, pasa la partida a `ABORTED` y devuelve la sala a `WAITING` o la cierra, igual que en el final de partida. No inserta resultados ni toca estadísticas | La partida está `IN_PROGRESS` | 7.20 |
 | **Ajuste tras una caída** | Al arrancar, antes de aceptar conexiones, desplaza `turn_started_at` y `turn_deadline_at` de cada sesión `ACTIVE` por el tiempo entre su último instante conocido y el arranque. Ese instante es `server_liveness.last_alive_at`, o `turn_started_at` si es posterior. No cambia `state_version` | `last_alive_at` se anota cada 10 segundos y, además, al apagarse en orden (ADR-015, V4) | 7.29, 8.18 |
 
-Los finales por tiempo agotado, rendición y abandono pasan por la misma operación de final de partida. Un final por abandono saca además de la sala a quien abandonó (7.32). La condición sobre `state_version` evita que un vencimiento y una jugada simultáneos se apliquen los dos: el que llega segundo encuentra otra versión, se descarta y se vuelve a evaluar.
+Los finales por tiempo agotado, rendición y abandono pasan por la misma operación de final de partida. Un final por abandono saca además de la sala a quien abandonó (7.32). Un vencimiento y una jugada simultáneos no se aplican los dos: el bloqueo de la fila de la sesión los ordena, y el segundo vuelve a leerla y la encuentra cambiada. La condición sobre `state_version` queda como segunda barrera (8.8).
 
-Si una transacción falla, el servidor descarta su copia en memoria de esa sesión y la vuelve a cargar desde la base de datos (8.10).
+Si una transacción falla, no se guarda nada, y la orden siguiente vuelve a leer la sesión de la base de datos (ADR-014, K2, que sustituye a la regla 8.10).
 
 ---
 

@@ -2,7 +2,7 @@
 
 Una plataforma web para jugar juegos de mesa en línea contra otras personas, en tiempo real o por turnos. El primer juego es Cuatro en raya.
 
-**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **corte vertical** completo: el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo); el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo), y el **Hito 3**, Cuatro en raya en tiempo real (la partida empieza sola cuando todos están listos, con tablero, relojes, rendición, resultado, historial y revancha). Están construidos también el **Hito 4**, la recuperación ante cortes y reinicios (quien pasa 2 minutos sin conexión pierde por abandono, y un reinicio del servidor no descuenta a nadie el tiempo parado), y el **Hito 5**, la modalidad por turnos con aviso de turno y aplicación instalable, fusionados en `main`. El **Hito 6**, cuenta, estadísticas y administración por la API, está en revisión. Falta el Hito 7, la preparación para publicar. El reparto del resto del MVP en hitos se aceptó al terminar el corte vertical. Cada hito se implementa solo cuando se autoriza de forma explícita.
+**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **corte vertical** completo: el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo); el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo), y el **Hito 3**, Cuatro en raya en tiempo real (la partida empieza sola cuando todos están listos, con tablero, relojes, rendición, resultado, historial y revancha). Están construidos también el **Hito 4**, la recuperación ante cortes y reinicios (quien pasa 2 minutos sin conexión pierde por abandono, y un reinicio del servidor no descuenta a nadie el tiempo parado), el **Hito 5**, la modalidad por turnos con aviso de turno y aplicación instalable, y el **Hito 6**, cuenta, estadísticas y administración por la API, todos fusionados en `main` (el Hito 6, el 2026-11-19, en la PR #8). Falta el Hito 7, la preparación para publicar, que **no está autorizado**. El reparto del resto del MVP en hitos se aceptó al terminar el corte vertical. Cada hito se implementa solo cuando se autoriza de forma explícita.
 
 ## Qué hay aquí
 
@@ -12,7 +12,7 @@ Una plataforma web para jugar juegos de mesa en línea contra otras personas, en
 | [`docs/adr/`](docs/adr/README.md) | Las diecisiete decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
 | [`docs/auditoria/`](docs/auditoria/README.md) | El análisis que precedió a las decisiones. Es histórico y no se mantiene al día |
 | [`contracts/`](contracts/) | La API, el protocolo de tiempo real, el contrato del motor de juego, el catálogo de errores y la matriz de permisos |
-| [`planning/`](planning/) | El backlog por hitos y el registro de lo decidido y lo abierto |
+| [`planning/`](planning/) | El backlog por hitos, el registro de lo decidido y lo abierto, y el [análisis de la aplicación](planning/analisis/informe-de-analisis-y-tareas.md) del 2026-11-19 con sus tareas de mejora |
 | [`apps/backend/`](apps/backend/) | El servidor: la API y el canal de tiempo real |
 | [`apps/frontend/`](apps/frontend/) | La aplicación web |
 | [`packages/contracts/`](packages/contracts/) | Tipos y esquemas de la API y del protocolo, y catálogo de errores. Lo usan el backend y el frontend |
@@ -21,7 +21,7 @@ Una plataforma web para jugar juegos de mesa en línea contra otras personas, en
 
 ## Cómo ejecutarlo en local
 
-Hace falta [Node.js](https://nodejs.org/) 26.13 o posterior de la línea 26, [pnpm](https://pnpm.io/) 12 y [Docker](https://www.docker.com/) para la base de datos. Funciona en Windows, macOS y Linux.
+Hace falta [Node.js](https://nodejs.org/) 26.13 o posterior de la línea 26, [pnpm](https://pnpm.io/) 12 y [Docker](https://www.docker.com/) para la base de datos. Se ha probado en Linux. Windows y macOS están previstos, pero todavía sin probar.
 
 ```sh
 pnpm install     # instala las dependencias de todos los paquetes
@@ -52,12 +52,13 @@ Nada es obligatorio en local. Para cambiar la base de datos, el registro de acti
 |---|---|
 | `pnpm dev`, `pnpm dev:https` | Arranca el entorno local en HTTP o en HTTPS |
 | `pnpm db:up`, `pnpm db:down` | Arranca o detiene la base de datos |
-| `pnpm db:migrate` | Aplica las migraciones pendientes |
+| `pnpm db:migrate` | Aplica las migraciones pendientes. Antes hay que construir con `pnpm build`; `pnpm dev` ya lo hace solo |
 | `pnpm test` | Ejecuta las pruebas. Las del backend usan la base de datos `gameboard_test`, que `pnpm db:up` crea |
 | `pnpm test:e2e` | Ejecuta las pruebas en navegador. Antes hay que construir con `pnpm build`, tener la base de datos en marcha y `pnpm dev` parado, porque usan sus mismos puertos. La primera vez hay que descargar el navegador con `pnpm --filter @gameboard/e2e exec playwright install chromium`. Usan su propia base de datos, `gameboard_e2e`, que crean de cero cada vez, y el puerto 3010 para que una prueba pueda reiniciar la API. La del reinicio y la de la administración, que retira un juego del catálogo, van en su propio grupo, después de las demás y de una en una |
-| `pnpm check` | Todo lo que se comprueba en cada pull request: formato, análisis, reglas de dependencias, compilación, tipos y pruebas |
+| `pnpm check` | Lo que se comprueba en cada pull request, salvo las pruebas en navegador: formato, análisis, reglas de dependencias, compilación, tipos y pruebas. Las pruebas en navegador también corren en cada pull request, en un trabajo aparte, y en local se lanzan con `pnpm test:e2e` |
 | `pnpm build` | Compila los paquetes y el backend, y genera el frontend como archivos estáticos en `apps/frontend/.output/public` |
 | `pnpm format` | Da formato al código |
+| `pnpm icons` | Vuelve a dibujar los iconos PNG de la aplicación instalable a partir de sus SVG. Solo hace falta si cambia un SVG, y usa el Chromium de las pruebas en navegador |
 | `pnpm admin:role <usuario> ADMIN` | Concede el rol de administrador a una cuenta, y con `USER` lo retira. Antes hay que construir con `pnpm build`. Cómo usar la administración, en [`docs/guia-administracion.md`](docs/guia-administracion.md) |
 
 ## Orden de lectura
@@ -73,7 +74,7 @@ Nada es obligatorio en local. Para cambiar la base de datos, el registro de acti
 9. [`contracts/05-permissions.md`](contracts/05-permissions.md): matriz de permisos.
 10. [`planning/decisiones-y-pendientes.md`](planning/decisiones-y-pendientes.md): qué está decidido y qué sigue abierto.
 11. [`planning/backlog-mvp.md`](planning/backlog-mvp.md): hitos.
-12. [`planning/cierre-hito-0.md`](planning/cierre-hito-0.md): comprobación de que la arquitectura quedó cerrada.
+12. [`planning/cierre-hito-0.md`](planning/cierre-hito-0.md): comprobación, del 2026-11-16, de que la arquitectura quedó cerrada antes de implementar. Es histórica y no se mantiene al día.
 
 Para administrar la plataforma: [`docs/guia-administracion.md`](docs/guia-administracion.md).
 

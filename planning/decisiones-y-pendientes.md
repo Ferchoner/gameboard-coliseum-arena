@@ -28,6 +28,14 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | ADR-009 | Reglas de dominio de salas, partidas y relojes |
 | ADR-010 | Persistencia de partida |
 | ADR-011 | Convenciones de nombres y glosario |
+| ADR-012 | Decisiones de arranque del Hito 1 |
+| ADR-013 | Decisiones del Hito 2, salas y tiempo real |
+| ADR-014 | Decisiones del Hito 3, Cuatro en raya en tiempo real |
+| ADR-015 | Decisiones del Hito 4, reconexión y recuperación |
+| ADR-016 | Decisiones del Hito 5, modalidad por turnos |
+| ADR-017 | Decisiones del Hito 6, cuenta, estadísticas y administración |
+
+El índice de ADR dice además qué decisiones cambió o precisó cada ADR posterior.
 | ADR-012 | Decisiones de arranque del Hito 1 (S1 a S25): herramientas, versiones, validación, sesiones y entorno local |
 | ADR-013 | Decisiones del Hito 2 (H1 a H20): salas, canal de tiempo real, avisos tras guardar y tareas periódicas. Incluye las elecciones C1 a C5, confirmadas después |
 | ADR-014 | Decisiones del Hito 3 (K1 a K22): quién dirige la partida, estado siempre en la base de datos, relojes, el juego Cuatro en raya, frontend y pruebas en navegador. Incluye las elecciones L1 a L7, confirmadas el 2026-11-16 |
@@ -128,7 +136,13 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 | Paso de Drizzle a la versión 1.0 definitiva, cuando se publique. Hoy se usa la candidata `1.0.0-rc.5` | Cuando salga | ADR-012, decisión S8 |
 | Paso a TypeScript 7, cuando las herramientas lo admitan | Cuando salga la 7.1 | ADR-012, decisión S5 |
 | Generar al construir el contenido del catálogo, y no solo la portada. Exige que la API esté disponible al construir. Hoy la portada se genera y la lista de juegos se pide en el navegador | Con el alojamiento | ADR-006; `apps/frontend/nuxt.config.ts` |
-| Valores definitivos de los límites de frecuencia y de tamaño | Tras el corte vertical, con datos reales | Protocolo, sección 12; notas de la API, sección 4 |
+| Implementar los límites de frecuencia de la API y del canal de tiempo real. Hoy no existen, aunque los contratos los describen; solo se limitan el tamaño de los mensajes, las conexiones por jugador y las suscripciones por conexión | En el Hito 7 | ADR-013, decisión H9; backlog, Hito 7; análisis, T-06 |
+| Valores definitivos de los límites de frecuencia y de tamaño | Con los límites de frecuencia, en el Hito 7, con datos reales | Protocolo, sección 12; notas de la API, sección 4 |
+| Corregir la sección 9 del catálogo de errores para que diga lo de K21 y L2. Quien decide confirmó el 2026-11-19 que prevalecen K21 y L2, que es lo que hace el código | En la tanda de cambios de contrato | ADR-014, sección 8; análisis, T-04 |
+| Corregir la operación `restoreState` del contrato del motor, que habla de cargar en memoria. Quien decide confirmó el 2026-11-19 que prevalece K2 | En la tanda de cambios de contrato | ADR-014, decisión K2 y sección 8; análisis, T-03 |
+| Probar a mano la aplicación instalable en Chrome de escritorio y en un móvil | En el Hito 7 | ADR-016, decisión N6 |
+| Cómo sirve el alojamiento `sw.js`, sin guardarlo en caché, y el manifiesto con su tipo | Con el alojamiento, en el Hito 7 | ADR-016, sección 12 |
+| Probar el entorno local en Windows. Todo se ha ejecutado en Linux | Al probarlo en el equipo de quien decide | ADR-013 y ADR-014, pendientes |
 
 ### Antes de publicar
 
@@ -161,6 +175,6 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 
 - Una propuesta no es una decisión hasta que quien decide la confirma de forma explícita.
 - Toda propuesta se presenta con sus alternativas, sus consecuencias y una recomendación.
-- Una decisión aceptada no se reescribe. Si cambia, se anota el cambio con su fecha en el documento que la contiene, o se añade un ADR que la sustituye.
+- Una decisión aceptada no se reescribe. Si cambia, se sigue la convención del [índice de ADR](../docs/adr/README.md#convenciones): se anota el cambio con su fecha y su origen en la decisión afectada, se actualiza el estado del ADR y su fila del índice, o se añade un ADR que la sustituye.
 - No se añade ninguna dependencia, no se cambia ningún contrato y no se implementa nada fuera del alcance sin aprobación previa.
 - No se escribe código de un hito hasta recibir su autorización explícita. Los Hitos 1 a 4 están autorizados, todos desde el 2026-11-16, el Hito 5, desde el 2026-11-18, y el Hito 6, desde el 2026-11-19. El Hito 7 no lo está.

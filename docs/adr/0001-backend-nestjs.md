@@ -63,12 +63,12 @@ Datos verificados el 2026-11-14 en el registro de npm y en las fuentes de la sec
 | 5.2 | Versión de Node.js | Node.js 26 | Es la versión LTS activa, con soporte activo hasta octubre de 2027 y de seguridad hasta abril de 2029. NestJS 12 exige 20.19 o 22.12 como mínimo |
 | 5.3 | Formato de módulos | ESM | NestJS 12 publica sus paquetes en ESM y Nuxt también es ESM. Los proyectos ESM usan Vitest por defecto, lo que permitiría un solo ejecutor de pruebas en backend y frontend. Salvedad: hay informes de fricción con alias de rutas bajo ESM, por lo que no se usan alias |
 | 5.4 | Adaptador HTTP | El adaptador por defecto (Express) | El tráfico de juego va por WebSocket y no pasa por el adaptador HTTP, así que el rendimiento de Fastify no aporta al MVP. Es reversible |
-| 5.5 | Aislamiento del motor | `game-engine` es TypeScript puro, sin importar `@nestjs/*`, ORM ni transporte, verificado de forma automática | Protege las decisiones A2 y B2. La herramienta de verificación se elige al iniciar el Hito 1 |
+| 5.5 | Aislamiento del motor | `game-engine` es TypeScript puro, sin importar `@nestjs/*`, ORM ni transporte, verificado de forma automática | Protege las decisiones A2 y B2. La herramienta de verificación se elige al iniciar el Hito 1. *Cerrado el 2026-11-16 (ADR-012, S4): dependency-cruiser* |
 | 5.6 | Configuración de TypeScript | Modo estricto | Coherente con contratos tipados y con la regla 8 |
 
 **Quedan fuera de este ADR, para pasos posteriores:**
-- Librería de validación de DTOs (la opción por defecto de NestJS o una basada en esquemas compartibles con el frontend). Se decide al iniciar el Hito 1.
-- Organización del repositorio y forma de compartir tipos: ver ADR-005. El gestor de paquetes se decide al iniciar el Hito 1.
+- Librería de validación de DTOs (la opción por defecto de NestJS o una basada en esquemas compartibles con el frontend). Se decide al iniciar el Hito 1. *Cerrado el 2026-11-16 (ADR-012, S6): Zod, con los esquemas en el paquete de contratos.*
+- Organización del repositorio y forma de compartir tipos: ver ADR-005. El gestor de paquetes se decide al iniciar el Hito 1. *Cerrado el 2026-11-16 (ADR-012, S3): pnpm.*
 - El SDK de observabilidad propio de NestJS 12. No se adopta por ahora (regla 5 del proyecto: evitar dependencias no justificadas).
 
 ## 6. Dato relevante para la decisión de autenticación

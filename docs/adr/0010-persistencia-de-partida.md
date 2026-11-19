@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Aceptada |
+| **Estado** | Aceptada, modificada por ADR-014 (K2) |
 | **Fecha** | 2026-11-14 |
 | **Decidida por** | Fernando Hernandez Argueta |
 | **Cierra** | Pendientes P8 y P14; hallazgos C-08, C-09 y C-10; efectos R-1 y R-2 del requisito de las dos modalidades |
@@ -33,7 +33,7 @@ La documentación inicial preveía snapshots y una tabla de eventos sin definir 
 | 8.7 | **Una jugada confirmada es una sola transacción** que actualiza el snapshot, la versión y los relojes, y añade la fila al registro de jugadas. O se guarda todo o no se guarda nada |
 | 8.8 | La actualización solo se aplica si la versión guardada coincide con la esperada. Si no coincide, la transacción se descarta. Es una segunda barrera además de la regla 8.6 |
 | 8.9 | Nada se envía a los clientes hasta que la transacción se ha confirmado |
-| 8.10 | Si una transacción falla, el servidor descarta la copia en memoria de esa sesión y la vuelve a cargar desde la base de datos. Nunca confía en la memoria después de un fallo |
+| 8.10 | Si una transacción falla, el servidor descarta la copia en memoria de esa sesión y la vuelve a cargar desde la base de datos. Nunca confía en la memoria después de un fallo. *Sustituida el 2026-11-16 (ADR-014, K2): no hay copia en memoria que descartar. Si la transacción falla, no se guarda nada y la siguiente orden vuelve a leer la sesión de la base de datos* |
 
 ## 3. Reintentos y jugadas duplicadas
 

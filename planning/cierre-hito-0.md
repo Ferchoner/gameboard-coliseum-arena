@@ -5,6 +5,7 @@
 | **Fecha** | 2026-11-16 |
 | **Qué es** | La comprobación de que la arquitectura quedó decidida y la documentación es coherente, antes de pedir la autorización para implementar |
 | **Parte de** | La auditoría inicial, en [`docs/auditoria/`](../docs/auditoria/README.md) |
+| **Vigencia** | Documento histórico: describe el estado del 2026-11-16 y no se mantiene al día. Lo vigente está en los ADR, los contratos y el backlog |
 
 ---
 

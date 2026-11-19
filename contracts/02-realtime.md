@@ -332,7 +332,7 @@ Valores iniciales. Todos son configurables y se ajustarán con datos reales.
 | Límite | Valor inicial | Qué ocurre al superarlo |
 |---|---|---|
 | Tamaño de un mensaje del cliente | 16 KiB | Cierre con el código 1009 |
-| Órdenes por conexión | 20 cada 10 segundos | `RATE_LIMITED`. Si se repite, cierre con el código 1008 |
+| Órdenes por conexión | 20 cada 10 segundos | `RATE_LIMITED`. Si se repite, cierre con el código 1008. *Previsto para el Hito 7: hoy no se aplica, y el código 1008 no se usa (ADR-013, H9)* |
 | Conexiones abiertas por jugador | 5 | La conexión nueva se cierra con el código 4003 |
 | Suscripciones por conexión | 20 | `RATE_LIMITED` |
 | Intervalo de `SERVER_HEARTBEAT` | 25 segundos | |
