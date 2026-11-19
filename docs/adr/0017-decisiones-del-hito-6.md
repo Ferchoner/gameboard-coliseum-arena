@@ -266,3 +266,63 @@ Hechos al aceptarse las decisiones, salvo el backlog, que se marca al construir.
 | `docs/adr/0014-decisiones-del-hito-3.md` | Se anota en K4, con fecha, que las estadísticas las crea U8 |
 | `docs/guia-administracion.md` | Nuevo, al construir (U2) |
 | `docs/adr/README.md` | Se añade este ADR |
+
+---
+
+## 15. Lo que resultó al construir
+
+Añadido el 2026-11-19, al terminar el hito. No cambia ninguna decisión aceptada ni ningún contrato. Las elecciones Y1 a Y8 están **pendientes de confirmar**.
+
+### Supuestos de la sección 12
+
+| Supuesto | Resultado |
+|---|---|
+| La consulta de relleno de U8 da los mismos números que contar los resultados uno a uno | **Se cumple.** La prueba aplica todas las migraciones anteriores, mete partidas terminadas con victoria, derrota y empate, una anulada y una en curso, aplica la de las estadísticas y compara: cuentan las cuatro terminadas y ninguna de las otras dos |
+| Cerrar las conexiones de una cuenta suspendida activa el abandono en tiempo real como cualquier otra desconexión | **Se cumple.** Al suspender, la conexión se cierra con el código de fin de sesión, el rival ve al suspendido desconectado y empieza a correr su plazo de abandono. No hizo falta marcar la ausencia aparte |
+| Las pruebas en navegador pueden leer el buzón de archivos del servidor que arrancan | **Se cumple.** Las pruebas indican la carpeta con `MAIL_OUTBOX_DIR`, la vacían al arrancar y leen ahí el enlace |
+
+Hubo además un supuesto que no estaba escrito y no se cumplió: **U14 daba por hecho que ya existía una tarea periódica que borra las sesiones caducadas, y no existía.** La operación de borrado estaba escrita desde el Hito 1, pero nada la llamaba: una sesión caducada dejaba de valer al usarla, y si no se volvía a usar, su fila se quedaba en la base de datos. Ver Y3.
+
+También era inexacta una premisa de U2: la API no exige la cabecera `Origin` a `curl`. La protección contra peticiones falsificadas rechaza las que un navegador envía desde otro origen, y admite las que no traen ni `Origin` ni las cabeceras `Sec-Fetch-*`, que no vienen de un navegador. La decisión no cambia; la guía lo explica.
+
+### Cómo se comprueba el criterio de aceptación
+
+| Nivel | Qué se prueba |
+|---|---|
+| Servidor (48 pruebas nuevas), todas las respuestas contra el contrato | Perfil: solo los campos enviados, recorte de espacios, biografía vacía como nula, cuerpo vacío y campos de más rechazados. Contraseña: cierra las demás sesiones y sus conexiones y deja la actual; contraseña actual equivocada. Recuperación, con el tiempo controlado: el correo, el hash guardado, un solo uso, caduca a la hora, uno nuevo anula los anteriores, nada a una cuenta suspendida ni a un correo que no existe, cierra todas las sesiones. Limpieza periódica. Perfiles y estadísticas: por juego, al terminar, con empates, sin contar dos veces la jugada final repetida, perfil de cuenta suspendida. Relleno de la migración. Administración: la matriz de permisos entera (`FORBIDDEN` y `UNAUTHENTICATED` en las ocho operaciones), el rol leído en cada petición, búsqueda y páginas, suspender con sus efectos y el abandono, cerrar salas con y sin partida, anular, y cada paso del catálogo con un juego de pruebas de dos versiones y una tercera sin motor, incluidas las salas de U5 |
+| Navegador, la cuenta | Ana cambia su nombre visible, que Bea ve en su perfil; con la contraseña actual equivocada no cambia; al cambiarla, su otro navegador sale al instante y esta sesión sigue |
+| Navegador, la recuperación | Con dos navegadores abiertos, desde un tercero pide el enlace, lo abre desde el correo simulado, fija la contraseña nueva y los otros dos salen; el enlace no sirve dos veces |
+| Navegador, el perfil | Desde la partida, el nombre del rival lleva a su perfil sin partidas; al terminar, las estadísticas de los dos cuentan la partida |
+| Navegador, la administración | Un administrador creado con `pnpm admin:role` usa solo la API: suspende a Carla, que sale de sus dos pestañas y al entrar ve que está suspendida; anula una partida y los dos jugadores ven que no cuenta; retira Cuatro en raya, la sala de Dani se cierra delante de ella y el juego desaparece; lo vuelve a poner y se juega otra vez |
+
+Que las estadísticas cuentan también las partidas de antes del hito se comprueba en el servidor, con la prueba del relleno: en el navegador no hay partidas anteriores a la migración.
+
+### Elecciones menores tomadas al construir
+
+Ninguna estaba en las dieciocho decisiones y ninguna cambia un contrato. Se aplicaron como recomendaciones y **quedan pendientes de confirmar**.
+
+| ID | Asunto | Lo que se hizo | Alternativa |
+|---|---|---|---|
+| Y1 | Quién anula las partidas | `admin` usa a `game-sessions` para anular, igual que `realtime` le pasa las órdenes de juego. La regla automática de dependencias admite ya a los dos, y una regla nueva impide que ningún módulo dependa de `admin` | Que `admin` pida la anulación a través de `rooms` o de `realtime`. Un rodeo sin ventaja |
+| Y2 | Dónde viven el correo y la orden de consola | Un módulo nuevo, `mail`, con la interfaz `Mailer` y el buzón de archivos (U6). La orden `pnpm admin:role` vive en `apps/backend/src/scripts/` y arranca solo la configuración, la base de datos y las cuentas, sin rutas ni canal de tiempo real | Meter el correo dentro de `auth`. El servicio real del Hito 7 tendría que salir de ahí |
+| Y3 | La limpieza periódica (U14) | Como no existía, se creó: cada hora (`AUTH_CLEANUP_MINUTES`) borra las sesiones caducadas, avisando para cerrar sus conexiones, y los enlaces caducados o usados. Es un temporizador propio, sin librería, como el de las salas inactivas | Dejar las filas. Crecen sin límite y no sirven para nada |
+| Y4 | Las salas cuando el catálogo cambia justo antes de empezar (U5) | Además de cerrar las salas al cambiar el catálogo, el servidor comprueba al empezar cada partida, también la revancha, que el juego sigue activo y que la versión vigente admite las opciones de la sala. Si no, la cierra con motivo "administración" en vez de fallar | Comprobarlo solo al cambiar el catálogo. Un cambio entre esa comprobación y el inicio dejaría la sala fallando con un error del servidor |
+| Y5 | El token en la dirección (U7) | La página lo lee y lo quita de la dirección al abrirse, para que no quede en el historial del navegador. También lo lee si la página ya estaba abierta y solo cambia lo que va tras `#` | Dejarlo en la dirección hasta enviar el formulario |
+| Y6 | Qué envía la página de la cuenta | Solo los campos que cambiaron. Si no cambió nada, lo dice sin llamar al servidor. El nombre de usuario y el correo se muestran sin poder editarlos, porque el contrato no lo permite | Enviar siempre los dos campos |
+| Y7 | El nombre de un juego que ya no está en el catálogo | Las estadísticas de un juego desactivado se siguen mostrando, con su nombre corto en vez del nombre, porque la página toma los nombres del catálogo público | Añadir el nombre al contrato de estadísticas. Cambia el contrato |
+| Y8 | Dónde corre la prueba en navegador de la administración | En el grupo que corre al final y de una en una, junto a la del reinicio, porque retira Cuatro en raya del catálogo que usan todas las demás | Un catálogo de pruebas propio. Habría que dar de alta otro juego solo para esto |
+
+### Otras notas
+
+- Archivos nuevos del backend: los módulos `statistics`, `admin` y `mail`, `auth/password-reset.service.ts`, `auth/auth-cleanup.ts`, `players/players.controller.ts`, `games/room-options.ts` (la comprobación de opciones de sala, compartida por la creación y por Y4), `scripts/admin-role.ts` y la migración `20261119052221_estadisticas_y_recuperacion`.
+- Variables de entorno nuevas, en `apps/backend/.env.example`: `MAIL_TRANSPORT`, `MAIL_OUTBOX_DIR`, `PASSWORD_RESET_MINUTES` y `AUTH_CLEANUP_MINUTES`. La carpeta `apps/backend/var/` no se sube al repositorio.
+- Frontend: páginas `/cuenta`, `/recuperar-contrasena` y `/jugadores/[username]`, el enlace "¿Olvidaste tu contraseña?" en la entrada, el nombre de la cabecera lleva a la cuenta, y los nombres de los jugadores en salas, partidas e historial llevan a su perfil. El perfil muestra la inicial del nombre en lugar del avatar (U12).
+- Las pruebas: 48 nuevas en el servidor, 2 en el frontend y 4 en navegador.
+
+### Lo que queda sin hacer, y dónde
+
+| Asunto | Cuándo |
+|---|---|
+| Servicio real de correo y límite de frecuencia de las peticiones de recuperación | Hito 7, con el alojamiento |
+| Guardar las acciones de administración en la base de datos y la política de borrado | Hito 7 |
+| Panel visual de administración | Después del MVP, salvo que se decida otra cosa |

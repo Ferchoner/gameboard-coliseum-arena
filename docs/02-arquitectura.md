@@ -95,6 +95,7 @@ Las flechas indican quién usa a quién.
 | `realtime` | Conexiones WebSocket, suscripciones en memoria, presencia y difusión. Es el único módulo que conoce el transporte | Ninguna |
 | `statistics` | Contadores por jugador y juego | `game_statistics` |
 | `admin` | Operaciones de administración. No tiene datos propios: usa los demás módulos | Ninguna |
+| `mail` | El envío de correo, detrás de la interfaz `Mailer`. En local, el correo simulado en archivos (ADR-017, U6) | Ninguna |
 | `broadcast` | La interfaz neutral por la que los módulos avisan de lo que cambió y preguntan quién está conectado, sin conocer el WebSocket. `realtime` la implementa (ADR-013, decisión H5) | Ninguna |
 | `database`, `config`, `common` | Infraestructura compartida y acotada: conexión, configuración, sobre de respuesta y errores | Ninguna |
 
@@ -196,6 +197,16 @@ Se decidió el 2026-11-16 en [ADR-014](adr/0014-decisiones-del-hito-3.md).
 | Orden de los bloqueos | El final de partida bloquea primero la sesión de juego y después la sala. Nadie los toma al revés | K10 |
 | Frontend y motor | El frontend no ejecuta el motor. Importa de él solo tipos, y la regla se comprueba de forma automática | K7 |
 | Pruebas en navegador | Playwright, en un trabajo aparte de las comprobaciones | K8 |
+
+### Lo que resultó al construir el Hito 6
+
+Está en la [sección 15 de ADR-017](adr/0017-decisiones-del-hito-6.md#15-lo-que-resultó-al-construir), pendiente de confirmar.
+
+| Asunto | Lo que se hizo | Dónde |
+|---|---|---|
+| Quién conoce a `game-sessions` | Además de `realtime`, `admin`, que le pide anular partidas. Ningún módulo depende de `admin`. Las dos reglas se comprueban de forma automática | Y1 |
+| Correo y órdenes de consola | El módulo `mail` y la carpeta `apps/backend/src/scripts/`, con `pnpm admin:role` | Y2 |
+| Limpieza de sesiones y enlaces | Un temporizador en `auth` borra cada hora las sesiones caducadas y los enlaces de recuperación caducados o usados | Y3 |
 
 ---
 
