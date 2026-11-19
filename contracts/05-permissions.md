@@ -186,6 +186,6 @@ Estas decisiones no derivan de un ADR: se tomaron al escribir la matriz. Fueron 
 
 | Asunto | Estado |
 |---|---|
-| **Jugador retirado en una partida de más de dos que continúa.** Hay que decidir si sigue viendo la partida y si recibe sus avisos | Ya anotado en el contrato del motor. Se decide con el primer juego de más de dos jugadores |
+| **Jugador retirado en una partida de más de dos que continúa.** Hay que decidir si sigue viendo la partida y si recibe sus avisos | *Cerrado el 2026-11-19 (ADR-020, DO19 a DO21):* sigue viendo la partida hasta el final como participante, no recibe aviso de turno porque nunca vuelve a estar activo, y no puede rendirse otra vez |
 | **Registro de acciones de administración.** Quién suspendió una cuenta o anuló una partida no queda guardado | Ya anotado en el modelo de datos. Conviene valorarlo antes del lanzamiento público |
 | **Espectadores y salas privadas** | Posteriores al MVP. Añadirán una situación nueva, la de invitado o espectador, sin cambiar las actuales |

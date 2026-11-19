@@ -463,14 +463,20 @@ export class RoomsService {
     );
   }
 
-  /** El límite cuenta las pertenencias a salas no cerradas de esa modalidad (decisión R7). */
+  /**
+   * El límite cuenta las pertenencias a salas no cerradas de esa modalidad
+   * (decisión R7), salvo las de las partidas en las que el jugador ya se
+   * retiró y que siguen sin él (regla 7.33).
+   */
   private async assertBelowMatchLimit(
     playerId: string,
     mode: MatchMode,
     tx: Transaction,
   ): Promise<void> {
     const limit = this.config.rooms.maxMatchesPerPlayer[mode];
-    const current = await this.repository.countOpenMemberships(playerId, mode, tx);
+    const current =
+      (await this.repository.countOpenMemberships(playerId, mode, tx)) -
+      (await this.matchStarter.current.countRetiredMatches(playerId, mode, tx));
     if (current >= limit) {
       throw new AppError(
         'MATCH_LIMIT_REACHED',

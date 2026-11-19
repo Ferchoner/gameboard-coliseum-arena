@@ -263,6 +263,7 @@ El estado vivo de una partida. Es un concepto interno del servidor: su existenci
 | `state_version` | `integer` | No | Contador de cambios. Empieza en 0 y aumenta en 1 cada vez que cambia el estado: con cada jugada confirmada y con cada retirada de un asiento |
 | `active_seats` | `smallint[]` | No | Asientos que pueden jugar ahora, que son aquellos cuyo reloj está corriendo. En un juego por turnos contiene un solo asiento; en uno con jugadas simultáneas, varios. Vacía si la sesión está cerrada |
 | `active_since` | `jsonb` | No | Versión del estado desde la que está activo, sin interrupción, cada asiento de `active_seats`, con el asiento como clave: `{"0": 4, "1": 4}`. Con varios asientos activos, a cada uno le vale una jugada hecha sobre esa versión o una posterior. Vacío si la sesión está cerrada. *Añadida el 2026-11-19 (ADR-019, X15)* |
+| `retired_seats` | `smallint[]` | No | Asientos retirados de una partida que siguió sin ellos, en el orden en que se retiraron. Vacío al empezar. Con dos jugadores siempre está vacío, porque toda retirada termina la partida. *Añadida el 2026-11-19 (ADR-020, DO18)* |
 | `clocks` | `jsonb` | No | Tiempo restante de cada asiento, en milisegundos, medido en el instante `turn_started_at` (8.4) |
 | `turn_started_at` | `timestamptz` | Sí | Instante en que se midieron los relojes. Desde entonces corren los de los asientos activos (7.3) |
 | `turn_deadline_at` | `timestamptz` | Sí | Instante en que se agota el primer reloj de los asientos activos si nadie juega. Es `turn_started_at` más el menor de sus tiempos restantes |

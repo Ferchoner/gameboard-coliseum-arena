@@ -82,6 +82,11 @@ export interface MatchPlayerView {
    * tiene valor en tiempo real y mientras está desconectado (ADR-009, 7.26).
    */
   readonly abandonAt: IsoDateTime | null;
+  /**
+   * Se retiró por tiempo, rendición o abandono y la partida sigue, o siguió,
+   * sin él. Solo puede pasar con más de dos jugadores (ADR-020, DO21).
+   */
+  readonly retired: boolean;
 }
 
 export interface MatchResultView {

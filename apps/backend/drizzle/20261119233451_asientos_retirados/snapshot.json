@@ -1,0 +1,47 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "ff9ec6eb-23a2-4805-b731-4830a9d3446b",
+  "prevIds": [
+    "4c6c0d72-2454-49f5-8591-752309153307"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "game_sessions",
+        "retired_seats"
+      ],
+      "writes": [
+        "s|col|public.game_sessions.retired_seats",
+        "n|col|public.game_sessions.retired_seats",
+        "e|col|public.game_sessions.retired_seats"
+      ],
+      "reads": [
+        "n|tbl|public.game_sessions",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "retired_seats",
+        "type": "smallint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 1,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

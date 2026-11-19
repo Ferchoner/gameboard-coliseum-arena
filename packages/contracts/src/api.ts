@@ -243,6 +243,7 @@ export const matchPlayerSchema = z.strictObject({
   connected: z.boolean(),
   clockRemainingMs: z.int(),
   abandonAt: dateTime.nullable(),
+  retired: z.boolean(),
 }) satisfies z.ZodType<MatchPlayerView>;
 
 export const matchResultSchema = z.strictObject({

@@ -29,6 +29,7 @@ export type GameSessionChange = Pick<
   | 'stateVersion'
   | 'activeSeats'
   | 'activeSince'
+  | 'retiredSeats'
   | 'clocks'
   | 'turnStartedAt'
   | 'turnDeadlineAt'
@@ -136,6 +137,19 @@ export class GameSessionsRepository {
     return rows.flatMap((row) =>
       row.turnDeadlineAt ? [{ matchId: row.matchId, turnDeadlineAt: row.turnDeadlineAt }] : [],
     );
+  }
+
+  /** Los asientos retirados de cada una de esas sesiones activas (ADR-020, DO18). */
+  async findRetiredSeats(
+    matchIds: readonly string[],
+    executor: DbExecutor = this.database.db,
+  ): Promise<Map<string, readonly number[]>> {
+    if (matchIds.length === 0) return new Map();
+    const rows = await executor
+      .select({ matchId: gameSessions.matchId, retiredSeats: gameSessions.retiredSeats })
+      .from(gameSessions)
+      .where(and(inArray(gameSessions.matchId, [...matchIds]), eq(gameSessions.status, 'ACTIVE')));
+    return new Map(rows.map((row) => [row.matchId, row.retiredSeats]));
   }
 
   // --- Registro de jugadas -------------------------------------------------

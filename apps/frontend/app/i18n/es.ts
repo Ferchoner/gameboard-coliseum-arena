@@ -206,6 +206,11 @@ export const es = {
       FAILURE: 'La partida se anuló por un fallo del servidor. No cuenta para nadie.',
       ADMIN: 'Un administrador anuló la partida. No cuenta para nadie.',
     },
+    /** Con más de dos jugadores, la partida sigue sin quien se retira (ADR-020, DO21). */
+    retired: {
+      notice: 'Te retiraste. La partida sigue sin ti.',
+      badge: 'Se retiró',
+    },
     resign: {
       action: 'Rendirse',
       question: '¿Seguro que quieres rendirte? Perderás la partida.',
@@ -219,6 +224,8 @@ export const es = {
       roomClosedHint: 'La sala de esta partida se cerró al terminar.',
       /** Quien pierde por abandono sale de la sala (regla 7.32). */
       leftRoomHint: 'Al perder por abandono saliste de la sala.',
+      /** Quien se retira de una partida que sigue sale de la sala al terminar (regla 7.33). */
+      retiredLeftRoomHint: 'Te retiraste antes del final, así que saliste de la sala.',
       allMatches: 'Ver mis partidas',
     },
     /** En el móvil, en tiempo real (ADR-016, decisión N5). */

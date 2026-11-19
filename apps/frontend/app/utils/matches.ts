@@ -49,6 +49,14 @@ export function youAbandoned(match: Pick<MatchView, 'result' | 'yourSeat'>): boo
   return match.result?.reason === 'ABANDONMENT' && outcomeOf(match, match.yourSeat) === 'LOSS';
 }
 
+/**
+ * Si quien mira se retiró y la partida siguió sin él (ADR-020, DO21). Al
+ * terminar la partida sale de la sala (regla 7.33).
+ */
+export function youRetired(match: Pick<MatchView, 'players' | 'yourSeat'>): boolean {
+  return match.players.some((player) => player.seat === match.yourSeat && player.retired);
+}
+
 /** Un reloj en minutos y segundos: "4:07". Solo marca "0:00" cuando no queda nada. */
 export function formatClock(ms: number): string {
   const totalSeconds = Math.ceil(Math.max(0, ms) / 1000);

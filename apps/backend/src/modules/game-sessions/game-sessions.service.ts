@@ -4,6 +4,7 @@ import type {
   ListMyMatchesQuery,
   MatchAbortReason,
   MatchEndReason,
+  MatchMode,
   MatchSummaryView,
   Page,
   PlayerRef,
@@ -248,6 +249,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       stateVersion: 0,
       activeSeats: [...status.activeSeats],
       activeSince: initialActiveSince(status.activeSeats),
+      retiredSeats: [],
       clocks: clocksToStored(clocks),
       turnStartedAt: now,
       turnDeadlineAt: deadlineOf(clocks, status.activeSeats, now),
@@ -264,6 +266,31 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
 
   describeRoom(roomId: string, executor?: DbExecutor): Promise<RoomMatches> {
     return this.matches.describeRoom(roomId, executor);
+  }
+
+  async countRetiredMatches(
+    playerId: string,
+    mode: MatchMode,
+    executor?: DbExecutor,
+  ): Promise<number> {
+    const retired = await this.findRetiredMatchesOf(playerId, executor);
+    return retired.filter((match) => match.mode === mode).length;
+  }
+
+  /**
+   * Las partidas en curso en las que el jugador se retiró y que siguen sin
+   * él (ADR-020, DO19 y DO20), con su modalidad.
+   */
+  private async findRetiredMatchesOf(
+    playerId: string,
+    executor?: DbExecutor,
+  ): Promise<{ readonly matchId: string; readonly mode: MatchMode }[]> {
+    const inProgress = await this.matches.findInProgressSeatsOf(playerId, executor);
+    const retiredSeats = await this.repository.findRetiredSeats(
+      inProgress.map((match) => match.matchId),
+      executor,
+    );
+    return inProgress.filter((match) => retiredSeats.get(match.matchId)?.includes(match.seat));
   }
 
   // --- Órdenes de los jugadores ---------------------------------------------
@@ -413,6 +440,9 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
     return this.database.transaction(async (tx) => {
       const { loaded, seat } = await this.lockMatchOf(matchId, playerId, tx);
       if (loaded.session.status !== 'ACTIVE') throw matchNotInProgress();
+      // Quien ya se retiró y ve seguir la partida no se retira otra vez: es
+      // como una orden repetida (ADR-020, DO19).
+      if (loaded.session.retiredSeats.includes(seat)) return this.snapshotOf(loaded);
 
       const now = this.clock.now();
       // Si antes de rendirse ya se había agotado un reloj, ese vencimiento va primero.
@@ -487,7 +517,13 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
    * en la que juega (regla 7.26).
    */
   async playerDisconnected(playerId: string): Promise<void> {
-    const matchIds = await this.matches.findInProgressIdsOf(playerId, 'REALTIME');
+    // En las partidas en las que ya se retiró no puede perder por abandono (ADR-020, DO19).
+    const retired = new Set(
+      (await this.findRetiredMatchesOf(playerId)).map((match) => match.matchId),
+    );
+    const matchIds = (await this.matches.findInProgressIdsOf(playerId, 'REALTIME')).filter(
+      (matchId) => !retired.has(matchId),
+    );
     // Mientras se buscaban sus partidas pudo volver.
     if (this.presence.isConnected(playerId)) return;
     const abandonAt = this.abandonAtFrom(this.clock.now());
@@ -529,11 +565,18 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       const record = await this.matches.find(matchId, tx);
       if (!record) throw new Error(`La sesión ${matchId} no tiene partida`);
 
-      // Con la fila bloqueada se vuelve a mirar quién falta y quién está.
+      // Con la fila bloqueada se vuelve a mirar quién falta y quién está. Un
+      // asiento retirado ni pierde por abandono ni cuenta como rival
+      // conectado (ADR-020, DO19).
       const now = this.clock.now();
-      const absent = new Set(this.absences.dueAbsentees(matchId, now));
+      const retired = new Set(session.retiredSeats.map((seat) => requirePlayer(record, seat)));
+      for (const playerId of retired) this.absences.markPresent(matchId, playerId);
+      const absent = new Set(
+        this.absences.dueAbsentees(matchId, now).filter((playerId) => !retired.has(playerId)),
+      );
       const rivalConnected = record.playerIds.some(
-        (playerId) => !absent.has(playerId) && this.presence.isConnected(playerId),
+        (playerId) =>
+          !absent.has(playerId) && !retired.has(playerId) && this.presence.isConnected(playerId),
       );
       if (absent.size === 0 || !rivalConnected) return false;
 
@@ -581,8 +624,11 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
   /** Empieza a contar la ausencia de los participantes que no están conectados. */
   private countAbsences(snapshot: MatchSnapshot): void {
     const abandonAt = this.abandonAtFrom(this.clock.now());
-    for (const { playerId } of snapshot.players) {
-      if (!this.presence.isConnected(playerId)) {
+    for (const [seat, { playerId }] of snapshot.players.entries()) {
+      // Un asiento retirado ya no puede perder por abandono (ADR-020, DO19).
+      if (snapshot.retiredSeats.includes(seat)) {
+        this.absences.markPresent(snapshot.matchId, playerId);
+      } else if (!this.presence.isConnected(playerId)) {
         this.absences.markAbsent(snapshot.matchId, playerId, abandonAt);
       }
     }
@@ -834,8 +880,13 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
     let { stateVersion } = loaded.session;
     let endReason: MatchEndReason = 'COMPLETED';
     const events: GameEventView[] = [];
-    const retired = new Set<number>();
-    // Quien pierde por abandono sale de la sala al terminar la partida (regla 7.32).
+    // Los asientos ya retirados no se retiran otra vez (ADR-020, DO18).
+    const retired = new Set<number>(loaded.session.retiredSeats);
+    // Los que se retiran y la partida sigue sin ellos (ADR-020, DO18).
+    const retiredSeats = [...loaded.session.retiredSeats];
+    // Quien pierde por abandono la retirada que termina la partida sale de la
+    // sala al terminar (regla 7.32). Los retirados de una partida que siguió
+    // salen también, pero eso lo resuelve el final (regla 7.33).
     const departing: string[] = [];
     // Cada retirada se anota con el `stateVersion` que produce (ADR-018, decisión Z2).
     const recorded: NewMatchRetirementRow[] = [];
@@ -849,8 +900,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       endReason = reason;
       retired.add(seat);
       events.push(...(retirement.events as readonly GameEventView[]));
-      const playerId = loaded.record.playerIds[seat];
-      if (playerId === undefined) throw new Error(`La partida no tiene el asiento ${seat}`);
+      const playerId = requirePlayer(loaded.record, seat);
       recorded.push({
         matchId: loaded.record.matchId,
         sequence: stateVersion,
@@ -858,7 +908,8 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
         reason,
         createdAt: now,
       });
-      if (reason === 'ABANDONMENT') departing.push(playerId);
+      if (!game.engine.getStatus(state).finished) retiredSeats.push(seat);
+      else if (reason === 'ABANDONMENT') departing.push(playerId);
     }
 
     await this.repository.insertRetirements(recorded, tx);
@@ -872,6 +923,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
         clocks: this.clocksOf(loaded, now),
         now,
         actingSeat: null,
+        retiredSeats,
       },
       endReason,
       tx,
@@ -896,6 +948,8 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       readonly now: Date;
       /** El asiento que jugó, o `null` si el cambio es una retirada (ADR-019, X16). */
       readonly actingSeat: number | null;
+      /** Los asientos retirados de la partida que sigue. Si no se dan, los que ya había. */
+      readonly retiredSeats?: readonly number[];
     },
     endReason: MatchEndReason,
     tx: Transaction,
@@ -903,10 +957,17 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
   ): Promise<MatchSnapshot> {
     const { now } = next;
     const status = next.engine.getStatus(next.state);
+    const retiredSeats = [...(next.retiredSeats ?? loaded.session.retiredSeats)];
 
     if (status.finished) {
       const seats = [...status.results].sort((a, b) => a.seat - b.seat);
-      return this.finish(loaded, next, { reason: endReason, seats }, tx, departing);
+      return this.finish(
+        loaded,
+        { ...next, retiredSeats },
+        { reason: endReason, seats },
+        tx,
+        departing,
+      );
     }
 
     const session = await this.updateSession(
@@ -922,6 +983,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
           next.stateVersion,
           next.actingSeat,
         ),
+        retiredSeats,
         clocks: clocksToStored(next.clocks),
         turnStartedAt: now,
         turnDeadlineAt: deadlineOf(next.clocks, status.activeSeats, now),
@@ -946,6 +1008,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       readonly stateVersion: number;
       readonly clocks: readonly number[];
       readonly now: Date;
+      readonly retiredSeats: readonly number[];
     },
     result: MatchResultRecord,
     tx: Transaction,
@@ -960,6 +1023,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
         stateVersion: final.stateVersion,
         activeSeats: [],
         activeSince: {},
+        retiredSeats: [...final.retiredSeats],
         clocks: clocksToStored(final.clocks),
         turnStartedAt: null,
         turnDeadlineAt: null,
@@ -978,7 +1042,14 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       now,
       tx,
     );
-    await this.rooms.matchEnded(loaded.record.roomId, now, tx, departing);
+    // Salen de la sala quien perdió por abandono (regla 7.32) y quien se
+    // retiró de la partida mientras seguía sin él (regla 7.33).
+    await this.rooms.matchEnded(
+      loaded.record.roomId,
+      now,
+      tx,
+      leavingPlayers(loaded.record, final.retiredSeats, departing),
+    );
 
     const record: MatchRecord = { ...loaded.record, status: 'FINISHED', endedAt: now, result };
     return this.snapshotOf({ ...loaded, record, session });
@@ -1019,6 +1090,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
         stateVersion: loaded.session.stateVersion,
         activeSeats: [],
         activeSince: {},
+        retiredSeats: [...loaded.session.retiredSeats],
         clocks: clocksToStored(this.clocksOf(loaded, now)),
         turnStartedAt: null,
         turnDeadlineAt: null,
@@ -1030,7 +1102,13 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
     if (room === 'CLOSE') {
       await this.rooms.closeByAdmin(roomId, now, tx);
     } else {
-      await this.rooms.matchEnded(roomId, now, tx);
+      // Los retirados de la partida salen de la sala, igual que al terminar (regla 7.33).
+      await this.rooms.matchEnded(
+        roomId,
+        now,
+        tx,
+        leavingPlayers(loaded.record, loaded.session.retiredSeats, []),
+      );
     }
 
     const record: MatchRecord = {
@@ -1084,6 +1162,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       stateVersion: session.stateVersion,
       players,
       activeSeats: session.activeSeats,
+      retiredSeats: session.retiredSeats,
       clocks: clocksFromStored(session.clocks, players.length),
       turnStartedAt: session.turnStartedAt,
       turnDeadlineAt: session.turnDeadlineAt,
@@ -1128,6 +1207,19 @@ function requireRef(refs: ReadonlyMap<string, PlayerRef>, playerId: string): Pla
   const ref = refs.get(playerId);
   if (!ref) throw new Error(`El jugador ${playerId} no tiene cuenta`);
   return ref;
+}
+
+/**
+ * Quienes salen de la sala al terminar la partida: los retirados de una
+ * partida que siguió sin ellos (regla 7.33) y quienes perdieron por
+ * abandono en la retirada que la terminó (regla 7.32), sin repetir.
+ */
+function leavingPlayers(
+  record: MatchRecord,
+  retiredSeats: readonly number[],
+  departing: readonly string[],
+): string[] {
+  return [...new Set([...retiredSeats.map((seat) => requirePlayer(record, seat)), ...departing])];
 }
 
 function requirePlayer(record: MatchRecord, seat: number): string {
