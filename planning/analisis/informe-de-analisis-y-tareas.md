@@ -469,7 +469,7 @@ Ninguno cambia el comportamiento de la aplicación. Varios son contratos: correg
 
 ## 8. Lo que el usuario tiene que decidir
 
-*Respondido el 2026-11-19:* el plan por tandas se acepta tal como se propone (punto 1); prevalecen K2 y K21/L2 (punto 2); la carpeta compartida será un espejo del repositorio (punto 3). Los puntos 4 y 5 se deciden con su tanda.
+*Respondido el 2026-11-19:* el plan por tandas se acepta tal como se propone (punto 1); prevalecen K2 y K21/L2 (punto 2); la carpeta compartida será un espejo del repositorio (punto 3). Los puntos 4 y 5 se deciden con su tanda. La tanda de contratos se autorizó y se fusionó el mismo día (PR #10). La de comprobaciones y pruebas se autorizó el 2026-11-19, con Dependabot solo para las acciones de GitHub (punto 4, T-10).
 
 1. **Qué tareas se trabajan y en qué orden.** Sugerencia, sin tocar el Hito 7:
    - **Primera tanda, sin código de la aplicación:** T-01, T-28, T-03, T-25, T-26, T-27, T-30 y la nota de T-06 en los contratos.

@@ -79,6 +79,29 @@ describe('entrada de la API', () => {
       expect(response.body.error.code).toBe('ORIGIN_NOT_ALLOWED');
     });
 
+    // Las tres siguientes fijan lo que dice el contrato desde el 2026-11-19
+    // (análisis, T-17): una actualización de NestJS no debe cambiarlo sin aviso.
+    it('la rechaza si solo la cabecera Sec-Fetch-Site dice que viene de otro sitio', async () => {
+      const response = await login().set('Sec-Fetch-Site', 'cross-site');
+
+      expect(response.status).toBe(403);
+      expect(response.body.error.code).toBe('ORIGIN_NOT_ALLOWED');
+    });
+
+    it('rechaza el origen opaco "null", el de una página sin origen propio', async () => {
+      const response = await login().set('Origin', 'null');
+
+      expect(response.status).toBe(403);
+      expect(response.body.error.code).toBe('ORIGIN_NOT_ALLOWED');
+    });
+
+    it('admite una petición sin Origin ni cabeceras Sec-Fetch-*, como las de curl, que depende solo de la cookie', async () => {
+      const response = await login();
+
+      expect(response.status).toBe(401);
+      expect(response.body.error.code).toBe('INVALID_CREDENTIALS');
+    });
+
     it('rechaza otro puerto del mismo host, que es otro origen', async () => {
       const response = await login()
         .set('Origin', 'http://localhost:9999')

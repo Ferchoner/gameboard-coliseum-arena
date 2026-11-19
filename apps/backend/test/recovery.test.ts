@@ -6,8 +6,14 @@ import { GameSessionsService } from '../src/modules/game-sessions/game-sessions.
 import { ServerLiveness } from '../src/modules/game-sessions/server-liveness.js';
 import { createTestApp, type TestApp, type TestAppOptions } from './app.js';
 import { query, resetDatabase } from './database.js';
-import { MINUTE_MS, seedFourInARow, type StartedMatch, startMatch } from './match-setup.js';
-import { reconnect, type TestPlayer } from './players.js';
+import {
+  FOUR_IN_A_ROW,
+  MINUTE_MS,
+  seedFourInARow,
+  type StartedMatch,
+  startMatch,
+} from './match-setup.js';
+import { reconnect, signUp, type TestPlayer } from './players.js';
 import { TestSocket } from './realtime-client.js';
 
 type MatchUpdated = Extract<Notification, { type: 'MATCH_UPDATED' }>;
@@ -15,6 +21,8 @@ type MatchUpdated = Extract<Notification, { type: 'MATCH_UPDATED' }>;
 const SECOND_MS = 1000;
 const FIVE_MINUTES_MS = 5 * MINUTE_MS;
 const ABANDON_MS = 2 * MINUTE_MS;
+const HOUR_MS = 60 * MINUTE_MS;
+const TWELVE_HOURS_MS = 12 * HOUR_MS;
 /** Lo que tarda de verdad una prueba entre medir y comprobar. */
 const TOLERANCE_MS = 3 * SECOND_MS;
 
@@ -94,6 +102,26 @@ describe('reconexión y recuperación', () => {
     return socket;
   }
 
+  /** Una partida de Cuatro en raya por turnos: empieza en cuanto la sala se completa (7.10). */
+  async function startByTurns(t: TestApp): Promise<StartedMatch> {
+    const owner = await signUp(t);
+    const guest = await signUp(t);
+    const created = await owner.post('/rooms', {
+      ...FOUR_IN_A_ROW,
+      mode: 'TURN_BASED',
+      timeControl: { type: 'TOTAL_PER_PLAYER', totalMs: TWELVE_HOURS_MS },
+    });
+    expect(created.status, created.text).toBe(201);
+    const roomId = (created.body.data as RoomView).roomId;
+    const joined = await guest.put(`/rooms/${roomId}/members/me`);
+    const room = joined.body.data as RoomView;
+    expect(room.status).toBe('IN_MATCH');
+    const matchId = room.currentMatchId as string;
+    const view = await viewOf(t, owner, matchId);
+    const [first, second] = view.yourSeat === 0 ? [owner, guest] : [guest, owner];
+    return { roomId, matchId, first, second, owner, guest };
+  }
+
   function expectNear(actual: number, expected: number): void {
     expect(actual).toBeLessThanOrEqual(expected);
     expect(actual).toBeGreaterThan(expected - TOLERANCE_MS);
@@ -160,6 +188,30 @@ describe('reconexión y recuperación', () => {
         [match.matchId],
       );
       expect(session?.turn_started_at.getTime()).toBeLessThanOrEqual(t2.clock.now().getTime());
+    });
+
+    it('en una partida por turnos también desplaza el turno: la parada no se descuenta (W5)', async () => {
+      const t1 = await boot();
+      const match = await startByTurns(t1);
+      t1.clock.advance(HOUR_MS);
+      await shutDown(t1);
+
+      // Arranca tras tres horas parado.
+      const t2 = await boot({ clockOffsetMs: 4 * HOUR_MS });
+      const view = await viewOf(t2, match.first, match.matchId);
+
+      expect(view.activeSeats).toEqual([0]);
+      expectNear(view.players[0]?.clockRemainingMs ?? 0, TWELVE_HOURS_MS - HOUR_MS);
+      expect(view.players[1]?.clockRemainingMs).toBe(TWELVE_HOURS_MS);
+      // La fecha límite también se mueve: no vence antes de tiempo.
+      const [session] = await query<{ turn_deadline_at: Date }>(
+        'select turn_deadline_at from game_sessions where match_id = $1',
+        [match.matchId],
+      );
+      expectNear(
+        (session?.turn_deadline_at.getTime() ?? 0) - t2.clock.now().getTime(),
+        TWELVE_HOURS_MS - HOUR_MS,
+      );
     });
 
     it('la primera vez que arranca, sin anotación, no ajusta nada', async () => {
@@ -271,6 +323,44 @@ describe('reconexión y recuperación', () => {
 
       const room = await roomOf(t, match.guest, match.roomId);
       expect(room).toMatchObject({ status: 'CLOSED', closeReason: 'OWNER_LEFT' });
+    });
+
+    it('un abandono y una jugada simultáneos dejan un solo resultado (T-13)', async () => {
+      const match = await followedMatch();
+      await match.guestSocket.close();
+      await match.ownerSocket.nextOfType('MATCH_UPDATED');
+      t.clock.advance(ABANDON_MS);
+
+      const [move, abandoned] = await Promise.allSettled([
+        sessions.submitAction(match.first.playerId, match.matchId, randomUUID(), 0, {
+          type: 'DROP_TOKEN',
+          column: 3,
+        }),
+        sessions.abandonIfDue(match.matchId),
+      ]);
+
+      expect(abandoned).toEqual({ status: 'fulfilled', value: true });
+      if (move.status === 'rejected') {
+        expect(move.reason).toMatchObject({ code: 'MATCH_NOT_IN_PROGRESS' });
+      }
+      expect(await query('select reason from match_results')).toEqual([{ reason: 'ABANDONMENT' }]);
+      expect(await query('select match_id from player_results')).toHaveLength(2);
+    });
+
+    it('en una partida por turnos no cuenta la ausencia (W5)', async () => {
+      const match = await startByTurns(t);
+      const ownerSocket = await follow(server, match.owner, match.matchId);
+      const guestSocket = await follow(server, match.guest, match.matchId);
+      await Promise.all([ownerSocket.quiet(), guestSocket.quiet()]);
+
+      await guestSocket.close();
+      t.clock.advance(3 * ABANDON_MS);
+
+      expect(await sessions.abandonIfDue(match.matchId)).toBe(false);
+      expect(await sessions.abandonDueMatches()).toBe(0);
+      const view = await viewOf(t, match.owner, match.matchId);
+      expect(view.status).toBe('IN_PROGRESS');
+      expect(view.players.map((player) => player.abandonAt)).toEqual([null, null]);
     });
 
     it('quien vuelve a tiempo no pierde', async () => {

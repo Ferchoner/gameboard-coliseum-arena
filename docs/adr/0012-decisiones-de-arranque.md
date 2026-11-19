@@ -143,7 +143,7 @@ El archivo `contracts/01-rest-api.yaml` es el contrato aceptado. Hay que decidir
 
 **Recomendación: A**, con dos comprobaciones automáticas:
 
-1. Toda respuesta real de la API en las pruebas se valida contra el archivo OpenAPI.
+1. Toda respuesta real de la API en las pruebas se valida contra el archivo OpenAPI. *Cumplido del todo el 2026-11-19 (análisis, T-02): hasta entonces cada prueba llamaba a la validación a mano y una de cada tres respuestas se quedaba sin comprobar. Ahora la validación va en el único sitio por el que pasan las peticiones de las pruebas (`apps/backend/test/app.ts`), comprueba también que el código de error sea uno de los que enumera la operación, y al terminar informa de las respuestas del contrato que ninguna prueba vio.*
 2. Cada esquema de Zod está atado en compilación al tipo del contrato, de modo que no puede aceptar una forma distinta.
 
 **Qué pasa con los archivos de tipos actuales.** `contracts/02-realtime.ts` pasa a `packages/contracts` y `contracts/03-game-engine.ts` pasa a `packages/game-engine`, sin cambiar su contenido, como preveía `docs/02-arquitectura.md`, sección 7. No quedan copias en `contracts/`: los documentos `.md` enlazan a la nueva ubicación. El archivo OpenAPI se queda donde está.
