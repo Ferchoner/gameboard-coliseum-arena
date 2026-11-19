@@ -13,7 +13,7 @@ Este documento es un índice. No decide nada: dice dónde está cada decisión y
 
 ### Arquitectura
 
-Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron el 2026-11-14, las cuatro siguientes, el 2026-11-16, y ADR-016, el 2026-11-18.
+Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron el 2026-11-14, las cuatro siguientes, el 2026-11-16, ADR-016, el 2026-11-18, y ADR-017, el 2026-11-19.
 
 | ADR | Decisión |
 |---|---|
@@ -33,6 +33,7 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | ADR-014 | Decisiones del Hito 3 (K1 a K22): quién dirige la partida, estado siempre en la base de datos, relojes, el juego Cuatro en raya, frontend y pruebas en navegador. Incluye las elecciones L1 a L7, confirmadas el 2026-11-16 |
 | ADR-015 | Decisiones del Hito 4 (V1 a V12): abandono por desconexión con margen de 5 segundos, no descontar el tiempo de una caída del servidor y pruebas de reinicio y de corte de red |
 | ADR-016 | Decisiones del Hito 5 (N1 a N12): Cuatro en raya por turnos sin versión nueva, aviso de turno, lo que se ve al entrar, aplicación instalable sin dependencias, abandono en el móvil y pruebas. Aceptadas el 2026-11-18 |
+| ADR-017 | Decisiones del Hito 6 (U1 a U18): criterio de aceptación, administración solo por API con una guía, orden para el rol, efectos de suspender y de cambiar el catálogo, correo simulado en archivos, recuperación de contraseña, estadísticas, pantallas y pruebas. Aceptadas el 2026-11-19 |
 
 ### Contratos y modelo, versión 1
 
@@ -87,9 +88,7 @@ Las inconsistencias que el registro inicial pedía normalizar están resueltas. 
 
 No son decisiones. No deben tratarse como aprobadas.
 
-Las decisiones U1 a U18 del Hito 6, en [ADR-017](../docs/adr/0017-decisiones-del-hito-6.md), propuestas el 2026-11-19.
-
-Las decisiones N1 a N12 del Hito 5 y sus elecciones Q1 a Q6 ([ADR-016, sección 14](../docs/adr/0016-decisiones-del-hito-5.md#14-lo-que-resultó-al-construir)) se confirmaron el 2026-11-18, y las elecciones W1 a W9 del Hito 4, el 2026-11-16.
+Ninguna. Las decisiones U1 a U18 del Hito 6, en [ADR-017](../docs/adr/0017-decisiones-del-hito-6.md), se aceptaron el 2026-11-19. Las decisiones N1 a N12 del Hito 5 y sus elecciones Q1 a Q6 ([ADR-016, sección 14](../docs/adr/0016-decisiones-del-hito-5.md#14-lo-que-resultó-al-construir)) se confirmaron el 2026-11-18, y las elecciones W1 a W9 del Hito 4, el 2026-11-16.
 
 ---
 
@@ -120,7 +119,6 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 
 | Asunto | Cuándo | Dónde está anotado |
 |---|---|---|
-| Crear las estadísticas y rellenarlas con los resultados ya guardados | Hito 6 | ADR-014, decisión K4 |
 | Caída solo de la base de datos con el servidor en marcha: su tiempo se descuenta | Con el alojamiento y la supervisión, en el Hito 7 | ADR-015, sección 11 |
 | Sacar de la sala a quien abandona una partida de más de dos jugadores que sigue en curso | Con el primer juego de más de dos jugadores | ADR-015, sección 13, W6 |
 | Precisar en el protocolo el margen de desconexión y el abandono cuando faltan todos | La próxima vez que se autorice cambiar los contratos | ADR-015, sección 13 |

@@ -2,9 +2,9 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Propuesta |
+| **Estado** | Aceptada |
 | **Fecha** | 2026-11-19 |
-| **Decide** | Fernando Hernandez Argueta |
+| **Decidida por** | Fernando Hernandez Argueta |
 | **Cierra** | Las estadísticas aplazadas (ADR-014, K4) y la administración del catálogo (decisión del 2026-11-16) |
 | **Depende de** | ADR-004, ADR-008 (puntos 15 a 17), ADR-009 (reglas 7.12, 7.14, 7.20, 7.26 y 7.32), ADR-010 (regla 8.15), ADR-014, el modelo de datos, la API, el protocolo y la matriz de permisos |
 
@@ -39,7 +39,7 @@ Lo que falta decidir son los huecos que los contratos no cubren, cómo se opera 
 - Cada decisión tiene un identificador (U1 a U18), sus alternativas y una recomendación.
 - Las decisiones U1 a U10 afectan a la experiencia, a la arquitectura o cuesta deshacerlas. Van explicadas una a una.
 - Las decisiones U11 a U18 son menores y fáciles de cambiar. Van en una tabla.
-- **Ninguna está aceptada.** Lo que dice "recomendación" es solo eso hasta que quien decide la confirme.
+- **Las dieciocho se aceptaron el 2026-11-19 tal como se recomendaban.** Donde el texto dice "recomendación", léase "decisión".
 - **Ninguna cambia un contrato ni una regla aceptada, y ninguna añade dependencias.** Dos piden atención: **U2** mantiene el alcance aprobado (sin panel visual) frente a una alternativa que lo cambiaría, y **U5** precisa qué pasa con las salas existentes cuando un administrador cambia el catálogo, que el contrato no dice.
 
 ## 3. Resumen
