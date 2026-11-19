@@ -239,3 +239,10 @@ El 2026-11-19 quien decide aceptó X1 a X18 tal como se recomiendan, y autorizó
 - Si se agotó el reloj de otro asiento y la partida sigue, la sesión se vuelve a leer dentro de la misma transacción, con la fila ya bloqueada, y la jugada se evalúa sobre lo que dejó el vencimiento.
 - Para que ese vencimiento se guarde aunque el motor rechace después la jugada, los rechazos del motor vuelven como rechazo y no como excepción. En el caso normal no cambia nada, porque antes del motor no se ha guardado nada.
 - El paquete del motor tiene un segundo motor de pruebas, `createSimultaneousFakeEngine`, en el que todos los asientos están activos a la vez y cada uno juega dos veces. Pasa la comprobación común (Z3) y lo usan las pruebas del servidor de jugadas simultáneas.
+
+### Batalla naval
+
+- El motor está en `packages/game-engine/src/games/naval-battle/` y se registra como `naval-battle@1.0.0`. Su estado guarda las dos flotas y los disparos de cada asiento; quién está activo, los impactos y los barcos hundidos se calculan de nuevo a partir de ahí en una sola pasada, para que la comprobación común (Z3) termine a tiempo.
+- Las flotas solo salen del servidor a través de `getView`: cada asiento recibe la suya y, de la rival, solo los barcos hundidos (X10). La prueba en navegador lo comprueba en la respuesta REST y en cada mensaje `MATCH_UPDATED` que recibe cada jugador.
+- La migración `alta_batalla_naval` da de alta el juego y su versión inactivos, con la versión **sin ser la vigente**. La base de datos solo admite como vigente una versión activa (`game_versions_current_is_active`), y la plantilla de `docs/guia-nuevo-juego.md` decía lo contrario, así que la migración fallaba. Se corrigieron la plantilla y el orden de activación: primero la versión, después hacerla vigente y por último el juego.
+- En el navegador, "Colocar al azar" usa el azar del navegador solo para proponer un borrador; el servidor valida la flota como cualquier otra (X13). En un móvil de 390 px de ancho, las dos cuadrículas caben sin desplazamiento lateral.

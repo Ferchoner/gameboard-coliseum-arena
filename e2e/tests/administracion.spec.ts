@@ -72,8 +72,12 @@ test('criterio del Hito 6: la administración, vista desde los navegadores', asy
   // La sala que esperaba se cierra delante de quien la creó, y el juego desaparece.
   await expect(dani.page.getByText('Un administrador cerró la sala.')).toBeVisible();
   expect(new URL(dani.page.url()).pathname).toBe(`/salas/${roomId}`);
+  // Puede haber otros juegos activos (Batalla naval, si la activó su prueba): solo falta este.
   const home = await catalogOn(dani.page);
-  await expect(home.getByText('Todavía no hay juegos disponibles.')).toBeVisible();
+  await expect(
+    home.locator('.game').or(home.getByText('Todavía no hay juegos disponibles.')).first(),
+  ).toBeVisible();
+  await expect(home.locator('.game', { hasText: 'Cuatro en raya' })).toHaveCount(0);
 
   const restored = await api.put('admin/games/four-in-a-row/status', {
     data: { status: 'ACTIVE' },

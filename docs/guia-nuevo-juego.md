@@ -81,11 +81,13 @@ VALUES (
 ON CONFLICT ("slug") DO NOTHING;
 --> statement-breakpoint
 INSERT INTO "game_versions" ("id", "game_id", "version", "status", "is_current", "released_at", "created_at")
-SELECT gen_random_uuid(), "games"."id", '1.0.0', 'INACTIVE', true, now(), now()
+SELECT gen_random_uuid(), "games"."id", '1.0.0', 'INACTIVE', false, now(), now()
 FROM "games"
 WHERE "games"."slug" = '<gameSlug>'
 ON CONFLICT DO NOTHING;
 ```
+
+La versión entra **sin ser la vigente** (`is_current` a `false`), porque la base de datos solo admite como vigente una versión activa (`game_versions_current_is_active`). Al activarla, se hace vigente desde la administración. *Corregido el 2026-11-19 (ADR-019): la plantilla decía `true`, y la migración fallaba; se vio al dar de alta Batalla naval.*
 
 Para **una versión nueva de un juego que ya existe**, solo la segunda sentencia, con la versión nueva, `'INACTIVE'` y `is_current` a `false`: la vigente se cambia desde la administración.
 
@@ -129,7 +131,7 @@ En este orden, que también está en la [guía de administración](guia-administ
 1. Desplegar el backend: la migración da de alta el juego inactivo.
 2. Desplegar el frontend con su tablero.
 3. Comprobar con `GET /admin/games` que la versión tiene motor y, en el frontend, que el juego se ve.
-4. Activar la versión y el juego desde la administración.
+4. Desde la administración, activar la versión, hacerla vigente y activar el juego.
 
 ## Lista de comprobación
 

@@ -20,6 +20,10 @@
     "./four-in-a-row": {
       "types": "./dist/games/four-in-a-row/types.d.ts",
       "default": "./dist/games/four-in-a-row/types.js"
+    },
+    "./naval-battle": {
+      "types": "./dist/games/naval-battle/types.d.ts",
+      "default": "./dist/games/naval-battle/types.js"
     }
   },
   "files": [

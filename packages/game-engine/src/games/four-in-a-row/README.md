@@ -16,10 +16,10 @@ Ninguna. `parseSettings` solo acepta el objeto vacío `{}`; cualquier otra cosa 
 
 ## Controles de tiempo
 
-| Modalidad | Tiempo total por jugador |
-|---|---|
-| En tiempo real | 3, 5 o 10 minutos |
-| Por turnos | 12, 24 o 36 horas |
+| Modalidad      | Tiempo total por jugador |
+| -------------- | ------------------------ |
+| En tiempo real | 3, 5 o 10 minutos        |
+| Por turnos     | 12, 24 o 36 horas        |
 
 Los controles por turnos se añadieron en la misma versión, sin cambiar reglas ni estado (ADR-016, decisión N1).
 
@@ -33,11 +33,11 @@ Los controles por turnos se añadieron en la misma versión, sin cambiar reglas 
 
 Precisan un rechazo `INVALID_ACTION` (ADR-014, decisión K6; [catálogo de errores](../../../../../contracts/04-error-catalog.md)):
 
-| Motivo | Cuándo |
-|---|---|
-| `MALFORMED_ACTION` | La acción no tiene la forma de arriba |
-| `COLUMN_OUT_OF_RANGE` | La columna no existe |
-| `COLUMN_FULL` | La columna ya tiene sus seis fichas |
+| Motivo                | Cuándo                                |
+| --------------------- | ------------------------------------- |
+| `MALFORMED_ACTION`    | La acción no tiene la forma de arriba |
+| `COLUMN_OUT_OF_RANGE` | La columna no existe                  |
+| `COLUMN_FULL`         | La columna ya tiene sus seis fichas   |
 
 Además, como todo motor: `NOT_YOUR_TURN` si no le toca a ese asiento y `GAME_ALREADY_FINISHED` si el juego terminó.
 
