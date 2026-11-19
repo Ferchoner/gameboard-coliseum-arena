@@ -271,7 +271,7 @@ Hechos al aceptarse las decisiones, salvo el backlog, que se marca al construir.
 
 ## 15. Lo que resultó al construir
 
-Añadido el 2026-11-19, al terminar el hito. No cambia ninguna decisión aceptada ni ningún contrato. Las elecciones Y1 a Y8 están **pendientes de confirmar**.
+Añadido el 2026-11-19, al terminar el hito. No cambia ninguna decisión aceptada ni ningún contrato. Las elecciones Y1 a Y8 se confirmaron el mismo día.
 
 ### Supuestos de la sección 12
 
@@ -299,7 +299,7 @@ Que las estadísticas cuentan también las partidas de antes del hito se comprue
 
 ### Elecciones menores tomadas al construir
 
-Ninguna estaba en las dieciocho decisiones y ninguna cambia un contrato. Se aplicaron como recomendaciones y **quedan pendientes de confirmar**.
+Ninguna estaba en las dieciocho decisiones y ninguna cambia un contrato. Se aplicaron como recomendaciones y **quedaron confirmadas el 2026-11-19** por quien decide, las ocho.
 
 | ID | Asunto | Lo que se hizo | Alternativa |
 |---|---|---|---|

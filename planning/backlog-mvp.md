@@ -136,7 +136,7 @@ Construido el 2026-11-18. Lo que resultó al construir, incluidas seis eleccione
 
 Decisiones del hito en [ADR-017](../docs/adr/0017-decisiones-del-hito-6.md). La administración se hace solo por la API, con la guía de [`docs/guia-administracion.md`](../docs/guia-administracion.md) (U2).
 
-Construido el 2026-11-19, en revisión en la PR #8. Lo que resultó al construir, incluidas ocho elecciones menores que no estaban en ADR-017 y están pendientes de confirmar, está en su sección 15. El criterio de aceptación se comprueba en cada pull request con cuatro pruebas en navegador.
+Construido el 2026-11-19, en revisión en la PR #8. Lo que resultó al construir, incluidas ocho elecciones menores que no estaban en ADR-017 y se confirmaron el 2026-11-19, está en su sección 15. El criterio de aceptación se comprueba en cada pull request con cuatro pruebas en navegador.
 
 **Criterio de aceptación** (ADR-017, U1): una persona cambia su nombre visible, que ven los demás, y su contraseña. Después la olvida, la recupera con el enlace del correo simulado y sus sesiones abiertas en otro navegador se cierran. Su perfil público muestra sus estadísticas de Cuatro en raya, que cuentan también las partidas jugadas antes de este hito y se ponen al día al terminar una partida nueva. Un administrador, solo con la API: suspende una cuenta y su dueño sale al instante de todas sus pestañas; anula una partida en curso y los dos jugadores ven que se anuló y que no cuenta; y retira Cuatro en raya del catálogo y lo vuelve a poner, sin desplegar ni tocar la base de datos.
 

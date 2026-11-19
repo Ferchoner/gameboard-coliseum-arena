@@ -200,7 +200,7 @@ Se decidió el 2026-11-16 en [ADR-014](adr/0014-decisiones-del-hito-3.md).
 
 ### Lo que resultó al construir el Hito 6
 
-Está en la [sección 15 de ADR-017](adr/0017-decisiones-del-hito-6.md#15-lo-que-resultó-al-construir), pendiente de confirmar.
+Está en la [sección 15 de ADR-017](adr/0017-decisiones-del-hito-6.md#15-lo-que-resultó-al-construir), confirmado el 2026-11-19.
 
 | Asunto | Lo que se hizo | Dónde |
 |---|---|---|
