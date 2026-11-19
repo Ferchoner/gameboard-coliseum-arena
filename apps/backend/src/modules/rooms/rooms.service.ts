@@ -463,7 +463,6 @@ export class RoomsService {
     );
   }
 
-
   /** El límite cuenta las pertenencias a salas no cerradas de esa modalidad (decisión R7). */
   private async assertBelowMatchLimit(
     playerId: string,

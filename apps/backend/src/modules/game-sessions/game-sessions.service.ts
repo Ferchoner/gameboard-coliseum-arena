@@ -26,10 +26,7 @@ import type { MatchSnapshot } from '../broadcast/match-snapshot.js';
 import { Presence } from '../broadcast/presence.js';
 import { RealtimeEvents } from '../broadcast/realtime-events.js';
 import { GamesService, type GameVersion } from '../games/games.service.js';
-import type {
-  MatchRecord,
-  MatchResultRecord,
-} from '../matches/match-record.js';
+import type { MatchRecord, MatchResultRecord } from '../matches/match-record.js';
 import { MatchesService } from '../matches/matches.service.js';
 import { PlayersService } from '../players/players.service.js';
 import {
@@ -665,7 +662,13 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       if (record.status !== 'IN_PROGRESS') throw matchNotInProgress();
 
       const loaded = await this.load(record, session, tx);
-      await this.abort(loaded, 'ADMIN', this.clock.now(), tx, options.closeRoom ? 'CLOSE' : 'FOLLOW_MATCH_END');
+      await this.abort(
+        loaded,
+        'ADMIN',
+        this.clock.now(),
+        tx,
+        options.closeRoom ? 'CLOSE' : 'FOLLOW_MATCH_END',
+      );
       return true;
     });
   }
@@ -954,7 +957,12 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       await this.rooms.matchEnded(roomId, now, tx);
     }
 
-    const record: MatchRecord = { ...loaded.record, status: 'ABORTED', abortReason: reason, endedAt: now };
+    const record: MatchRecord = {
+      ...loaded.record,
+      status: 'ABORTED',
+      abortReason: reason,
+      endedAt: now,
+    };
     const snapshot = this.snapshotOf({ ...loaded, record, session });
     this.announce(tx, snapshot, [], null);
     return snapshot;

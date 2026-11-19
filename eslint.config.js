@@ -91,6 +91,7 @@ export default tseslint.config(
       'apps/*/scripts/**/*.mjs',
       'e2e/support/**/*.mjs',
       'apps/backend/src/database/migrate.ts',
+      'apps/backend/src/scripts/**/*.ts',
       'apps/backend/src/main.ts',
     ],
     languageOptions: { globals: globals.node },

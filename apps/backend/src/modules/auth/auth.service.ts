@@ -65,10 +65,7 @@ export class AuthService {
         { email: input.email, username: input.username, passwordHash },
         tx,
       );
-      const profile = await this.profiles.create(
-        { userId: user.id, displayName },
-        tx,
-      );
+      const profile = await this.profiles.create({ userId: user.id, displayName }, tx);
       const player = await this.players.createForUser(user.id, tx);
       const session = await this.sessions.create(user.id, tx);
       return { me: toMe(user, profile, player), session };

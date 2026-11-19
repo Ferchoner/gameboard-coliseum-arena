@@ -219,15 +219,13 @@ export class GamesService implements OnApplicationBootstrap {
       status: game.status,
       versions: [...versions]
         .sort((a, b) => compareVersions(b.version, a.version))
-        .map(
-          (version): AdminGameVersion => ({
-            gameVersion: version.version,
-            status: version.status,
-            isCurrent: version.isCurrent,
-            engineRegistered: this.engines.resolve(game.slug, version.version) !== undefined,
-            releasedAt: version.releasedAt?.toISOString() ?? null,
-          }),
-        ),
+        .map((version): AdminGameVersion => ({
+          gameVersion: version.version,
+          status: version.status,
+          isCurrent: version.isCurrent,
+          engineRegistered: this.engines.resolve(game.slug, version.version) !== undefined,
+          releasedAt: version.releasedAt?.toISOString() ?? null,
+        })),
     };
   }
 

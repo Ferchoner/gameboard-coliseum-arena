@@ -82,7 +82,10 @@ export class AdminService {
    */
   async setUserStatus(admin: AuthContext, userId: string, status: UserStatus): Promise<AdminUser> {
     if (userId === admin.userId) {
-      throw new AppError('CANNOT_CHANGE_OWN_STATUS', 'An administrator cannot change their own status');
+      throw new AppError(
+        'CANNOT_CHANGE_OWN_STATUS',
+        'An administrator cannot change their own status',
+      );
     }
 
     const user = await this.database.transaction(async (tx) => {
@@ -169,7 +172,9 @@ export class AdminService {
     const { game, closed } = await this.database.transaction(async (tx) => {
       const changed = await this.games.setGameStatus(gameSlug, status, tx);
       const closedRooms =
-        status === 'INACTIVE' ? await this.rooms.closeUnplayableWaitingRooms(changed.gameId, tx) : 0;
+        status === 'INACTIVE'
+          ? await this.rooms.closeUnplayableWaitingRooms(changed.gameId, tx)
+          : 0;
       return { game: changed.game, closed: closedRooms };
     });
     this.logger.log(

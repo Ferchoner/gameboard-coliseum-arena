@@ -11,6 +11,7 @@ export interface TestPlayer {
   readonly get: (path: string) => Test;
   readonly post: (path: string, body?: object) => Test;
   readonly put: (path: string, body?: object) => Test;
+  readonly patch: (path: string, body?: object) => Test;
   readonly delete: (path: string) => Test;
 }
 
@@ -53,6 +54,7 @@ function actAs(t: TestApp, me: Me, cookie: string): TestPlayer {
     get: (path) => send(t.request().get(`${API}${path}`)),
     post: (path, body) => send(t.request().post(`${API}${path}`)).send(body),
     put: (path, body) => send(t.request().put(`${API}${path}`)).send(body),
+    patch: (path, body) => send(t.request().patch(`${API}${path}`)).send(body),
     delete: (path) => send(t.request().delete(`${API}${path}`)),
   };
 }
