@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, lt } from 'drizzle-orm';
+import { and, eq, lt, ne } from 'drizzle-orm';
 import { DatabaseService, type DbExecutor } from '../../database/database.service.js';
 import { authSessions } from './auth.schema.js';
 
@@ -66,6 +66,23 @@ export class SessionsRepository {
       .where(eq(authSessions.tokenHash, tokenHash))
       .returning({ id: authSessions.id });
     return deleted?.id ?? null;
+  }
+
+  /** Borra las sesiones de la cuenta, salvo `exceptId` si se indica. Devuelve sus `id`. */
+  async deleteByUserId(
+    userId: string,
+    exceptId: string | null,
+    executor: DbExecutor = this.database.db,
+  ): Promise<string[]> {
+    const deleted = await executor
+      .delete(authSessions)
+      .where(
+        exceptId === null
+          ? eq(authSessions.userId, userId)
+          : and(eq(authSessions.userId, userId), ne(authSessions.id, exceptId)),
+      )
+      .returning({ id: authSessions.id });
+    return deleted.map((row) => row.id);
   }
 
   /** Borra las sesiones caducadas. Devuelve sus `id`. */

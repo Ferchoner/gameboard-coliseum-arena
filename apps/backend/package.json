@@ -11,7 +11,8 @@
     "start:watch": "node --watch --env-file-if-exists=.env dist/main.js",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "node --env-file-if-exists=.env dist/database/migrate.js"
+    "db:migrate": "node --env-file-if-exists=.env dist/database/migrate.js",
+    "admin:role": "node --env-file-if-exists=.env dist/scripts/admin-role.js"
   },
   "dependencies": {
     "@gameboard/contracts": "workspace:*",

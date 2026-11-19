@@ -9,6 +9,8 @@ export const TEST_DATABASE_URL =
   'postgres://gameboard:gameboard@localhost:5432/gameboard_test';
 
 const TABLES = [
+  'game_statistics',
+  'password_reset_tokens',
   'server_liveness',
   'match_actions',
   'game_sessions',

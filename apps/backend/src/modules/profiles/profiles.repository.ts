@@ -39,4 +39,18 @@ export class ProfilesRepository {
       .from(profiles)
       .where(inArray(profiles.userId, [...userIds]));
   }
+
+  /** Cambia los campos indicados. Devuelve el perfil como queda, o `null` si no existe. */
+  async update(
+    userId: string,
+    changes: Partial<Pick<ProfileRow, 'displayName' | 'biography'>> & { updatedAt: Date },
+    executor: DbExecutor = this.database.db,
+  ): Promise<ProfileRow | null> {
+    const [row] = await executor
+      .update(profiles)
+      .set(changes)
+      .where(eq(profiles.userId, userId))
+      .returning();
+    return row ?? null;
+  }
 }

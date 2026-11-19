@@ -1,12 +1,22 @@
-import type { LoginRequest, Me, RegisterRequest } from '@gameboard/contracts';
+import type {
+  ChangePasswordRequest,
+  LoginRequest,
+  Me,
+  RegisterRequest,
+  UpdateMeRequest,
+} from '@gameboard/contracts';
 import { Injectable } from '@nestjs/common';
 import { AppError } from '../../common/errors/app-error.js';
 import { DatabaseService } from '../../database/database.service.js';
 import { type Player, PlayersService } from '../players/players.service.js';
-import { type Profile, ProfilesService } from '../profiles/profiles.service.js';
+import {
+  normalizeDisplayName,
+  type Profile,
+  ProfilesService,
+} from '../profiles/profiles.service.js';
 import { type User, UsersService } from '../users/users.service.js';
 import { PasswordHasher } from './password-hasher.js';
-import { type IssuedSession, SessionsService } from './sessions.service.js';
+import { type AuthContext, type IssuedSession, SessionsService } from './sessions.service.js';
 
 export interface SignedIn {
   readonly me: Me;
@@ -44,6 +54,8 @@ export class AuthService {
    * sola transacción (modelo de datos, sección 6; API, decisión A6).
    */
   async register(input: RegisterRequest): Promise<SignedIn> {
+    // Antes que nada, para no calcular el hash de una petición que no vale.
+    const displayName = normalizeDisplayName(input.displayName ?? input.username);
     await this.users.assertAvailable(input.email, input.username);
     // El hash es lento a propósito, así que se calcula fuera de la transacción.
     const passwordHash = await this.hasher.hash(input.password);
@@ -54,7 +66,7 @@ export class AuthService {
         tx,
       );
       const profile = await this.profiles.create(
-        { userId: user.id, displayName: input.displayName ?? input.username },
+        { userId: user.id, displayName },
         tx,
       );
       const player = await this.players.createForUser(user.id, tx);
@@ -100,6 +112,41 @@ export class AuthService {
     const user = await this.users.findById(userId);
     if (!user) throw new AppError('UNAUTHENTICATED', 'There is no valid session');
     return this.loadMe(user);
+  }
+
+  /**
+   * Cambia el nombre visible o la biografía de la cuenta propia. Solo
+   * cambia lo que llega (API, `PATCH /me`).
+   */
+  async updateMe(userId: string, changes: UpdateMeRequest): Promise<Me> {
+    // El contrato pide al menos un campo (`minProperties: 1`).
+    if (changes.displayName === undefined && changes.biography === undefined) {
+      throw new AppError('VALIDATION_ERROR', 'The request body is not valid', {
+        fields: [{ field: 'body', rule: 'REQUIRED' }],
+      });
+    }
+    await this.profiles.update(userId, changes);
+    return this.getMe(userId);
+  }
+
+  /**
+   * Cambia la contraseña de la cuenta propia. Cierra las demás sesiones de
+   * la cuenta y sus conexiones; la actual sigue abierta (API,
+   * `PUT /me/password`).
+   */
+  async changePassword(auth: AuthContext, input: ChangePasswordRequest): Promise<void> {
+    const user = await this.users.findById(auth.userId);
+    if (!user) throw new AppError('UNAUTHENTICATED', 'There is no valid session');
+    if (!(await this.hasher.verify(user.passwordHash, input.currentPassword))) {
+      throw new AppError('INVALID_CURRENT_PASSWORD', 'The current password is not correct');
+    }
+    const passwordHash = await this.hasher.hash(input.newPassword);
+
+    await this.database.transaction(async (tx) => {
+      await this.users.lock(user.id, tx);
+      await this.users.updatePasswordHash(user.id, passwordHash, tx);
+      await this.sessions.endAllOf(user.id, tx, auth.sessionId);
+    });
   }
 
   private async loadMe(user: User): Promise<Me> {

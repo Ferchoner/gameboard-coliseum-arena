@@ -13,3 +13,6 @@ playwright-report/
 .certs/
 .DS_Store
 *.log
+
+# Correo simulado del backend (ADR-017, U6).
+apps/backend/var/

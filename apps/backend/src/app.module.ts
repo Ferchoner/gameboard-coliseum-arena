@@ -3,6 +3,7 @@ import { CommonModule } from './common/common.module.js';
 import type { AppConfig } from './config/config.js';
 import { ConfigModule } from './config/config.module.js';
 import { DatabaseModule } from './database/database.module.js';
+import { AdminModule } from './modules/admin/admin.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { BroadcastModule } from './modules/broadcast/broadcast.module.js';
 import { GameSessionsModule } from './modules/game-sessions/game-sessions.module.js';
@@ -30,6 +31,7 @@ export class AppModule {
         RoomsModule,
         GameSessionsModule,
         RealtimeModule,
+        AdminModule,
         HealthModule,
       ],
     };

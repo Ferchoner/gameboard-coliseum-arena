@@ -5,7 +5,7 @@ import { Clock } from '../../common/clock.js';
 import { AppError } from '../../common/errors/app-error.js';
 import type { DbExecutor } from '../../database/database.service.js';
 import { uniqueViolationOf } from '../../database/errors.js';
-import { UsersRepository, type UserRow } from './users.repository.js';
+import { UsersRepository, type UserRow, type UserSearch } from './users.repository.js';
 
 /** La cuenta: credenciales, estado y rol (ADR-011, convención 9.11). */
 export interface User {
@@ -94,10 +94,47 @@ export class UsersService {
     return row ? toUser(row) : null;
   }
 
-  async updatePasswordHash(id: string, passwordHash: string): Promise<void> {
-    await this.repository.updatePasswordHash(id, passwordHash, this.clock.now());
+  async findByEmail(email: string): Promise<User | null> {
+    const row = await this.repository.findByEmail(email);
+    return row ? toUser(row) : null;
+  }
+
+  async updatePasswordHash(id: string, passwordHash: string, executor?: DbExecutor): Promise<void> {
+    await this.repository.updatePasswordHash(id, passwordHash, this.clock.now(), executor);
+  }
+
+  /**
+   * Bloquea la cuenta hasta que termine la transacción y la devuelve. Quien
+   * cambia la contraseña o el estado de una cuenta la bloquea antes, para
+   * que dos cambios a la vez no se pisen.
+   */
+  async lock(id: string, executor: DbExecutor): Promise<User | null> {
+    const row = await this.repository.lockById(id, executor);
+    return row ? toUser(row) : null;
+  }
+
+  /** Cambia el estado de la cuenta. Devuelve la cuenta como queda, o `null` si no existe. */
+  async setStatus(id: string, status: UserStatus, executor?: DbExecutor): Promise<User | null> {
+    const row = await this.repository.updateStatus(id, status, this.clock.now(), executor);
+    return row ? toUser(row) : null;
+  }
+
+  /**
+   * Cambia el rol de la cuenta. No es una operación de la API: la usa la
+   * orden `pnpm admin:role` (API, decisión A5; ADR-017, U3).
+   */
+  async setRole(id: string, role: UserRole): Promise<void> {
+    await this.repository.updateRole(id, role, this.clock.now());
+  }
+
+  /** Búsqueda de cuentas para la administración, de la más reciente a la más antigua. */
+  async search(search: UserSearch): Promise<User[]> {
+    const rows = await this.repository.search(search);
+    return rows.map(toUser);
   }
 }
+
+export type { UserSearch };
 
 function emailTaken(): AppError {
   return new AppError('EMAIL_TAKEN', 'An account with that email already exists');

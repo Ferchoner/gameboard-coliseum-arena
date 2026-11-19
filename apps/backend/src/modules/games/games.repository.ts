@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { and, asc, eq, inArray } from 'drizzle-orm';
-import { DatabaseService, type DbExecutor } from '../../database/database.service.js';
+import type { CatalogStatus } from '@gameboard/contracts';
+import { and, asc, eq, inArray, type SQL } from 'drizzle-orm';
+import {
+  DatabaseService,
+  type DbExecutor,
+  type Transaction,
+} from '../../database/database.service.js';
 import { games, gameVersions } from './games.schema.js';
 
 /** Un juego activo junto con su versión vigente. */
@@ -26,6 +31,19 @@ export interface GameVersionRow {
   readonly version: string;
 }
 
+/**
+ * Lo que tiene que cumplir un juego para estar en el catálogo: estar activo
+ * y tener una versión vigente activa (ADR-017, U16).
+ */
+const CATALOG_CONDITIONS = [
+  eq(games.status, 'ACTIVE'),
+  eq(gameVersions.isCurrent, true),
+  eq(gameVersions.status, 'ACTIVE'),
+];
+
+export type GameRow = typeof games.$inferSelect;
+export type GameVersionFullRow = typeof gameVersions.$inferSelect;
+
 /** Único punto de acceso a las tablas `games` y `game_versions`. */
 @Injectable()
 export class GamesRepository {
@@ -33,28 +51,81 @@ export class GamesRepository {
 
   /** Los juegos activos que tienen una versión vigente, por orden alfabético. */
   listCatalog(executor: DbExecutor = this.database.db): Promise<CatalogEntryRow[]> {
-    return this.catalogQuery(executor).orderBy(asc(games.name), asc(games.slug));
+    return this.catalogQueryWhere(executor).orderBy(asc(games.name), asc(games.slug));
   }
 
   async findCatalogEntry(
     slug: string,
     executor: DbExecutor = this.database.db,
   ): Promise<CatalogEntryRow | null> {
-    const [row] = await executor
-      .select({
-        gameId: games.id,
-        slug: games.slug,
-        name: games.name,
-        description: games.description,
-        version: gameVersions.version,
-      })
-      .from(games)
-      .innerJoin(gameVersions, eq(gameVersions.gameId, games.id))
-      .where(
-        and(eq(games.status, 'ACTIVE'), eq(gameVersions.isCurrent, true), eq(games.slug, slug)),
-      )
-      .limit(1);
+    const [row] = await this.catalogQueryWhere(executor, eq(games.slug, slug)).limit(1);
     return row ?? null;
+  }
+
+  /** Como `findCatalogEntry`, por el identificador del juego. */
+  async findCatalogEntryById(
+    gameId: string,
+    executor: DbExecutor = this.database.db,
+  ): Promise<CatalogEntryRow | null> {
+    const [row] = await this.catalogQueryWhere(executor, eq(games.id, gameId)).limit(1);
+    return row ?? null;
+  }
+
+  // --- Administración ------------------------------------------------------
+
+  /** Todos los juegos, activos o no, por nombre corto (ADR-017, U17). */
+  listAllGames(executor: DbExecutor = this.database.db): Promise<GameRow[]> {
+    return executor.select().from(games).orderBy(asc(games.slug));
+  }
+
+  /** Todas las versiones de esos juegos, activas o no. */
+  listAllVersionsOf(
+    gameIds: readonly string[],
+    executor: DbExecutor = this.database.db,
+  ): Promise<GameVersionFullRow[]> {
+    if (gameIds.length === 0) return Promise.resolve([]);
+    return executor
+      .select()
+      .from(gameVersions)
+      .where(inArray(gameVersions.gameId, [...gameIds]));
+  }
+
+  /** Bloquea el juego hasta que termine la transacción. Así, dos cambios del catálogo no se pisan. */
+  async lockGameBySlug(slug: string, tx: Transaction): Promise<GameRow | null> {
+    const [row] = await tx.select().from(games).where(eq(games.slug, slug)).for('update');
+    return row ?? null;
+  }
+
+  async updateGameStatus(
+    gameId: string,
+    status: CatalogStatus,
+    updatedAt: Date,
+    tx: Transaction,
+  ): Promise<void> {
+    await tx.update(games).set({ status, updatedAt }).where(eq(games.id, gameId));
+  }
+
+  async updateVersionStatus(
+    gameVersionId: string,
+    status: CatalogStatus,
+    tx: Transaction,
+  ): Promise<void> {
+    await tx.update(gameVersions).set({ status }).where(eq(gameVersions.id, gameVersionId));
+  }
+
+  /**
+   * Hace vigente esa versión. Primero deja de serlo la anterior: el índice
+   * único admite una sola vigente por juego.
+   */
+  async makeCurrent(gameId: string, gameVersionId: string, tx: Transaction): Promise<void> {
+    await tx
+      .update(gameVersions)
+      .set({ isCurrent: false })
+      .where(and(eq(gameVersions.gameId, gameId), eq(gameVersions.isCurrent, true)));
+    await tx
+      .update(gameVersions)
+      .set({ isCurrent: true })
+      .where(eq(gameVersions.id, gameVersionId));
   }
 
   /** El nombre corto de cada juego, por su identificador, esté activo o no. */
@@ -136,7 +207,7 @@ export class GamesRepository {
       .innerJoin(games, eq(games.id, gameVersions.gameId));
   }
 
-  private catalogQuery(executor: DbExecutor) {
+  private catalogQueryWhere(executor: DbExecutor, extra?: SQL) {
     return executor
       .select({
         gameId: games.id,
@@ -147,6 +218,6 @@ export class GamesRepository {
       })
       .from(games)
       .innerJoin(gameVersions, eq(gameVersions.gameId, games.id))
-      .where(and(eq(games.status, 'ACTIVE'), eq(gameVersions.isCurrent, true)));
+      .where(and(...CATALOG_CONDITIONS, extra));
   }
 }

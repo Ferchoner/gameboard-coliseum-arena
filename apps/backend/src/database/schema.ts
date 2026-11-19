@@ -4,7 +4,7 @@
  * escribe (arquitectura, decisión D3). Ningún otro código debe importar
  * este archivo.
  */
-export { authSessions } from '../modules/auth/auth.schema.js';
+export { authSessions, passwordResetTokens } from '../modules/auth/auth.schema.js';
 export {
   gameSessions,
   matchActions,
@@ -20,4 +20,5 @@ export {
 export { players } from '../modules/players/players.schema.js';
 export { profiles } from '../modules/profiles/profiles.schema.js';
 export { roomPlayers, rooms } from '../modules/rooms/rooms.schema.js';
+export { gameStatistics } from '../modules/statistics/statistics.schema.js';
 export { users } from '../modules/users/users.schema.js';

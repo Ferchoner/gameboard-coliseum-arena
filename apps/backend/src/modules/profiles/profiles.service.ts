@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Clock } from '../../common/clock.js';
+import { AppError } from '../../common/errors/app-error.js';
 import type { DbExecutor } from '../../database/database.service.js';
 import { ProfilesRepository, type ProfileRow } from './profiles.repository.js';
 
@@ -9,6 +10,32 @@ export interface Profile {
   readonly displayName: string;
   readonly avatarUrl: string | null;
   readonly biography: string | null;
+}
+
+/** Lo que se puede cambiar del perfil (API, `PATCH /me`). */
+export interface ProfileChanges {
+  readonly displayName?: string;
+  readonly biography?: string | null;
+}
+
+/**
+ * El nombre visible sin los espacios de los extremos (ADR-017, U13). Un
+ * nombre que se queda vacío no vale: se vería en blanco.
+ */
+export function normalizeDisplayName(displayName: string): string {
+  const trimmed = displayName.trim();
+  if (trimmed === '') {
+    throw new AppError('VALIDATION_ERROR', 'The request body is not valid', {
+      fields: [{ field: 'displayName', rule: 'TOO_SHORT' }],
+    });
+  }
+  return trimmed;
+}
+
+/** La biografía sin los espacios de los extremos. Vacía es lo mismo que no tener (U13). */
+export function normalizeBiography(biography: string | null): string | null {
+  const trimmed = biography?.trim() ?? '';
+  return trimmed === '' ? null : trimmed;
 }
 
 function toProfile(row: ProfileRow): Profile {
@@ -32,9 +59,28 @@ export class ProfilesService {
     executor?: DbExecutor,
   ): Promise<Profile> {
     const row = await this.repository.insert(
-      { userId: input.userId, displayName: input.displayName, updatedAt: this.clock.now() },
+      {
+        userId: input.userId,
+        displayName: normalizeDisplayName(input.displayName),
+        updatedAt: this.clock.now(),
+      },
       executor,
     );
+    return toProfile(row);
+  }
+
+  /** Cambia el nombre visible o la biografía. Solo cambia lo indicado. */
+  async update(userId: string, changes: ProfileChanges): Promise<Profile> {
+    const row = await this.repository.update(userId, {
+      ...(changes.displayName === undefined
+        ? {}
+        : { displayName: normalizeDisplayName(changes.displayName) }),
+      ...(changes.biography === undefined
+        ? {}
+        : { biography: normalizeBiography(changes.biography) }),
+      updatedAt: this.clock.now(),
+    });
+    if (!row) throw new Error(`La cuenta ${userId} no tiene perfil`);
     return toProfile(row);
   }
 

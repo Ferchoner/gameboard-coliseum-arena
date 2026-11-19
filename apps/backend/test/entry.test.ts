@@ -139,7 +139,7 @@ describe('entrada de la API', () => {
       expect(response.status).toBe(405);
       expectErrorEnvelope(response);
       expect(response.body.error.code).toBe('METHOD_NOT_ALLOWED');
-      expect(response.get('Allow')).toBe('GET, HEAD');
+      expect(response.get('Allow')).toBe('GET, HEAD, PATCH');
     });
 
     it('distingue el método no admitido también en rutas con parámetros', async () => {
