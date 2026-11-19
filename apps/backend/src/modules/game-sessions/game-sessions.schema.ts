@@ -1,3 +1,4 @@
+import type { SeatRetirementReason } from '@gameboard/game-engine';
 import { sql } from 'drizzle-orm';
 import {
   check,
@@ -17,6 +18,13 @@ import { matches, matchPlayers } from '../matches/matches.schema.js';
 
 export const GAME_SESSION_STATUSES = ['ACTIVE', 'CLOSED'] as const;
 export type GameSessionStatus = (typeof GAME_SESSION_STATUSES)[number];
+
+/** Por qué se retira un asiento (ADR-009, reglas 7.5, 7.19 y 7.26). */
+export const SEAT_RETIREMENT_REASONS = [
+  'TIMEOUT',
+  'RESIGNATION',
+  'ABANDONMENT',
+] as const satisfies readonly SeatRetirementReason[];
 
 /** Tiempo que le queda a cada asiento, en milisegundos, con el asiento como clave. */
 export type StoredClocks = Readonly<Record<string, number>>;
@@ -101,6 +109,40 @@ export const matchActions = pgTable(
       foreignColumns: [matchPlayers.matchId, matchPlayers.playerId],
     }),
     check('match_actions_sequence_valid', sql`${table.sequence} >= 1`),
+  ],
+);
+
+/**
+ * Las retiradas de un asiento: tiempo agotado, rendición o abandono. Como
+ * una jugada, cada una cambia el estado y sube `stateVersion`, y se anota
+ * con la misma numeración. Con `match_actions`, el registro de una partida
+ * va de 1 a su `stateVersion` sin huecos (ADR-018, decisión Z2).
+ */
+export const matchRetirements = pgTable(
+  'match_retirements',
+  {
+    matchId: uuid('match_id')
+      .notNull()
+      .references(() => matches.id),
+    /** El `stateVersion` que resultó de la retirada. */
+    sequence: integer('sequence').notNull(),
+    /** Quién ocupaba el asiento retirado. */
+    playerId: uuid('player_id').notNull(),
+    reason: text('reason', { enum: SEAT_RETIREMENT_REASONS }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    primaryKey({ name: 'match_retirements_pk', columns: [table.matchId, table.sequence] }),
+    foreignKey({
+      name: 'match_retirements_match_player_fk',
+      columns: [table.matchId, table.playerId],
+      foreignColumns: [matchPlayers.matchId, matchPlayers.playerId],
+    }),
+    check('match_retirements_sequence_valid', sql`${table.sequence} >= 1`),
+    check(
+      'match_retirements_reason_valid',
+      sql`${table.reason} in ('TIMEOUT', 'RESIGNATION', 'ABANDONMENT')`,
+    ),
   ],
 );
 

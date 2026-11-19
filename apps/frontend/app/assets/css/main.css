@@ -434,8 +434,17 @@ a {
 /* --- Partidas ------------------------------------------------------------ */
 
 :root {
+  /*
+   * Los colores de los asientos, para cualquier juego (ADR-018, decisión
+   * Z7). La clase `seat-N` fija `--seat-color` para el asiento N; un
+   * tablero lo usa en lugar de un color propio.
+   */
   --seat-0: #d6453d;
   --seat-1: #e9b520;
+  --seat-2: #2e9d5b;
+  --seat-3: #7b4fc9;
+  --seat-4: #e07a1f;
+  --seat-5: #1f9bb0;
   --board: #2f5fd0;
   --board-hole: #f6f5f1;
 }
@@ -444,6 +453,10 @@ a {
   :root {
     --seat-0: #ef6a61;
     --seat-1: #f2c94c;
+    --seat-2: #4cc07c;
+    --seat-3: #a07ae6;
+    --seat-4: #f39a4a;
+    --seat-5: #4cc3d6;
     --board: #2a4a9c;
     --board-hole: #15171b;
   }
@@ -521,14 +534,33 @@ a {
   flex: none;
 }
 
-.token.seat-0,
-.four-cell.seat-0 {
-  background: var(--seat-0);
+.seat-0 {
+  --seat-color: var(--seat-0);
 }
 
-.token.seat-1,
-.four-cell.seat-1 {
-  background: var(--seat-1);
+.seat-1 {
+  --seat-color: var(--seat-1);
+}
+
+.seat-2 {
+  --seat-color: var(--seat-2);
+}
+
+.seat-3 {
+  --seat-color: var(--seat-3);
+}
+
+.seat-4 {
+  --seat-color: var(--seat-4);
+}
+
+.seat-5 {
+  --seat-color: var(--seat-5);
+}
+
+.token,
+.four-cell[class*='seat-'] {
+  background: var(--seat-color, var(--border));
 }
 
 .clock {

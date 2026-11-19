@@ -108,7 +108,7 @@ Responde `204` sin cuerpo. Los jugadores ven que un administrador anuló la part
 
 ## 5. Catálogo de juegos
 
-Un juego o una versión nuevos llegan con su motor, en una migración, y quedan **inactivos** (decisión del 2026-11-16, en [`planning/decisiones-y-pendientes.md`](../planning/decisiones-y-pendientes.md)). Se activan desde aquí, sin desplegar ni tocar la base de datos.
+Un juego o una versión nuevos llegan con su motor, en una migración, y quedan **inactivos** (decisión del 2026-11-16, en [`planning/decisiones-y-pendientes.md`](../planning/decisiones-y-pendientes.md)). Se activan desde aquí, sin tocar la base de datos, después de desplegar el frontend que sabe mostrarlos (ver [el orden](#en-qué-orden-activar-un-juego-o-una-versión-nuevos) más abajo). Cómo se añade uno está en la [guía para añadir un juego](guia-nuevo-juego.md).
 
 ### Ver el catálogo completo
 
@@ -153,6 +153,19 @@ api -X PUT "$API/admin/games/<gameSlug>/current-version" -d '{"gameVersion":"<ve
 - Las salas en espera cuyas opciones (modalidad, tiempo, jugadores o configuración) no admite la versión nueva se cierran en el mismo momento (U5).
 
 Para pasar a una versión nueva: activarla, hacerla vigente y, si se quiere, desactivar la anterior.
+
+### En qué orden activar un juego o una versión nuevos
+
+La aplicación solo ofrece los juegos que sabe mostrar, y elige el tablero por juego y versión mayor (ADR-018, decisiones Z5 y Z6). Para que nadie cree una sala que no se pueda jugar:
+
+1. Desplegar el backend con el motor y la migración que da de alta el juego o la versión, inactivos.
+2. Desplegar el frontend que sabe mostrarlo. Como se alojan por separado, puede ir antes o después del backend, pero siempre antes de activar.
+3. Comprobar con `GET /admin/games` que la versión tiene su motor (`engineRegistered`) y, en el frontend desplegado, que el juego se ve.
+4. Activar la versión y, si es un juego nuevo, el juego. Para una versión nueva de un juego que ya existe, hacerla vigente.
+
+Quien tenga abierta una versión anterior de la aplicación ve un aviso que le pide recargar, y no puede entrar en salas de ese juego hasta hacerlo.
+
+Para retirar un juego o volver a una versión anterior, el orden es el contrario: primero desactivar o elegir otra versión vigente, y después desplegar el frontend sin su tablero.
 
 ## 6. Registro de las acciones
 

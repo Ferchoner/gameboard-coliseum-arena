@@ -5,22 +5,17 @@ import type {
   FourInARowView,
 } from '@gameboard/game-engine/four-in-a-row';
 import { computed } from 'vue';
-import { es } from '../i18n/es';
+import type { BoardProps } from '../game-ui';
+import { fourInARowStrings as texts } from './texts';
 
 /**
  * El tablero de Cuatro en raya. Solo dibuja lo que el servidor envía y
  * dice qué columna se pulsa: no decide si una jugada es válida, porque el
  * motor no se ejecuta en el navegador (ADR-014, decisión K7).
  */
-const props = defineProps<{
-  view: FourInARowView;
-  /** Si quien mira puede jugar ahora mismo. */
-  canPlay: boolean;
-}>();
+const props = defineProps<BoardProps<FourInARowView>>();
 
 const emit = defineEmits<{ play: [action: FourInARowAction] }>();
-
-const texts = es.games['four-in-a-row'];
 
 const isIn = (cells: readonly FourInARowCell[] | null, column: number, row: number) =>
   cells?.some((cell) => cell.column === column && cell.row === row) ?? false;
@@ -63,12 +58,10 @@ function drop(column: number): void {
         v-for="cell in one.cells"
         :key="cell.row"
         class="four-cell"
-        :class="{
-          'seat-0': cell.seat === 0,
-          'seat-1': cell.seat === 1,
-          winning: cell.winning,
-          last: cell.last,
-        }"
+        :class="[
+          cell.seat === null ? null : `seat-${cell.seat}`,
+          { winning: cell.winning, last: cell.last },
+        ]"
         :data-row="cell.row"
         :data-seat="cell.seat ?? ''"
         aria-hidden="true"

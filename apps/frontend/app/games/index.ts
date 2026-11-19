@@ -1,17 +1,28 @@
+import { defineAsyncComponent } from 'vue';
 import { fourInARowTexts } from './four-in-a-row';
-import FourInARowBoard from './FourInARowBoard.vue';
 import type { GameUi } from './game-ui';
+import { gameUiKey } from './keys';
 
-export type { GameUi } from './game-ui';
+export type { BoardProps, GameUi } from './game-ui';
 
 /**
- * Los juegos que esta versión de la aplicación sabe mostrar, por su nombre
- * corto. Añadir un juego es añadir aquí su tablero y sus textos.
+ * Los juegos que esta versión de la aplicación sabe mostrar, por juego y
+ * versión mayor (ADR-018, decisión Z5). Cada tablero se carga solo cuando
+ * se abre una partida de su juego (Z7). Añadir un juego es añadir aquí su
+ * tablero y sus textos, que viven en su carpeta.
  */
 const GAME_UIS: Readonly<Record<string, GameUi>> = {
-  'four-in-a-row': { ...fourInARowTexts, board: FourInARowBoard },
+  'four-in-a-row@1': {
+    ...fourInARowTexts,
+    board: defineAsyncComponent(() => import('./four-in-a-row/FourInARowBoard.vue')),
+  },
 };
 
-export function gameUi(gameSlug: string): GameUi | null {
-  return GAME_UIS[gameSlug] ?? null;
+export function gameUi(gameSlug: string, gameVersion: string): GameUi | null {
+  return GAME_UIS[gameUiKey(gameSlug, gameVersion)] ?? null;
+}
+
+/** Si esta versión de la aplicación sabe mostrar ese juego en esa versión. */
+export function knowsGame(gameSlug: string, gameVersion: string): boolean {
+  return gameUi(gameSlug, gameVersion) !== null;
 }

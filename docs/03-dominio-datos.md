@@ -54,6 +54,8 @@ erDiagram
     matches ||--|| game_sessions : "tiene su estado en"
     matches ||--o{ match_actions : "registra"
     match_players ||--o{ match_actions : "realiza"
+    matches ||--o{ match_retirements : "registra"
+    match_players ||--o{ match_retirements : "se retira en"
 
     matches ||--o| match_results : "termina con"
     match_results ||--|{ player_results : "se desglosa en"
@@ -224,6 +226,8 @@ La presencia, es decir, quién está conectado, no se guarda (7.24).
 | `game_version_id` | `uuid` | No | Referencia a `game_versions`. Se fija al empezar y no cambia (7.23, 9.8) |
 | `mode` | `text` | No | Copia de la modalidad de la sala al empezar |
 | `time_control` | `jsonb` | No | Copia del control de tiempo de la sala al empezar |
+| `settings` | `jsonb` | No | Las opciones del juego tal como las validó el motor al empezar (ADR-018, Z1) |
+| `seed` | `text` | Sí | La semilla del azar que recibió el motor al crear el estado inicial (contrato del motor, M7; ADR-018, Z1). Nula solo en las partidas empezadas antes del 2026-11-19 |
 | `status` | `text` | No | `IN_PROGRESS`, `FINISHED` o `ABORTED` |
 | `abort_reason` | `text` | Sí | `ADMIN` o `FAILURE`. Solo tiene valor si la partida está anulada (7.20) |
 | `started_at` | `timestamptz` | No | |
@@ -232,6 +236,8 @@ La presencia, es decir, quién está conectado, no se guarda (7.24).
 Restricciones: como mucho una partida `IN_PROGRESS` por sala, mediante un índice único parcial sobre `room_id`. Índice `(room_id, started_at)`, que sirve también para alternar los asientos en la revancha.
 
 La partida no guarda `game_id`: el juego se obtiene a través de su versión. Así no puede haber una partida cuyo juego y cuya versión no coincidan.
+
+*Precisada el 2026-11-19 (ADR-018, Z1): la partida guarda sus opciones y su semilla. Con ellas y el registro de jugadas y retiradas se puede volver a crear cualquier estado de la partida con el mismo motor. Las partidas anteriores recibieron las opciones de su sala.*
 
 #### `match_players` (participante de una partida)
 
@@ -287,6 +293,22 @@ Cada jugada aceptada, como una fila que solo se añade y nunca se modifica (8.2)
 | `created_at` | `timestamptz` | No | Instante de la confirmación |
 
 Restricciones: clave primaria `(match_id, sequence)`. `(match_id, player_id, request_id)` único, que es lo que impide aplicar dos veces la misma petición (8.12, 8.13). `(match_id, player_id)` hace referencia a `match_players`: solo un participante puede tener jugadas.
+
+#### `match_retirements` (registro de retiradas)
+
+Cada retirada de un asiento: tiempo agotado, rendición o abandono. Como las jugadas, solo se añade y nunca se modifica. Se escribe en la misma transacción que la retirada (ADR-018, Z2).
+
+| Campo | Tipo | Nulo | Descripción |
+|---|---|---|---|
+| `match_id` | `uuid` | No | Referencia a `matches` |
+| `sequence` | `integer` | No | El `state_version` que resultó de la retirada. Sigue la misma numeración que `match_actions` |
+| `player_id` | `uuid` | No | Quién se retiró |
+| `reason` | `text` | No | `TIMEOUT`, `RESIGNATION` o `ABANDONMENT` |
+| `created_at` | `timestamptz` | No | |
+
+Restricciones: clave primaria `(match_id, sequence)`. `(match_id, player_id)` hace referencia a `match_players`. `sequence` mayor o igual que 1.
+
+Las jugadas y las retiradas de una partida, ordenadas por `sequence`, van de 1 a su `state_version` sin huecos. *Añadida el 2026-11-19 (ADR-018, Z2). Las partidas anteriores terminadas por una retirada recibieron la suya: todas eran de dos jugadores, así que fue el último cambio y la del asiento que perdió.*
 
 ### 3.6. Resultados y estadísticas
 
@@ -405,8 +427,8 @@ Cada operación de esta tabla es una sola transacción: o se guarda todo o no se
 | **Registro** | Inserta `users`, `profiles` y `players`. Inserta además la fila de `auth_sessions`, porque registrarse inicia la sesión (decisión A6 de la API) | `email` y `username` libres | |
 | **Crear una sala** | Inserta `rooms` en `WAITING` y la fila del anfitrión en `room_players` | El jugador no supera su límite de partidas simultáneas | 7.30 |
 | **Entrar a una sala** | Inserta `room_players`. Actualiza `rooms.last_activity_at` | La sala está en `WAITING` y tiene plaza. El jugador no supera su límite de partidas simultáneas | 7.15, 7.30 |
-| **Inicio de partida** | Pasa la sala a `IN_MATCH`. Inserta `matches`, `match_players` con los asientos y `game_sessions` con el estado inicial, la versión 0 y los relojes completos | La sala está en `WAITING` y completa. Además, todos están listos, salvo en la primera partida de una sala por turnos, que no tiene paso de "listo" | 7.9, 7.10, 7.31 |
-| **Jugada confirmada** | Actualiza `game_sessions`: snapshot, versión, relojes, asientos activos y fecha límite. Inserta una fila en `match_actions` | La sesión está `ACTIVE` y su `state_version` es el esperado. La actualización debe afectar exactamente a una fila | 8.7, 8.8 |
+| **Inicio de partida** | Pasa la sala a `IN_MATCH`. Inserta `matches`, con las opciones y la semilla, `match_players` con los asientos y `game_sessions` con el estado inicial, la versión 0 y los relojes completos | La sala está en `WAITING` y completa. Además, todos están listos, salvo en la primera partida de una sala por turnos, que no tiene paso de "listo" | 7.9, 7.10, 7.31 |
+| **Jugada confirmada** | Actualiza `game_sessions`: snapshot, versión, relojes, asientos activos y fecha límite. Inserta una fila en `match_actions`. Una retirada hace lo mismo, pero inserta la fila en `match_retirements` (ADR-018, Z2) | La sesión está `ACTIVE` y su `state_version` es el esperado. La actualización debe afectar exactamente a una fila | 8.7, 8.8 |
 | **Final de partida** | Lo anterior si el final lo produce una jugada. Además: cierra la sesión, pasa la partida a `FINISHED`, inserta `match_results` y `player_results`, actualiza `game_statistics`, y devuelve la sala a `WAITING` limpiando las marcas de listo o, si no admite revancha, la cierra | La sesión está `ACTIVE` y su `state_version` es el esperado | 8.14, 8.15, 8.16, 7.31 |
 | **Anulación** | Cierra la sesión, pasa la partida a `ABORTED` y devuelve la sala a `WAITING` o la cierra, igual que en el final de partida. No inserta resultados ni toca estadísticas | La partida está `IN_PROGRESS` | 7.20 |
 | **Ajuste tras una caída** | Al arrancar, antes de aceptar conexiones, desplaza `turn_started_at` y `turn_deadline_at` de cada sesión `ACTIVE` por el tiempo entre su último instante conocido y el arranque. Ese instante es `server_liveness.last_alive_at`, o `turn_started_at` si es posterior. No cambia `state_version` | `last_alive_at` se anota cada 10 segundos y, además, al apagarse en orden (ADR-015, V4) | 7.29, 8.18 |
@@ -480,7 +502,7 @@ Estas decisiones no derivan de un ADR: se tomaron al escribir el modelo. Fueron 
 | R6 | Revocar o cerrar una sesión de autenticación **borra su fila**. No se conserva historial de sesiones | Marcar la fila como revocada | Menos datos personales guardados. El MVP no tiene ninguna pantalla que muestre sesiones pasadas |
 | R7 | Los límites de partidas simultáneas (7.30) se cuentan como **pertenencias a salas no cerradas**, por modalidad. Cubre tanto la sala en la que se espera como la partida en curso | Contar solo partidas `IN_PROGRESS` | Precisa la regla 7.30. Contar pertenencias impide acumular salas en espera por encima del límite |
 | R8 | Cuando un administrador cierra una sala con una partida en curso, la partida se anula en la misma transacción. Cuando una partida se anula sin que nadie cierre la sala, la sala sigue la misma regla que al terminar una partida: vuelve a `WAITING` si admite revancha y se cierra si no | Impedir el cierre mientras haya partida | Precisa las reglas 7.11 y 7.20, que no cubrían estos dos casos |
-| R9 | La rendición no se anota en `match_actions`. Queda reflejada en el resultado, con el motivo `RESIGNATION` | Anotarla como una fila más | La rendición es una orden de la plataforma, no una jugada del motor (7.19) |
+| R9 | La rendición no se anota en `match_actions`. Queda reflejada en el resultado, con el motivo `RESIGNATION`. *Precisada el 2026-11-19 (ADR-018, Z2): se anota en `match_retirements`, como las demás retiradas* | Anotarla como una fila más | La rendición es una orden de la plataforma, no una jugada del motor (7.19) |
 | R10 | `game_sessions` guarda una **lista de asientos activos**, no un solo asiento | Un solo asiento activo | Deja el modelo preparado para juegos con jugadas simultáneas. Un juego por turnos guarda una lista de un elemento, así que no le supone ningún coste. Coincide con el contrato del motor |
 
 ---

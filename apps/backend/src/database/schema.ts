@@ -8,6 +8,7 @@ export { authSessions, passwordResetTokens } from '../modules/auth/auth.schema.j
 export {
   gameSessions,
   matchActions,
+  matchRetirements,
   serverLiveness,
 } from '../modules/game-sessions/game-sessions.schema.js';
 export { gameVersions, games } from '../modules/games/games.schema.js';

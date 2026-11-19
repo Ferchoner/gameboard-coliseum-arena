@@ -41,6 +41,11 @@ export const es = {
     loading: 'Cargando los juegos…',
     empty: 'Todavía no hay juegos disponibles.',
     retry: 'Volver a intentar',
+    /** Hay juegos en el catálogo que esta versión de la aplicación no sabe mostrar (ADR-018, Z5). */
+    unknownGames: (count: number) =>
+      count === 1
+        ? 'Hay un juego nuevo que esta versión de la aplicación aún no sabe mostrar. Recarga la página para verlo.'
+        : `Hay ${count} juegos nuevos que esta versión de la aplicación aún no sabe mostrar. Recarga la página para verlos.`,
     players: {
       exact: (count: number) => `${count} jugadores`,
       range: (min: number, max: number) => `De ${min} a ${max} jugadores`,
@@ -101,6 +106,9 @@ export const es = {
     title: (owner: string) => `Sala de ${owner}`,
     /** Cuando quien la creó ya no está, que es lo que pasa en una sala cerrada porque salió. */
     untitled: 'Sala',
+    /** En una sala de un juego que esta versión de la aplicación no sabe mostrar (ADR-018, decisión Z5). */
+    unknownGame:
+      'Esta versión de la aplicación no sabe mostrar este juego, así que no puedes entrar ni marcarte listo. Recarga la página para tener la versión nueva.',
     loading: 'Cargando la sala…',
     back: 'Volver a las salas',
     status: {
@@ -252,24 +260,6 @@ export const es = {
       TIMEOUT: 'por tiempo',
       RESIGNATION: 'por rendición',
       ABANDONMENT: 'por abandono',
-    },
-  },
-
-  /** Textos propios de cada juego. */
-  games: {
-    'four-in-a-row': {
-      seats: ['Rojas', 'Amarillas'],
-      dropIn: (column: number) => `Soltar ficha en la columna ${column}`,
-      columnState: (tokens: number, capacity: number) => `${tokens} de ${capacity} fichas`,
-      end: {
-        line: 'Cuatro en línea.',
-        full: 'El tablero se llenó sin cuatro en línea.',
-      },
-      rejections: {
-        MALFORMED_ACTION: 'Esa jugada no es válida.',
-        COLUMN_OUT_OF_RANGE: 'Esa columna no existe.',
-        COLUMN_FULL: 'Esa columna está llena.',
-      },
     },
   },
 

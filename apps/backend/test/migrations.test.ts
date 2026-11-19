@@ -80,16 +80,15 @@ describe('migraciones', () => {
 });
 
 /**
- * La migración de las estadísticas las rellena con las partidas que ya
- * habían terminado (ADR-017, U8). Se comprueba aplicando primero todas las
- * anteriores, metiendo partidas y aplicando después la que falta.
+ * Una base de datos con las migraciones anteriores a `migration` ya
+ * aplicadas, para meter datos y comprobar después cómo los trata esa
+ * migración al aplicarla con las siguientes.
  */
-describe('migración de las estadísticas', () => {
-  const STATISTICS_MIGRATION = '20261119052221_estadisticas_y_recuperacion';
-  const name = `gameboard_backfill_${process.pid}`;
+function migrationSandbox(migration: string, suffix: string) {
+  const name = `gameboard_${suffix}_${process.pid}`;
   const url = new URL(TEST_DATABASE_URL);
   url.pathname = `/${name}`;
-  let earlier: string;
+  let earlier = '';
 
   async function migrateFrom(folder: string): Promise<void> {
     const pool = new pg.Pool({ connectionString: url.toString(), max: 1 });
@@ -116,10 +115,10 @@ describe('migración de las estadísticas', () => {
   beforeAll(async () => {
     await query(`drop database if exists ${name}`);
     await query(`create database ${name}`);
-    // Una copia de la carpeta de migraciones sin la de las estadísticas.
+    // Una copia de la carpeta de migraciones sin esa ni las siguientes.
     earlier = await mkdtemp(join(tmpdir(), 'gameboard-migraciones-'));
     for (const entry of await readdir(MIGRATIONS_FOLDER)) {
-      if (entry === STATISTICS_MIGRATION) continue;
+      if (entry >= migration) continue;
       await cp(join(MIGRATIONS_FOLDER, entry), join(earlier, entry), { recursive: true });
     }
   });
@@ -128,8 +127,28 @@ describe('migración de las estadísticas', () => {
     await rm(earlier, { recursive: true, force: true });
   });
 
+  return {
+    run,
+    /** Aplica las migraciones anteriores a la que se prueba. */
+    migrateEarlier: () => migrateFrom(earlier),
+    /** Aplica todas las que faltan. */
+    migrateAll: () => migrateFrom(MIGRATIONS_FOLDER),
+  };
+}
+
+/**
+ * La migración de las estadísticas las rellena con las partidas que ya
+ * habían terminado (ADR-017, U8). Se comprueba aplicando primero todas las
+ * anteriores, metiendo partidas y aplicando después las que faltan.
+ */
+describe('migración de las estadísticas', () => {
+  const { run, migrateEarlier, migrateAll } = migrationSandbox(
+    '20261119052221_estadisticas_y_recuperacion',
+    'backfill',
+  );
+
   it('cuenta las partidas terminadas de antes y no las anuladas', async () => {
-    await migrateFrom(earlier);
+    await migrateEarlier();
     expect(await run(`select to_regclass('game_statistics') as name`)).toEqual([{ name: null }]);
 
     const [found] = await run<{ id: string; game_id: string }>(
@@ -190,7 +209,7 @@ describe('migración de las estadísticas', () => {
     await match('ABORTED');
     await match('IN_PROGRESS');
 
-    await migrateFrom(MIGRATIONS_FOLDER);
+    await migrateAll();
 
     const rows = await run(
       `select player_id, game_id, played, wins, losses, draws from game_statistics
@@ -199,6 +218,93 @@ describe('migración de las estadísticas', () => {
     expect(rows).toEqual([
       { player_id: ana, game_id: version.game_id, played: 4, wins: 2, losses: 1, draws: 1 },
       { player_id: bea, game_id: version.game_id, played: 4, wins: 1, losses: 2, draws: 1 },
+    ]);
+  });
+});
+
+/**
+ * La migración de la semilla, las opciones y las retiradas (ADR-018, Z1 y
+ * Z2): las partidas anteriores reciben las opciones de su sala, y las que
+ * terminaron por una retirada, la suya.
+ */
+describe('migración de la semilla, las opciones y las retiradas', () => {
+  const { run, migrateEarlier, migrateAll } = migrationSandbox(
+    '20261119171159_semilla_opciones_y_retiradas',
+    'retirements',
+  );
+
+  it('rellena las opciones y una retirada por partida terminada por tiempo, rendición o abandono', async () => {
+    await migrateEarlier();
+    const [found] = await run<{ id: string; game_id: string }>(
+      `select game_versions.id, game_versions.game_id from game_versions
+       join games on games.id = game_versions.game_id where games.slug = 'four-in-a-row'`,
+    );
+    if (!found) throw new Error('Falta Cuatro en raya');
+    const version = found;
+    const [ana, bea] = [randomUUID(), randomUUID()];
+    for (const player of [ana, bea]) {
+      await run(`insert into players (id, user_id, created_at) values ($1, null, now())`, [player]);
+    }
+    const roomId = randomUUID();
+    await run(
+      `insert into rooms (id, game_id, owner_player_id, mode, time_control, max_players,
+         rematch_enabled, settings, status, created_at, last_activity_at)
+       values ($1, $2, $3, 'REALTIME', '{}', 2, true, '{"tablero": 7}', 'WAITING', now(), now())`,
+      [roomId, version.game_id, ana],
+    );
+
+    /** Una partida de Ana contra Bea con `stateVersion` cambios; si terminó, Bea pierde. */
+    async function match(reason: string | null, stateVersion: number): Promise<string> {
+      const matchId = randomUUID();
+      await run(
+        `insert into matches (id, room_id, game_version_id, mode, time_control, status,
+           abort_reason, started_at, ended_at)
+         values ($1, $2, $3, 'REALTIME', '{}', $4, null, now(), $5)`,
+        [
+          matchId,
+          roomId,
+          version.id,
+          reason ? 'FINISHED' : 'IN_PROGRESS',
+          reason ? new Date() : null,
+        ],
+      );
+      await run(
+        `insert into match_players (match_id, player_id, seat) values ($1, $2, 0), ($1, $3, 1)`,
+        [matchId, ana, bea],
+      );
+      await run(
+        `insert into game_sessions (match_id, status, state, state_version, active_seats, clocks,
+           turn_started_at, turn_deadline_at, created_at, updated_at)
+         values ($1, $2, '{}', $3, '{}', '{}', now(), now(), now(), now())`,
+        [matchId, reason ? 'CLOSED' : 'ACTIVE', stateVersion],
+      );
+      if (!reason) return matchId;
+      await run(`insert into match_results (match_id, reason, created_at) values ($1, $2, now())`, [
+        matchId,
+        reason,
+      ]);
+      await run(
+        `insert into player_results (match_id, player_id, outcome) values ($1, $2, 'WIN'), ($1, $3, 'LOSS')`,
+        [matchId, ana, bea],
+      );
+      return matchId;
+    }
+    const resigned = await match('RESIGNATION', 5);
+    const timedOut = await match('TIMEOUT', 8);
+    await match('COMPLETED', 7);
+    await match(null, 3);
+
+    await migrateAll();
+
+    expect(await run(`select distinct settings, seed from matches`)).toEqual([
+      { settings: { tablero: 7 }, seed: null },
+    ]);
+    const rows = await run(
+      `select match_id, sequence, player_id, reason from match_retirements order by sequence`,
+    );
+    expect(rows).toEqual([
+      { match_id: resigned, sequence: 5, player_id: bea, reason: 'RESIGNATION' },
+      { match_id: timedOut, sequence: 8, player_id: bea, reason: 'TIMEOUT' },
     ]);
   });
 });

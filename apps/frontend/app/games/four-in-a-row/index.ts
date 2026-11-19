@@ -1,8 +1,6 @@
 import type { FourInARowView } from '@gameboard/game-engine/four-in-a-row';
-import { es } from '../i18n/es';
-import type { GameTexts } from './game-ui';
-
-const texts = es.games['four-in-a-row'];
+import type { GameTexts } from '../game-ui';
+import { fourInARowStrings as texts } from './texts';
 
 export const fourInARowTexts: GameTexts = {
   seatNames: texts.seats,
