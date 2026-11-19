@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Aceptada |
+| **Estado** | Aceptada, modificada por ADR-014 (K2) y ADR-015 (V2 y V5) |
 | **Fecha** | 2026-11-14 |
 | **Decidida por** | Fernando Hernandez Argueta |
 | **Cierra** | Pendientes P6, P7 y P9; hallazgos C-11, C-12 y C-13; vacío G-05; efectos R-2, R-3, R-5, R-6 y R-7 del requisito de las dos modalidades |
@@ -71,7 +71,7 @@ Cambio respecto a la documentación inicial: INITIALIZING y RECOVERING dejan de 
 
 | ID | Regla |
 |---|---|
-| 7.22 | La sesión se carga en memoria cuando alguien la necesita y se libera cuando lleva un tiempo sin jugadores conectados ni jugadas |
+| 7.22 | La sesión se carga en memoria cuando alguien la necesita y se libera cuando lleva un tiempo sin jugadores conectados ni jugadas. *Sustituida el 2026-11-16 (ADR-014, K2): no hay copia en memoria; cada jugada lee la sesión de la base de datos con un bloqueo de fila, la cambia y la guarda* |
 | 7.23 | La versión del motor se fija al iniciar la partida y no cambia hasta que termina. Desactivar una versión solo impide empezar partidas nuevas con ella; el servidor la conserva mientras tenga partidas en curso |
 
 ## 5. Presencia, desconexión y abandono

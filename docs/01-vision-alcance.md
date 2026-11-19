@@ -39,7 +39,7 @@ Quien crea la sala elige la modalidad y el control de tiempo entre los que el ju
 | Plataforma y juegos separados | La plataforma no conoce las reglas de ningún juego, y un motor de juego no conoce la red, la base de datos ni las cuentas | ADR-007, acuerdo B2 |
 | Monolito modular | Un solo servidor con módulos de límites claros. Sin microservicios | Instrucciones del proyecto |
 | Contratos primero | La API y el protocolo se definen antes que la interfaz, y el frontend los consume | ADR-007, acuerdo B10 |
-| La base de datos es la verdad | PostgreSQL es la fuente de verdad de toda partida. La memoria del servidor es solo una caché | ADR-007, acuerdo B6 |
+| La base de datos es la verdad | PostgreSQL es la fuente de verdad de toda partida. No hay copia en memoria del estado de una partida: cada jugada lo lee de la base de datos | ADR-007, acuerdo B6; ADR-014, K2 |
 | La identidad sale de la sesión | El servidor nunca acepta un identificador de jugador enviado por el cliente como prueba de identidad | ADR-007, acuerdo B11 |
 | Juegos extensibles por contrato | Añadir un juego es añadir un motor que cumple el contrato. No se toca la plataforma | Contrato del motor |
 

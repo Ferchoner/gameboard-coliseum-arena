@@ -244,6 +244,8 @@ Además, un hueco temporal que no pide decisión: el tiempo de una parada del se
 
 Ninguno obliga a cambiar un contrato. K1 precisa una decisión de ADR-013, K3 cambia el reparto del backlog y K7 cambia una regla de dependencias de ADR-012.
 
+*Corregido el 2026-11-19, tras el análisis de la aplicación (tareas T-03 y T-04):* dos decisiones sí afectan a contratos y a otros ADR. K2 sustituye las reglas 7.22 (ADR-009) y 8.10 (ADR-010), precisa B6 (ADR-007) y deja inexacta la operación `restoreState` de `contracts/03-game-engine.md`. K21 y L2 contradicen la sección 9 del catálogo de errores, que hace llegar `GAME_ALREADY_FINISHED` e `INVALID_GAME_STATE` como `INTERNAL_ERROR`. Quien decide confirmó el 2026-11-19 que prevalecen K2 y K21/L2, que es lo que hace el código. Los dos contratos se corrigen en la tanda de cambios de contrato.
+
 ## 9. Lo que se comprobó antes de recomendar
 
 | Comprobación | Resultado |

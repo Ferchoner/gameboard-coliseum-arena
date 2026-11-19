@@ -144,7 +144,7 @@ Toda petición pasa por las mismas comprobaciones, en este orden. Se responde co
 | # | Comprobación | Si falla, en la API | En tiempo real |
 |---|---|---|---|
 | 1 | Origen permitido | `403 ORIGIN_NOT_ALLOWED` | Se rechaza la apertura de la conexión |
-| 2 | Límite de frecuencia | `429 RATE_LIMITED` | `RATE_LIMITED` |
+| 2 | Límite de frecuencia. *Previsto para el Hito 7: hoy no se aplica, salvo el límite de suscripciones por conexión del canal* | `429 RATE_LIMITED` | `RATE_LIMITED` |
 | 3 | Sesión válida | `401 UNAUTHENTICATED` | Se rechaza la apertura. Si la sesión termina después, cierre con el código 4001 |
 | 4 | Rol, solo en administración | `403 FORBIDDEN` | No aplica |
 | 5 | Forma de los datos | `400 VALIDATION_ERROR` | `INVALID_MESSAGE` |

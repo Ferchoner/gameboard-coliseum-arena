@@ -17,7 +17,7 @@ La documentación inicial mezclaba capacidades del MVP con otras posteriores: lo
 | Nivel | Qué es | Corresponde a |
 |---|---|---|
 | **Corte vertical** | Lo mínimo para jugar una partida completa de principio a fin y validar la arquitectura | Hitos 1 a 3 del backlog |
-| **Resto del MVP** | Lo que se añade sobre el corte antes de dar el MVP por terminado | Hito 4 y trabajo adicional |
+| **Resto del MVP** | Lo que se añade sobre el corte antes de dar el MVP por terminado | Hito 4 y trabajo adicional. *Precisada el 2026-11-16 (backlog, B1): Hitos 4 a 7* |
 | **Posterior** | Fuera del MVP. La arquitectura no debe impedirlo, pero no se diseña en detalle ahora | |
 
 ## 3. Decisión

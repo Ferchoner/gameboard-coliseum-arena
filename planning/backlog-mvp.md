@@ -119,7 +119,7 @@ Construido el 2026-11-16. Lo que resultó al construir, incluidas nueve eleccion
 - [x] Lista de "mis partidas en curso", que indica en cuáles te toca, primero las de tu turno y con la hora límite, también en la portada (N3).
 - [x] Aviso de turno dentro de la aplicación: contador en la cabecera, aviso emergente y número en el título de la pestaña (N2).
 - [x] Aplicación instalable como PWA, con manifiesto, iconos y service worker propios (N4).
-- [ ] Probar a mano la instalación en Chrome de escritorio y en un móvil (N6).
+- Probar a mano la instalación en Chrome de escritorio y en un móvil (N6): sin hacer al cerrar el hito, pasó al Hito 7 el 2026-11-19.
 
 Decisiones del hito en [ADR-016](../docs/adr/0016-decisiones-del-hito-5.md), aceptadas el 2026-11-18.
 
@@ -136,7 +136,7 @@ Construido el 2026-11-18. Lo que resultó al construir, incluidas seis eleccione
 
 Decisiones del hito en [ADR-017](../docs/adr/0017-decisiones-del-hito-6.md). La administración se hace solo por la API, con la guía de [`docs/guia-administracion.md`](../docs/guia-administracion.md) (U2).
 
-Construido el 2026-11-19, en revisión en la PR #8. Lo que resultó al construir, incluidas ocho elecciones menores que no estaban en ADR-017 y se confirmaron el 2026-11-19, está en su sección 15. El criterio de aceptación se comprueba en cada pull request con cuatro pruebas en navegador.
+Construido y fusionado el 2026-11-19, en la PR #8. Lo que resultó al construir, incluidas ocho elecciones menores que no estaban en ADR-017 y se confirmaron el 2026-11-19, está en su sección 15. El criterio de aceptación se comprueba en cada pull request con cuatro pruebas en navegador.
 
 **Criterio de aceptación** (ADR-017, U1): una persona cambia su nombre visible, que ven los demás, y su contraseña. Después la olvida, la recupera con el enlace del correo simulado y sus sesiones abiertas en otro navegador se cierran. Su perfil público muestra sus estadísticas de Cuatro en raya, que cuentan también las partidas jugadas antes de este hito y se ponen al día al terminar una partida nueva. Un administrador, solo con la API: suspende una cuenta y su dueño sale al instante de todas sus pestañas; anula una partida en curso y los dos jugadores ven que se anuló y que no cuenta; y retira Cuatro en raya del catálogo y lo vuelve a poner, sin desplegar ni tocar la base de datos.
 
@@ -150,6 +150,13 @@ Depende de las decisiones de alojamiento, que están aplazadas.
 - [ ] Servicio real de envío de correo.
 - [ ] Prueba de la cookie de sesión en Safari con un despliegue real (ADR-004).
 - [ ] Política de borrado de datos y registro de acciones de administración, si se decide incluirlos.
+- [ ] Cierre de la conexión con el código 1008 cuando un cliente incumple el protocolo de forma repetida (ADR-013, H9).
+- [ ] Pruebas en navegador también en Firefox y WebKit, y en el modo HTTPS (ADR-014, sección 13).
+- [ ] Probar a mano la instalación de la aplicación en Chrome de escritorio y en un móvil (ADR-016, N6). Viene del Hito 5.
+- [ ] Cómo sirve el alojamiento `sw.js`, sin guardarlo en caché, y el manifiesto con su tipo (ADR-016, sección 12).
+- [ ] Probar el entorno local en Windows (ADR-013 y ADR-014, pendientes).
+
+Las tareas de mejora del [análisis de la aplicación](analisis/informe-de-analisis-y-tareas.md) del 2026-11-19 que tocan este hito (T-06, T-11, T-18, T-19 y T-20) se trabajan cuando se autorice.
 
 ---
 

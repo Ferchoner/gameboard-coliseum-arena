@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Aceptada |
+| **Estado** | Aceptada, modificada por ADR-014 (K2) |
 | **Fecha** | 2026-11-14 |
 | **Decidida por** | Fernando Hernandez Argueta |
 | **Cierra** | Los doce acuerdos que la documentación inicial recogía como "acordado conceptualmente", sin registro formal (sección 3.2 de la auditoría) |
@@ -23,7 +23,7 @@ Se ratifican los doce acuerdos con la redacción siguiente.
 | B3 | Registro de juegos | Cada motor se registra por juego y versión, y la sesión de juego lo resuelve mediante un registro | ADR-011 |
 | B4 | Sala, partida y sesión de juego | Son conceptos distintos. La sala es el lugar de reunión; la partida es el registro histórico con su resultado; la sesión de juego es el estado vivo de una partida | ADR-009 |
 | B5 | Almacenamiento | PostgreSQL | ADR-002 |
-| B6 | Fuente de verdad del estado | **PostgreSQL es la fuente de verdad del estado de toda partida.** La memoria del proceso es solo una caché de las sesiones de juego abiertas, que se reconstruye desde la base de datos cuando hace falta. Ninguna jugada se confirma antes de guardarse | ADR-010 |
+| B6 | Fuente de verdad del estado | **PostgreSQL es la fuente de verdad del estado de toda partida.** La memoria del proceso es solo una caché de las sesiones de juego abiertas, que se reconstruye desde la base de datos cuando hace falta. Ninguna jugada se confirma antes de guardarse. *Precisada el 2026-11-16 (ADR-014, K2): no hay copia en memoria del estado de la partida; cada jugada lo lee de la base de datos con un bloqueo de fila. La memoria guarda solo conexiones, suscripciones, presencia y temporizadores* | ADR-010 |
 | B7 | Redis | Sin Redis en el MVP. Se evaluará si algún día hay más de una instancia | |
 | B8 | Primer juego | El primer juego es el de alinear cuatro fichas, para dos jugadores, con el nombre "Cuatro en raya" | ADR-008 |
 | B9 | Frontend | Nuxt, Vue y TypeScript para la plataforma. La tecnología de dibujo de cada tablero se decide juego por juego; Phaser no es obligatorio | ADR-006 |

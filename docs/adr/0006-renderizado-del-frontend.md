@@ -30,7 +30,7 @@ El frontend es una **aplicación renderizada en el navegador**. Las páginas pú
 
 **Positivas**
 - Se aloja como archivos estáticos en cualquier servicio.
-- La cookie de sesión puede quedar ligada solo al host de la API, que es el alcance más restringido (propuesta pendiente de confirmación en ADR-004).
+- La cookie de sesión puede quedar ligada solo al host de la API, que es el alcance más restringido (propuesta pendiente de confirmación en ADR-004). *Confirmada el 2026-11-16 (ADR-012, S13).*
 - Encaja de forma natural con una PWA.
 
 **Negativas**

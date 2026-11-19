@@ -206,6 +206,8 @@ Valores iniciales. Todos son configurables y se ajustarán con datos reales.
 
 Al superarlos, la API responde `429` con el código `RATE_LIMITED` y la cabecera `Retry-After`.
 
+*Nota del 2026-11-19: estos límites están previstos para el Hito 7 y hoy no se aplican. La API no responde nunca `429` (ADR-013, H9; backlog, Hito 7).*
+
 ---
 
 ## 5. Lo que no está en la versión 1

@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta |
+| **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta. Puesta al día el 2026-11-19 con las decisiones de los Hitos 2 a 6, sin decisiones nuevas |
 | **Sustituye a** | El documento de arquitectura inicial |
 | **Recoge** | ADR-001 a ADR-007, el modelo de datos y los cinco contratos |
 | **Resuelve** | Hallazgo C-19 (el diagrama dibujaba la base de datos debajo del motor) |
@@ -58,22 +58,27 @@ Cada operación existe en un solo canal. La API cambia las salas; el WebSocket l
 flowchart TB
     API["Controladores de la API"]
     RT["realtime<br/>conexiones, suscripciones y difusión"]
-    PLAT["Plataforma<br/>auth · users · profiles · players<br/>games · rooms · statistics · admin"]
+    ADMIN["admin<br/>operaciones de administración"]
+    PLAT["Plataforma<br/>auth · users · profiles · players<br/>games · rooms · statistics · mail"]
     PART["Partida<br/>matches · game-sessions"]
     ENGINE["game-engine<br/>TypeScript puro, sin dependencias"]
     DB[("PostgreSQL")]
 
     API --> PLAT
     API --> PART
+    API --> ADMIN
     RT --> PLAT
     RT --> PART
+    ADMIN --> PLAT
+    ADMIN -->|"anula partidas"| PART
+    PART -->|"game-sessions usa rooms, games, players y statistics"| PLAT
     PLAT -->|"games lee lo que declara cada motor"| ENGINE
     PART -->|"game-sessions pide jugadas y vistas"| ENGINE
     PLAT -->|repositorios| DB
     PART -->|repositorios| DB
 ```
 
-Las flechas indican quién usa a quién.
+Las flechas indican quién usa a quién. Dentro de la partida, `game-sessions` usa a `matches`, y nadie de la plataforma conoce a ninguno de los dos (ADR-014, K1). Ningún módulo depende de `admin` (ADR-017, Y1). `broadcast`, la interfaz de difusión, no aparece: ver el segundo punto.
 
 - **El motor de juego no tiene ninguna flecha de salida**: no conoce la base de datos, la red ni los demás módulos. Recibe un estado y una jugada, y devuelve el estado nuevo. Quien guarda y quien avisa es la capa de sesión de juego.
 - **Los avisos a los clientes van en sentido contrario y no aparecen en el diagrama.** Los módulos no conocen el WebSocket: publican a través de una interfaz de difusión, que `realtime` implementa, y solo después de guardar (regla 7 de la sección 5).
@@ -120,7 +125,7 @@ Las 17 tablas del [modelo de datos](03-dominio-datos.md) tienen un único módul
 | 9 | La identidad sale de la sesión de autenticación. Nunca de un identificador enviado por el cliente | ADR-007, acuerdo B11 |
 | 10 | El cliente recibe la vista de su asiento, que calcula el motor. Nunca el estado completo | Contrato del motor; protocolo |
 | 11 | Sesión y rol se comprueban en la entrada, en un único sitio para la API y el WebSocket. Pertenencia y estado, en el módulo dueño, dentro de la transacción | Matriz de permisos, sección 7 |
-| 12 | PostgreSQL es la fuente de verdad. La memoria es una caché de sesiones de juego que se reconstruye desde la base de datos | ADR-007, acuerdo B6 |
+| 12 | PostgreSQL es la fuente de verdad. No hay copia en memoria del estado de una partida: cada orden lee su sesión de la base de datos con un bloqueo de fila. En memoria solo viven conexiones, suscripciones, presencia y temporizadores (sección 6) | ADR-007, acuerdo B6, precisado por ADR-014, K2 |
 
 ---
 
@@ -130,9 +135,9 @@ Las 17 tablas del [modelo de datos](03-dominio-datos.md) tienen un único módul
 |---|---|---|
 | Conexiones abiertas y suscripciones | `realtime` | Los clientes reconectan y se vuelven a suscribir (ADR-003, condición 5.7) |
 | Presencia: quién tiene una conexión abierta | `realtime` | Se recalcula con las conexiones nuevas (ADR-009, regla 7.24) |
-| Sesiones de juego cargadas | `game-sessions` | No hay copia en memoria: cada jugada lee la sesión de la base de datos con un bloqueo de fila (ADR-014, decisión K2). Si algún juego lo pide, la copia se puede añadir sin cambiar contratos |
-| Temporizadores de reloj y de abandono | `game-sessions` | Una revisión periódica de la base de datos cubre los que se pierdan (ADR-010, regla 8.17) |
-| Contadores de los límites de frecuencia | Entrada | Se reinician |
+| Sesiones de juego | `game-sessions` | No hay copia en memoria: cada jugada lee la sesión de la base de datos con un bloqueo de fila (ADR-014, decisión K2). Si algún juego lo pide, la copia se puede añadir sin cambiar contratos |
+| Temporizadores de reloj y de abandono, y la cuenta de jugadores ausentes | `game-sessions` | Al arrancar se vuelven a poner, y todos los participantes de una partida en tiempo real cuentan como ausentes hasta que se conectan. Una revisión periódica de la base de datos cubre los relojes que se pierdan (ADR-010, regla 8.17; ADR-015, V1 y V10) |
+| Contadores de los límites de frecuencia | Entrada | Se reinician. *Previstos para el Hito 7: hoy no existen. Solo se limitan el tamaño de los mensajes, las conexiones por jugador y las suscripciones por conexión* |
 
 Nada de esto es fuente de verdad.
 
@@ -168,7 +173,7 @@ Estos puntos quedaron aplazados a propósito en sus ADR, para decidirlos con las
 | Versión de Drizzle, controlador de PostgreSQL y conjunto de conexiones | `1.0.0-rc.5`, `pg` y 10 conexiones | S8 y S9 |
 | Gestión de sesiones | Propia, en el módulo `auth` | S12 |
 | Argon2id incorporado en Node.js 26 | Está estable y se usa | S15 |
-| Si el frontend usa el paquete del motor para mostrar las jugadas válidas | Se decide en el Hito 3 | S25 |
+| Si el frontend usa el paquete del motor para mostrar las jugadas válidas | Se decide en el Hito 3. *Cerrado el 2026-11-16 (ADR-014, K7): no lo ejecuta; solo importa sus tipos* | S25 |
 | Tipos escritos más de una vez | Se definen una sola vez. `contracts` toma del motor los que comparten | S2 |
 | Comprobación de salud del servidor | `GET /health`, fuera de la API versionada | S19 |
 
@@ -178,7 +183,7 @@ Se decidió el 2026-11-16 en [ADR-013](adr/0013-decisiones-del-hito-2.md).
 
 | Asunto | Decisión | Dónde |
 |---|---|---|
-| Quién depende de quién entre `rooms` y `matches` | `rooms` define una interfaz pequeña, el iniciador de partidas, y `matches` la implementa. `matches` conoce a `rooms`, y no al revés. Hasta el Hito 3 nadie la implementa y una sala completa se queda en espera | H1 y H2 |
+| Quién depende de quién entre `rooms` y `matches` | `rooms` define una interfaz pequeña, el iniciador de partidas, y `matches` la implementa. `matches` conoce a `rooms`, y no al revés. Hasta el Hito 3 nadie la implementa y una sala completa se queda en espera. *Precisada el 2026-11-16 (ADR-014, K1): la implementa `game-sessions`, no `matches`* | H1 y H2 |
 | Cómo avisan los módulos sin conocer el WebSocket | A través de una interfaz neutral de difusión y presencia, el módulo `broadcast`, que `realtime` implementa. `rooms` y `auth` no importan `realtime`; `realtime` sí usa a `rooms` y a `auth` | H5 |
 | Cuándo se envía un aviso | La transacción lleva una lista de avisos pendientes. Se envían al confirmarse y se descartan si se revierte | H6 |
 | Capacidad y límite de partidas simultáneas | Bloqueo de fila: primero la del jugador y después la de la sala, siempre en ese orden | H7 |
@@ -197,6 +202,25 @@ Se decidió el 2026-11-16 en [ADR-014](adr/0014-decisiones-del-hito-3.md).
 | Orden de los bloqueos | El final de partida bloquea primero la sesión de juego y después la sala. Nadie los toma al revés | K10 |
 | Frontend y motor | El frontend no ejecuta el motor. Importa de él solo tipos, y la regla se comprueba de forma automática | K7 |
 | Pruebas en navegador | Playwright, en un trabajo aparte de las comprobaciones | K8 |
+
+### Lo que se decidió en el Hito 4
+
+Se decidió el 2026-11-16 en [ADR-015](adr/0015-decisiones-del-hito-4.md). No añade módulos.
+
+| Asunto | Decisión | Dónde |
+|---|---|---|
+| Dónde se lleva la cuenta del abandono | En memoria, en `game-sessions`, avisado por el canal de tiempo real cuando un jugador se queda sin conexiones o vuelve. No se guarda en la base de datos | V1 |
+| Cómo se mide una parada del servidor | `game-sessions` anota su actividad cada 10 segundos y al apagarse en orden, en `server_liveness`, y al arrancar desplaza cada turno en curso | V4 |
+| Orden del arranque | Ajuste de relojes, temporizadores y ausencias, revisión periódica y, al final, la API y el canal aceptan conexiones. Si el ajuste falla, el servidor no arranca | V10 |
+
+### Lo que se decidió en el Hito 5
+
+Se decidió el 2026-11-18 en [ADR-016](adr/0016-decisiones-del-hito-5.md). No cambia el backend: la modalidad por turnos usa las mismas piezas.
+
+| Asunto | Decisión | Dónde |
+|---|---|---|
+| Aplicación instalable | Manifiesto, iconos y un service worker pequeño escrito a mano en el frontend, sin dependencias. Exige HTTPS o `localhost` | N4 |
+| Aviso de turno | Solo en la aplicación abierta, con el aviso personal que ya envía el canal. Sin notificaciones del sistema | N2 |
 
 ### Lo que resultó al construir el Hito 6
 
@@ -230,4 +254,4 @@ Lo que este documento añade por su cuenta. Fueron **aceptadas el 2026-11-16** p
 | Asunto | Situación |
 |---|---|
 | **Alojamiento, copias de seguridad y supervisión** | Aplazado por decisión de quien decide. Tendrá su propio ADR |
-| **Paso a varias instancias.** Hoy la serialización de jugadas, las suscripciones y los temporizadores viven en la memoria de un proceso | Fuera del MVP. La interfaz única de difusión y la revisión periódica de relojes son los dos puntos preparados para ello |
+| **Paso a varias instancias.** El orden de las jugadas ya lo da el bloqueo de fila de PostgreSQL, que vale con varias instancias. Lo que hoy lo impide es: la presencia y la cuenta de ausencias en la memoria de cada proceso; la difusión dentro del proceso; la anotación de actividad, que es una sola fila; los límites por jugador, contados por proceso; y la hora de cada máquina como fuente de tiempo de los relojes. Nada impide hoy que arranque una segunda instancia por error, por ejemplo durante un despliegue | Fuera del MVP (ADR-007, acuerdo B7). La interfaz única de difusión y la revisión periódica de relojes son los dos puntos preparados para ello. Actualizado el 2026-11-19 (análisis de la aplicación, tareas T-03 y T-20) |

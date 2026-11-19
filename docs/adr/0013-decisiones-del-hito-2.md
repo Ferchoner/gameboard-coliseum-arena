@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Aceptada, con un cambio en H3 |
+| **Estado** | Aceptada, con un cambio en H3; modificada por ADR-014 (K1) y ADR-015 (V3) |
 | **Fecha** | 2026-11-16 |
 | **Decidida por** | Fernando Hernandez Argueta |
 | **Cierra** | El asunto abierto sobre `rooms` y `matches` (`docs/02-arquitectura.md`, sección 10) y lo que ADR-012 dejó para el Hito 2 (sección 11) |
@@ -32,7 +32,7 @@ Los contratos ya fijan qué hace cada operación y cada mensaje. Lo que falta de
 
 | ID | Asunto | Recomendación |
 |---|---|---|
-| H1 | Quién depende de quién entre `rooms` y `matches` | `rooms` define una interfaz pequeña y `matches` la implementa. La dependencia va en un solo sentido: `matches` conoce a `rooms`, y no al revés |
+| H1 | Quién depende de quién entre `rooms` y `matches` | `rooms` define una interfaz pequeña y `matches` la implementa. La dependencia va en un solo sentido: `matches` conoce a `rooms`, y no al revés. *Precisada el 2026-11-16 (ADR-014, K1): la interfaz la implementa `game-sessions`, que usa a `matches` como registro; `rooms` sigue sin conocer a ninguno de los dos* |
 | H2 | Qué pasa en este hito cuando una sala cumple la condición de inicio | Nada todavía. La sala se queda en espera, completa. El inicio se conecta en el Hito 3 sin tocar `rooms` |
 | H3 | Cómo probar las salas a mano si el catálogo está vacío | Se recomendó un juego de demostración solo en local. **Decisión: no se añade nada.** Las salas se comprueban con pruebas automáticas y a mano desde el Hito 3 |
 | H4 | Servidor WebSocket | El adaptador oficial de NestJS sobre la librería `ws`, con la sesión comprobada antes de aceptar la conexión |
