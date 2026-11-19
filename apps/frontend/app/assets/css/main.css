@@ -108,12 +108,15 @@ a {
 
 .site-nav {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
 }
 
+/* Un nombre largo se parte antes que salirse del ancho de un móvil. */
 .who {
   color: var(--muted);
+  overflow-wrap: anywhere;
 }
 
 .content {
