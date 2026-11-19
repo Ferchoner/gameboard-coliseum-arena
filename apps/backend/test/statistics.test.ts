@@ -166,6 +166,40 @@ describe('jugadores', () => {
       ]);
     });
 
+    it('repetir la jugada final no cuenta la partida dos veces', async () => {
+      const match = await startMatch(t);
+      // El asiento 0 gana en vertical por la columna 0.
+      const columns = [0, 1, 0, 1, 0, 1, 0];
+      let finalRequest = '';
+      let finalVersion = 0;
+      for (const [index, column] of columns.entries()) {
+        finalVersion = await stateVersionOf(match.matchId);
+        finalRequest = randomUUID();
+        const player = index % 2 === 0 ? match.first : match.second;
+        await sessions.submitAction(player.playerId, match.matchId, finalRequest, finalVersion, {
+          type: 'DROP_TOKEN',
+          column,
+        });
+      }
+
+      // La misma orden otra vez, como cuando el navegador la reenvía al reconectar.
+      const repeated = await sessions.submitAction(
+        match.first.playerId,
+        match.matchId,
+        finalRequest,
+        finalVersion,
+        { type: 'DROP_TOKEN', column: 0 },
+      );
+
+      expect(repeated.status).toBe('FINISHED');
+      expect(
+        await query('select played, wins, losses, draws from game_statistics order by wins desc'),
+      ).toEqual([
+        { played: 1, wins: 1, losses: 0, draws: 0 },
+        { played: 1, wins: 0, losses: 1, draws: 0 },
+      ]);
+    });
+
     it('una partida en curso no cuenta todavía', async () => {
       const match = await startMatch(t);
 

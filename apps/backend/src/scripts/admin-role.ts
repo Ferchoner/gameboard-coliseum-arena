@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { USER_ROLES, type UserRole } from '@gameboard/contracts';
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Clock } from '../common/clock.js';
 import { InvalidConfigError, loadConfig } from '../config/config.js';
@@ -42,12 +42,13 @@ try {
   process.exit(1);
 }
 
+/** El reloj, que en la aplicación da `CommonModule` a todos los módulos. */
+@Global()
+@Module({ providers: [Clock], exports: [Clock] })
+class ClockModule {}
+
 /** Lo justo para cambiar una cuenta: ni rutas, ni canal de tiempo real, ni tareas periódicas. */
-@Module({
-  imports: [ConfigModule.forRoot(config), DatabaseModule, UsersModule],
-  providers: [Clock],
-  exports: [Clock],
-})
+@Module({ imports: [ConfigModule.forRoot(config), ClockModule, DatabaseModule, UsersModule] })
 class AdminRoleModule {}
 
 const app = await NestFactory.createApplicationContext(AdminRoleModule, { logger: ['error'] });

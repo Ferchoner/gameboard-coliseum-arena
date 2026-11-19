@@ -232,13 +232,25 @@ describe('administración', () => {
       ).toBe(200);
     });
 
-    it('la partida en curso de quien es suspendido sigue sus reglas (U4)', async () => {
+    it('la partida en curso de quien es suspendido sigue sus reglas: corre su abandono (U4)', async () => {
       const match = await startMatch(t);
+      const suspendedSocket = await TestSocket.open(server, { cookie: match.first.cookie });
+      const rivalSocket = await TestSocket.open(server, { cookie: match.second.cookie });
+      await rivalSocket.command({ type: 'SUBSCRIBE_MATCH', matchId: match.matchId });
+      await rivalSocket.quiet();
 
       await admin.put(`/admin/users/${match.first.me.userId}/status`, { status: 'SUSPENDED' });
 
-      const view = (await match.second.get(`/matches/${match.matchId}`)).body.data as MatchView;
-      expect(view.status).toBe('IN_PROGRESS');
+      // Su conexión se cierra como cualquier desconexión, y empieza a correr su plazo de abandono.
+      expect((await suspendedSocket.closed).code).toBe(4001);
+      const left = await rivalSocket.next(
+        (message) =>
+          message.type === 'MATCH_UPDATED' && message.payload.match.players[0]?.connected === false,
+      );
+      if (left.type !== 'MATCH_UPDATED') throw new Error('No llegó la desconexión');
+      expect(left.payload.match.status).toBe('IN_PROGRESS');
+      expect(left.payload.match.players[0]?.abandonAt).not.toBeNull();
+      await rivalSocket.close();
     });
 
     it('nadie puede cambiar su propio estado, y una cuenta que no existe es USER_NOT_FOUND', async () => {

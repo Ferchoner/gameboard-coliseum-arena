@@ -65,6 +65,9 @@ async function onSubmit(): Promise<void> {
     </form>
 
     <p class="muted">
+      <NuxtLink to="/recuperar-contrasena">{{ es.signIn.forgotPassword }}</NuxtLink>
+    </p>
+    <p class="muted">
       {{ es.signIn.noAccount }} <NuxtLink to="/registro">{{ es.nav.register }}</NuxtLink>
     </p>
   </section>

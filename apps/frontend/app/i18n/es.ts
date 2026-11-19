@@ -24,6 +24,7 @@ export const es = {
     signOut: 'Salir',
     signingOut: 'Saliendo…',
     signedInAs: 'Sesión de',
+    account: 'Tu cuenta',
     yourTurnIn: (count: number) =>
       count === 1 ? 'Te toca en 1 partida' : `Te toca en ${count} partidas`,
   },
@@ -75,7 +76,7 @@ export const es = {
       anyMode: 'Todas',
     },
     places: (members: number, capacity: number) => `${members} de ${capacity} jugadores`,
-    ownedBy: (name: string) => `Sala de ${name}`,
+    ownedBy: 'Sala de',
     withRematch: 'Con revancha',
     join: 'Entrar',
     joining: 'Entrando…',
@@ -228,7 +229,7 @@ export const es = {
     loading: 'Cargando tus partidas…',
     emptyInProgress: 'No tienes ninguna partida en curso.',
     emptyHistory: 'Todavía no has terminado ninguna partida.',
-    against: (names: string) => `Contra ${names}`,
+    against: 'Contra',
     play: 'Ir a la partida',
     open: 'Ver',
     yourTurn: 'Te toca',
@@ -298,6 +299,67 @@ export const es = {
     submit: 'Entrar',
     submitting: 'Entrando…',
     noAccount: '¿No tienes cuenta?',
+    forgotPassword: '¿Olvidaste tu contraseña?',
+  },
+
+  /** La cuenta propia: perfil y contraseña (ADR-017, U9). */
+  account: {
+    title: 'Tu cuenta',
+    intro: 'Lo que los demás ven de ti y cómo entras.',
+    publicProfile: 'Ver tu perfil público',
+    profile: {
+      title: 'Perfil',
+      username: 'Nombre de usuario',
+      usernameHint: 'No se puede cambiar.',
+      email: 'Correo electrónico',
+      submit: 'Guardar el perfil',
+      submitting: 'Guardando…',
+      saved: 'Perfil guardado.',
+      unchanged: 'No has cambiado nada.',
+    },
+    password: {
+      title: 'Contraseña',
+      intro: 'Al cambiarla se cierran tus sesiones en otros dispositivos. Esta sigue abierta.',
+      submit: 'Cambiar la contraseña',
+      submitting: 'Cambiando…',
+      changed: 'Contraseña cambiada. Se cerraron tus sesiones en otros dispositivos.',
+    },
+  },
+
+  /** Recuperar la contraseña por correo (ADR-017, U7 y U9). */
+  passwordReset: {
+    title: 'Recuperar la contraseña',
+    requestIntro:
+      'Escribe el correo de tu cuenta y te enviaremos un enlace para elegir una contraseña nueva.',
+    requestSubmit: 'Enviar el enlace',
+    requestSubmitting: 'Enviando…',
+    requested: (email: string) =>
+      `Si hay una cuenta con el correo ${email}, te hemos enviado un enlace. Caduca en una hora y solo sirve una vez.`,
+    confirmIntro: 'Elige tu contraseña nueva.',
+    confirmSubmit: 'Guardar la contraseña nueva',
+    confirmSubmitting: 'Guardando…',
+    confirmed: 'Contraseña cambiada. Ya puedes entrar con ella.',
+    signedOutEverywhere: 'Por seguridad, se cerraron todas las sesiones de tu cuenta.',
+    requestAnother: 'Pedir otro enlace',
+    goToSignIn: 'Entrar',
+    backToSignIn: 'Volver a entrar',
+  },
+
+  /** Perfil público de un jugador con sus estadísticas (ADR-017, U9). */
+  player: {
+    loading: 'Cargando el perfil…',
+    noBiography: 'Todavía no ha escrito nada sobre sí.',
+    editOwn: 'Editar tu perfil',
+    statisticsTitle: 'Estadísticas',
+    emptyStatistics: 'Todavía no ha terminado ninguna partida.',
+    columns: {
+      game: 'Juego',
+      played: 'Partidas',
+      wins: 'Victorias',
+      losses: 'Derrotas',
+      draws: 'Empates',
+    },
+    back: 'Volver',
   },
 
   fields: {
@@ -310,6 +372,16 @@ export const es = {
     password: {
       label: 'Contraseña',
       hint: (min: number) => `Al menos ${min} caracteres.`,
+    },
+    currentPassword: { label: 'Contraseña actual' },
+    newPassword: { label: 'Contraseña nueva' },
+    displayName: {
+      label: 'Nombre visible',
+      hint: (max: number) => `Es el nombre que ven los demás. Hasta ${max} caracteres.`,
+    },
+    biography: {
+      label: 'Sobre ti',
+      hint: (max: number) => `Opcional. Hasta ${max} caracteres.`,
     },
   },
 

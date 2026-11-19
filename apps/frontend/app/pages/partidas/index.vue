@@ -3,6 +3,7 @@ import type { MatchSummaryView, Page } from '@gameboard/contracts';
 import { computed, onMounted, ref } from 'vue';
 import { useHead } from '#imports';
 import OngoingMatches from '../../components/OngoingMatches.vue';
+import PlayerNames from '../../components/PlayerNames.vue';
 import { useApi } from '../../composables/useApi';
 import { useCatalog } from '../../composables/useCatalog';
 import { useRealtime } from '../../composables/useRealtime';
@@ -71,9 +72,6 @@ async function loadMore(): Promise<void> {
     : { status: 'failed', failure: result.failure };
 }
 
-const rivals = (match: MatchSummaryView) =>
-  es.matches.against(match.opponents.map((opponent) => opponent.displayName).join(', '));
-
 onMounted(() => {
   void loadCatalog();
   void load();
@@ -124,7 +122,7 @@ onMounted(() => {
         >
           <div>
             <h3>{{ gameName(match.gameSlug) }}</h3>
-            <p>{{ rivals(match) }}</p>
+            <p>{{ es.matches.against }} <PlayerNames :players="match.opponents" /></p>
             <p class="muted">
               <template v-if="match.endedAt">
                 {{ es.matches.endedAt(formatDateTime(match.endedAt)) }}

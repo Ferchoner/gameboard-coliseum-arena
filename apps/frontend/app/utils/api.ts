@@ -30,12 +30,15 @@ function isApiError(value: unknown): value is ApiError {
 
 /**
  * Lee una respuesta de la API según su sobre (`contracts/01-rest-api.md`):
- * `{ success: true, data }`, `{ success: false, error }` o `204` sin cuerpo.
+ * `{ success: true, data }`, `{ success: false, error }`, o `204` y `202` sin cuerpo.
  */
 export function readApiResponse<T>(status: number, body: unknown): ApiResult<T> {
   const succeeded = status >= 200 && status < 300;
 
-  if (status === 204) return { ok: true, data: undefined as T };
+  // `204` no lleva cuerpo; `202` tampoco cuando solo dice que la petición se aceptó.
+  if (status === 204 || (status === 202 && (body === undefined || body === null || body === ''))) {
+    return { ok: true, data: undefined as T };
+  }
   if (isRecord(body)) {
     if (succeeded && body.success === true && 'data' in body) {
       return { ok: true, data: body.data as T };

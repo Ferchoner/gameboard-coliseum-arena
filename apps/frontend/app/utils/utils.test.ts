@@ -28,8 +28,9 @@ describe('lectura de una respuesta de la API', () => {
     });
   });
 
-  it('acepta una respuesta 204 sin cuerpo', () => {
+  it('acepta una respuesta 204 o 202 sin cuerpo', () => {
     expect(readApiResponse(204, undefined)).toEqual({ ok: true, data: undefined });
+    expect(readApiResponse(202, '')).toEqual({ ok: true, data: undefined });
   });
 
   it('devuelve el error del catálogo de una respuesta fallida', () => {

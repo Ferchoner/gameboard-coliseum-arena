@@ -2,6 +2,7 @@
 import type { RoomView } from '@gameboard/contracts';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { navigateTo, useHead, useRoute } from '#imports';
+import PlayerLink from '../../components/PlayerLink.vue';
 import { useApi } from '../../composables/useApi';
 import { useCatalog } from '../../composables/useCatalog';
 import { useRealtime } from '../../composables/useRealtime';
@@ -213,7 +214,7 @@ onBeforeUnmount(stopListening);
 
       <ul class="members">
         <li v-for="member in room.members" :key="member.playerId" class="member">
-          <span class="member-name">{{ member.displayName }}</span>
+          <span class="member-name"><PlayerLink :player="member" /></span>
           <span v-if="member.playerId === me?.playerId" class="badge">{{ es.room.you }}</span>
           <span v-if="member.playerId === room.ownerPlayerId" class="badge">
             {{ es.room.owner }}
