@@ -127,7 +127,7 @@ En el canal de tiempo real no existe un código para "sin sesión": si la sesió
 | `MATCH_NOT_FOUND` | La partida no existe | 404 | Sí | | Informar |
 | `PLAYER_NOT_IN_MATCH` | Quien lo pide no es participante de la partida | 403 | Sí | | Informar |
 | `MATCH_NOT_IN_PROGRESS` | La partida no está en curso: terminó o se anuló | 409 | Sí | | Actualizar |
-| `STALE_STATE_VERSION` | La jugada se hizo sobre un estado que ya cambió (8.11) | | Sí | | Actualizar |
+| `STALE_STATE_VERSION` | La jugada se hizo sobre un estado que ya cambió (8.11). *Precisada el 2026-11-19 (ADR-019, X15): que ya cambió para ese asiento; con varios asientos activos, la jugada de otro no cuenta* | | Sí | | Actualizar |
 | `CLOCK_EXPIRED` | El reloj del jugador se agotó antes de que llegara la jugada (7.5) | | Sí | | Actualizar |
 | `NOT_YOUR_TURN` | Quien envía no puede jugar ahora | | Sí | Sí | Actualizar |
 | `INVALID_ACTION` | La acción está mal formada o las reglas del juego no la permiten | | Sí | Sí | Corregir |

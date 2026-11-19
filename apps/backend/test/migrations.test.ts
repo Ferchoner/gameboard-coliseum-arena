@@ -308,3 +308,74 @@ describe('migración de la semilla, las opciones y las retiradas', () => {
     ]);
   });
 });
+
+/**
+ * La migración de las jugadas simultáneas (ADR-019, decisión X15): cada
+ * sesión activa tiene su único asiento activo desde su versión actual; las
+ * cerradas, ninguno.
+ */
+describe('migración de las jugadas simultáneas', () => {
+  const { run, migrateEarlier, migrateAll } = migrationSandbox(
+    '20261119184458_jugadas_simultaneas',
+    'simultaneous',
+  );
+
+  it('rellena desde qué versión está activo cada asiento', async () => {
+    await migrateEarlier();
+    const [found] = await run<{ id: string; game_id: string }>(
+      `select game_versions.id, game_versions.game_id from game_versions
+       join games on games.id = game_versions.game_id where games.slug = 'four-in-a-row'`,
+    );
+    if (!found) throw new Error('Falta Cuatro en raya');
+    const version = found;
+    const [ana, bea] = [randomUUID(), randomUUID()];
+    for (const player of [ana, bea]) {
+      await run(`insert into players (id, user_id, created_at) values ($1, null, now())`, [player]);
+    }
+    const roomId = randomUUID();
+    await run(
+      `insert into rooms (id, game_id, owner_player_id, mode, time_control, max_players,
+         rematch_enabled, settings, status, created_at, last_activity_at)
+       values ($1, $2, $3, 'REALTIME', '{}', 2, true, '{}', 'WAITING', now(), now())`,
+      [roomId, version.game_id, ana],
+    );
+
+    async function session(activeSeats: string, stateVersion: number): Promise<string> {
+      const matchId = randomUUID();
+      const active = activeSeats !== '{}';
+      await run(
+        `insert into matches (id, room_id, game_version_id, mode, time_control, status,
+           abort_reason, started_at, ended_at, settings)
+         values ($1, $2, $3, 'REALTIME', '{}', $4, null, now(), $5, '{}')`,
+        [
+          matchId,
+          roomId,
+          version.id,
+          active ? 'IN_PROGRESS' : 'FINISHED',
+          active ? null : new Date(),
+        ],
+      );
+      await run(
+        `insert into game_sessions (match_id, status, state, state_version, active_seats, clocks,
+           turn_started_at, turn_deadline_at, created_at, updated_at)
+         values ($1, $2, '{}', $3, $4, '{}', now(), now(), now(), now())`,
+        [matchId, active ? 'ACTIVE' : 'CLOSED', stateVersion, activeSeats],
+      );
+      return matchId;
+    }
+    const playing = await session('{1}', 7);
+    const closed = await session('{}', 12);
+
+    await migrateAll();
+
+    const rows = await run<{ match_id: string; active_since: unknown }>(
+      `select match_id, active_since from game_sessions`,
+    );
+    expect(new Map(rows.map((row) => [row.match_id, row.active_since]))).toEqual(
+      new Map([
+        [playing, { '1': 7 }],
+        [closed, {}],
+      ]),
+    );
+  });
+});

@@ -52,6 +52,8 @@ La documentación inicial mezclaba capacidades del MVP con otras posteriores: lo
 
 **Decisión:** el juego se llama "Cuatro en raya", tanto en el nombre público como en los identificadores internos (`four-in-a-row`, ver ADR-011), con un tablero y unas fichas de diseño propio. Esto no es asesoría legal. El resto del pendiente P12 (derechos de arte y selección de juegos futuros) se trata cuando se elija el segundo juego.
 
+*Cerrado el 2026-11-19 (ADR-019, F1 y F9): los próximos juegos son Batalla naval y Dominó, y todos siguen una regla de derechos: mecánicas tradicionales, nombres genéricos, arte propio y reglas escritas por nosotros.*
+
 ## 5. Consecuencias
 
 - Las dos modalidades entran en el MVP, pero el corte vertical valida primero el tiempo real.

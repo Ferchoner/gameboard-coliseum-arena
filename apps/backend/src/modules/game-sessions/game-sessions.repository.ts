@@ -28,6 +28,7 @@ export type GameSessionChange = Pick<
   | 'state'
   | 'stateVersion'
   | 'activeSeats'
+  | 'activeSince'
   | 'clocks'
   | 'turnStartedAt'
   | 'turnDeadlineAt'

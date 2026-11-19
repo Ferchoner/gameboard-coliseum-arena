@@ -3,7 +3,7 @@ import type { AnyGameEngine, Seat } from './contract.js';
 import { GAME_ENGINES } from './engines.js';
 import { COLUMN_COUNT } from './games/four-in-a-row/engine.js';
 import { checkEngineConformance, type ConformanceFixture } from './testing/conformance.js';
-import { createFakeEngine } from './testing/fake-engine.js';
+import { createFakeEngine, createSimultaneousFakeEngine } from './testing/fake-engine.js';
 
 /**
  * Cada motor registrado pasa la comprobación común del contrato (ADR-018,
@@ -42,6 +42,15 @@ describe('comprobación común de los motores', () => {
     const fixture: ConformanceFixture = {
       settings: {},
       candidateActions: () => [{ type: 'INCREMENT' }, { type: 'OTRA_COSA' }],
+    };
+    expect(checkEngineConformance(engine, fixture)).toEqual([]);
+  });
+
+  it('el motor de pruebas de jugadas simultáneas también las cumple (ADR-019)', () => {
+    const engine = createSimultaneousFakeEngine('rounds', '1.0.0');
+    const fixture: ConformanceFixture = {
+      settings: {},
+      candidateActions: () => [{ type: 'SUBMIT' }, { type: 'OTRA_COSA' }],
     };
     expect(checkEngineConformance(engine, fixture)).toEqual([]);
   });

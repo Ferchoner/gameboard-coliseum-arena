@@ -1,0 +1,47 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "af1a7732-4aa1-4035-b3a5-c7333ff59f70",
+  "prevIds": [
+    "22dff1f7-23ba-46cb-a12f-8d50d62eae24"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "game_sessions",
+        "active_since"
+      ],
+      "writes": [
+        "s|col|public.game_sessions.active_since",
+        "n|col|public.game_sessions.active_since",
+        "e|col|public.game_sessions.active_since"
+      ],
+      "reads": [
+        "n|tbl|public.game_sessions",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "game_sessions",
+        "name": "active_since",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

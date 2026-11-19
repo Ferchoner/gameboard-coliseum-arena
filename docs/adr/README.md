@@ -13,9 +13,9 @@ Cada archivo de esta carpeta recoge una decisión de arquitectura aceptada, con 
 | [ADR-005](0005-organizacion-del-repositorio.md) | Un solo repositorio con espacios de trabajo | Aceptada | ADR-012 confirma los nombres de carpeta (S1) y la forma de compartir tipos (S2) |
 | [ADR-006](0006-renderizado-del-frontend.md) | Frontend renderizado en el navegador, con páginas públicas pregeneradas | Aceptada | ADR-012 confirma el alcance de la cookie (S13) |
 | [ADR-007](0007-linea-base.md) | Línea base de acuerdos de arquitectura | Aceptada, modificada | ADR-014 precisa B6 (K2) |
-| [ADR-008](0008-alcance-del-mvp.md) | Alcance del MVP | Aceptada | El backlog reparte el resto del MVP en los Hitos 4 a 7 (B1) |
+| [ADR-008](0008-alcance-del-mvp.md) | Alcance del MVP | Aceptada | El backlog reparte el resto del MVP en los Hitos 4 a 7 (B1); ADR-019 cierra el resto de la sección 4 (F1 y F9) |
 | [ADR-009](0009-reglas-de-dominio.md) | Reglas de dominio de salas, partidas y relojes | Aceptada, modificada | ADR-014 sustituye 7.22 (K2); ADR-015 precisa 7.26 (V2) y añade 7.32 (V5) |
-| [ADR-010](0010-persistencia-de-partida.md) | Persistencia de partida | Aceptada, modificada | ADR-014 sustituye 8.10 (K2); ADR-018 precisa 8.2 (Z1 y Z2) |
+| [ADR-010](0010-persistencia-de-partida.md) | Persistencia de partida | Aceptada, modificada | ADR-014 sustituye 8.10 (K2); ADR-018 precisa 8.2 (Z1 y Z2); ADR-019 precisa 8.11 (X15 y X16) |
 | [ADR-011](0011-convenciones-y-glosario.md) | Convenciones de nombres, identificadores y glosario | Aceptada | Ninguno |
 | [ADR-012](0012-decisiones-de-arranque.md) | Decisiones de arranque del Hito 1 | Aceptada, modificada | ADR-014 precisa la regla de dependencias de S2 y cierra S24 y S25 (K7) |
 | [ADR-013](0013-decisiones-del-hito-2.md) | Decisiones del Hito 2, salas y tiempo real | Aceptada, modificada | ADR-014 precisa H1 (K1); ADR-015 cierra H13 (V3) |
@@ -24,6 +24,7 @@ Cada archivo de esta carpeta recoge una decisión de arquitectura aceptada, con 
 | [ADR-016](0016-decisiones-del-hito-5.md) | Decisiones del Hito 5, modalidad por turnos | Aceptada | Ninguno |
 | [ADR-017](0017-decisiones-del-hito-6.md) | Decisiones del Hito 6, cuenta, estadísticas y administración | Aceptada | Ninguno |
 | [ADR-018](0018-preparacion-del-segundo-juego.md) | Preparación del segundo juego | Aceptada | Ninguno |
+| [ADR-019](0019-batalla-naval-y-jugadas-simultaneas.md) | Los próximos juegos, Batalla naval y jugadas simultáneas | Aceptada | Ninguno |
 
 ## Decisiones aplazadas
 

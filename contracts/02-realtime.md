@@ -142,8 +142,8 @@ El servidor comprueba, en este orden:
 | 2 | La partida existe y quien envía es participante | `MATCH_NOT_FOUND` o `PLAYER_NOT_IN_MATCH` |
 | 3 | Ese jugador no ha enviado ya una jugada con ese `requestId` en esta partida | No es un fallo. Responde con `MATCH_UPDATED` y el estado actual, sin eventos de juego, y no aplica nada (8.12) |
 | 4 | La partida está en curso | `MATCH_NOT_IN_PROGRESS` |
-| 5 | `stateVersion` es la versión actual | `STALE_STATE_VERSION`, con la versión actual |
-| 6 | El reloj del jugador no está agotado | `CLOCK_EXPIRED`. Además se aplica el vencimiento (7.5) |
+| 5 | `stateVersion` es la versión actual o, si el asiento de quien envía está activo, una versión anterior desde la que lo está sin interrupción. *Precisada el 2026-11-19 (ADR-019, X15 y X16): con varios asientos activos, la jugada de uno no deja obsoleta la de otro. El asiento que juega y sigue activo cuenta desde su propia jugada* | `STALE_STATE_VERSION`, con la versión actual |
+| 6 | El reloj del jugador no está agotado. *Precisada el 2026-11-19 (ADR-019, X17): si se agotó el de otro asiento activo, se aplica su vencimiento; si con eso la partida termina, se responde `MATCH_NOT_IN_PROGRESS`, y si sigue y quien envía sigue activo, se pasa a la comprobación 7 sobre el estado nuevo* | `CLOCK_EXPIRED`. Además se aplica el vencimiento (7.5) |
 | 7 | El motor acepta la acción | `NOT_YOUR_TURN` o `INVALID_ACTION`, con el motivo propio del juego si lo hay |
 
 Si todo se cumple, el servidor guarda la jugada y solo después envía `MATCH_UPDATED` (8.9).
@@ -388,7 +388,7 @@ Estas decisiones no derivan de un ADR: se tomaron al escribir el protocolo. Fuer
 
 | Asunto | Situación |
 |---|---|
-| **Jugadas simultáneas.** Si dos asientos juegan sobre la misma versión del estado, la segunda jugada recibe `STALE_STATE_VERSION` y hay que reenviarla. Además, si se agota el reloj de un asiento, la jugada de otro asiento activo se rechaza con `CLOCK_EXPIRED` (análisis del 2026-11-19, T-23) | Se precisa cuando llegue el primer juego de ese tipo |
+| **Jugadas simultáneas.** Si dos asientos juegan sobre la misma versión del estado, la segunda jugada recibe `STALE_STATE_VERSION` y hay que reenviarla. Además, si se agota el reloj de un asiento, la jugada de otro asiento activo se rechaza con `CLOCK_EXPIRED` (análisis del 2026-11-19, T-23) | *Cerrado el 2026-11-19 (ADR-019, X15 a X17):* comprobaciones 5 y 6 de `SUBMIT_ACTION` |
 | **Aviso de turno con la aplicación cerrada.** Este protocolo solo avisa a quien tiene una conexión abierta | Las notificaciones push son la primera ampliación tras el MVP (ADR-008, punto 12) |
 | **Espectadores** | Posterior al MVP. Bastará con ampliar quién puede suscribirse a una partida; el motor ya da una vista para quien no ocupa asiento |
 | **Valores definitivos de los límites** | Se ajustan con datos reales en el Hito 7, junto con los límites de frecuencia |
