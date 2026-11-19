@@ -48,7 +48,37 @@ api -X POST "$API/auth/logout"
 rm sesion.txt
 ```
 
-En Windows, con PowerShell, `curl.exe` admite las mismas opciones, pero las comillas del cuerpo hay que escribirlas como `'{\"username\":\"admin\"}'`.
+### En Windows, con PowerShell
+
+Las órdenes de arriba son de una terminal de Linux o macOS (bash o zsh). En PowerShell no funcionan tal cual: `API=...` no define una variable, y `api() { ... }` no define una función. Lo equivalente en PowerShell, sin `curl`:
+
+```powershell
+$API = 'http://localhost:3000/api/v1'
+$ORIGIN = 'http://localhost:3001'
+$sesion = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+
+function api($Method, $Path, $Body) {
+  $params = @{
+    Method      = $Method
+    Uri         = "$API/$Path"
+    WebSession  = $sesion
+    Headers     = @{ Origin = $ORIGIN }
+    ContentType = 'application/json'
+  }
+  if ($Body) { $params.Body = ConvertTo-Json $Body -Compress }
+  Invoke-RestMethod @params
+}
+
+# Inicia sesión. La cookie queda en $sesion mientras la ventana siga abierta.
+api POST auth/login @{ username = 'admin'; password = 'tu-contraseña' }
+```
+
+- Cada orden lleva el método, la ruta sin `$API` y, si hace falta, el cuerpo como tabla de PowerShell: `api PUT admin/games/naval-battle/status @{ status = 'ACTIVE' }`.
+- Para ver una respuesta completa, se añade `| ConvertTo-Json -Depth 10` al final.
+- Una respuesta de error, como `409`, aparece como un error en rojo con el cuerpo de la respuesta, que dice el código.
+- Al terminar, `api POST auth/logout`. No hay archivo que borrar: la cookie desaparece al cerrar la ventana.
+
+El resto de la guía muestra las órdenes en bash. En PowerShell se escriben con esta función, como en los ejemplos de [el orden para activar un juego](#en-qué-orden-activar-un-juego-o-una-versión-nuevos).
 
 Sin sesión, cualquier operación responde `401 UNAUTHENTICATED`. Con una sesión que no es de administrador, `403 FORBIDDEN`.
 
@@ -160,8 +190,38 @@ La aplicación solo ofrece los juegos que sabe mostrar, y elige el tablero por j
 
 1. Desplegar el backend con el motor y la migración que da de alta el juego o la versión, inactivos.
 2. Desplegar el frontend que sabe mostrarlo. Como se alojan por separado, puede ir antes o después del backend, pero siempre antes de activar.
-3. Comprobar con `GET /admin/games` que la versión tiene su motor (`engineRegistered`) y, en el frontend desplegado, que el juego se ve.
+3. Comprobar con `GET /admin/games` que el juego y la versión existen, inactivos, y que la versión tiene su motor (`engineRegistered` a `true`). Mientras el juego está inactivo no sale en la aplicación, así que todavía no se puede ver su tablero; eso ya lo comprobó la prueba en navegador del juego, que lo activa en su propia base de datos. *Corregido el 2026-11-19: este paso pedía ver el juego en el frontend antes de activarlo, lo que no es posible.*
 4. Activar la versión y hacerla vigente. Si es un juego nuevo, activar después el juego. *Precisado el 2026-11-19 (ADR-019): un juego nuevo también tiene que hacer vigente su versión, porque entra sin versión vigente.*
+5. Recargar la aplicación en el navegador: el juego aparece en la portada y en el formulario de crear sala. Crear una sala con él para comprobarlo.
+
+Por ejemplo, para Batalla naval. En bash:
+
+```sh
+api "$API/admin/games"
+api -X PUT "$API/admin/games/naval-battle/versions/1.0.0/status" -d '{"status":"ACTIVE"}'
+api -X PUT "$API/admin/games/naval-battle/current-version" -d '{"gameVersion":"1.0.0"}'
+api -X PUT "$API/admin/games/naval-battle/status" -d '{"status":"ACTIVE"}'
+```
+
+En PowerShell, con la función de la [sección 2](#en-windows-con-powershell):
+
+```powershell
+api GET admin/games | ConvertTo-Json -Depth 10
+api PUT admin/games/naval-battle/versions/1.0.0/status @{ status = 'ACTIVE' }
+api PUT admin/games/naval-battle/current-version @{ gameVersion = '1.0.0' }
+api PUT admin/games/naval-battle/status @{ status = 'ACTIVE' }
+```
+
+### Si un juego no aparece
+
+Un juego sale en la aplicación solo si se cumplen las cuatro condiciones de esta tabla (U16; ADR-018, Z5). Se revisan en orden:
+
+| Qué mirar | Cómo se ve | Qué hacer |
+| --- | --- | --- |
+| El juego existe en la base de datos | En `GET /admin/games` no está, o activarlo responde `404` | Aplicar las migraciones. En local, parar `pnpm dev` y volver a arrancarlo después de bajar los cambios: al arrancar construye y aplica las migraciones pendientes. Si no se usa `pnpm dev`, `pnpm build` y después `pnpm db:migrate` |
+| El servidor tiene su motor | `engineRegistered` es `false`, o activar la versión responde `409 ENGINE_NOT_REGISTERED` | Construir el backend con el código nuevo y reiniciarlo, igual que en la fila anterior |
+| La versión está activa y es la vigente, y el juego está activo | En `GET /admin/games`, el juego o la versión siguen `INACTIVE`, o ninguna versión es la vigente | Seguir los pasos 4 y 5 del orden de arriba, en ese orden |
+| El frontend sabe mostrarlo | La API lo lista en `GET /games`, pero la aplicación no lo ofrece, y la página de salas avisa de que hay un juego nuevo que esta versión aún no sabe mostrar | Recargar la página. Si sigue igual, construir y reiniciar el frontend con el código nuevo |
 
 Quien tenga abierta una versión anterior de la aplicación ve un aviso que le pide recargar, y no puede entrar en salas de ese juego hasta hacerlo.
 

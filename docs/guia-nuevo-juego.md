@@ -128,10 +128,13 @@ Si el juego tiene algo que no se ve en Cuatro en raya (más de dos asientos, jug
 
 En este orden, que también está en la [guía de administración](guia-administracion.md#en-qué-orden-activar-un-juego-o-una-versión-nuevos):
 
-1. Desplegar el backend: la migración da de alta el juego inactivo.
-2. Desplegar el frontend con su tablero.
-3. Comprobar con `GET /admin/games` que la versión tiene motor y, en el frontend, que el juego se ve.
+1. Desplegar el backend: la migración da de alta el juego inactivo. En local, volver a arrancar `pnpm dev`, que al arrancar construye y aplica las migraciones pendientes.
+2. Desplegar el frontend con su tablero. En local, lo hace el mismo `pnpm dev`.
+3. Comprobar con `GET /admin/games` que la versión existe y tiene su motor (`engineRegistered`). Un juego inactivo no sale en la aplicación, así que su tablero no se puede ver todavía; lo que lo comprueba antes de activar es la prueba en navegador de la sección 4.
 4. Desde la administración, activar la versión, hacerla vigente y activar el juego.
+5. Recargar la aplicación y crear una sala del juego.
+
+Las órdenes exactas, en bash y en PowerShell, están en la guía de administración, y también qué revisar si el juego no aparece. *Corregido el 2026-11-19: el paso 3 pedía ver el juego en el frontend antes de activarlo, lo que no es posible.*
 
 ## Lista de comprobación
 
@@ -142,3 +145,4 @@ En este orden, que también está en la [guía de administración](guia-administ
 - [ ] Tablero, textos y entrada en `GAME_UIS`.
 - [ ] `pnpm lint`, `pnpm typecheck` y `pnpm test` en verde.
 - [ ] Desplegado el frontend antes de activar.
+- [ ] Activado en el orden de la sección 5, y comprobado que se puede crear una sala.
