@@ -11,7 +11,7 @@ import { formatDuration, formatPlayers } from '../utils/format';
 import { sortInProgress } from '../utils/my-matches';
 
 const { session, me } = useSession();
-const { catalog, load } = useCatalog();
+const { catalog, games, unknownGames, load } = useCatalog();
 const { ongoing, loadMatches } = useRealtime();
 
 /** Al entrar se ven primero las partidas en las que le toca (ADR-016, decisión N3). */
@@ -62,29 +62,35 @@ watch(
       <button type="button" class="button quiet" @click="load">{{ es.home.retry }}</button>
     </div>
 
-    <p v-else-if="catalog.games.length === 0" class="empty">{{ es.home.empty }}</p>
+    <template v-else>
+      <p v-if="unknownGames > 0" class="notice warning" role="status">
+        {{ es.home.unknownGames(unknownGames) }}
+      </p>
 
-    <ul v-else class="games">
-      <li v-for="game in catalog.games" :key="game.gameSlug" class="game">
-        <h3>{{ game.name }}</h3>
-        <p v-if="game.description">{{ game.description }}</p>
-        <p class="muted">{{ formatPlayers(game) }}</p>
-        <dl class="modes">
-          <template v-for="mode in MATCH_MODES" :key="mode">
-            <div v-if="game.timeControls[mode].length > 0">
-              <dt>{{ es.home.modes[mode] }}</dt>
-              <dd>
-                {{
-                  game.timeControls[mode]
-                    .map((control) => formatDuration(control.totalMs))
-                    .join(', ')
-                }}
-                {{ es.home.timePerPlayer }}
-              </dd>
-            </div>
-          </template>
-        </dl>
-      </li>
-    </ul>
+      <p v-if="games.length === 0" class="empty">{{ es.home.empty }}</p>
+
+      <ul v-else class="games">
+        <li v-for="game in games" :key="game.gameSlug" class="game">
+          <h3>{{ game.name }}</h3>
+          <p v-if="game.description">{{ game.description }}</p>
+          <p class="muted">{{ formatPlayers(game) }}</p>
+          <dl class="modes">
+            <template v-for="mode in MATCH_MODES" :key="mode">
+              <div v-if="game.timeControls[mode].length > 0">
+                <dt>{{ es.home.modes[mode] }}</dt>
+                <dd>
+                  {{
+                    game.timeControls[mode]
+                      .map((control) => formatDuration(control.totalMs))
+                      .join(', ')
+                  }}
+                  {{ es.home.timePerPlayer }}
+                </dd>
+              </div>
+            </template>
+          </dl>
+        </li>
+      </ul>
+    </template>
   </section>
 </template>

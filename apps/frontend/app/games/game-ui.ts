@@ -1,3 +1,4 @@
+import type { GameEventView, MatchPlayerView } from '@gameboard/contracts';
 import type { Component } from 'vue';
 
 /** Los textos de un juego: lo que la aplicación dice de él sin dibujar nada. */
@@ -11,10 +12,29 @@ export interface GameTexts {
 }
 
 /**
- * Lo que la aplicación necesita para mostrar un juego. El tablero recibe
- * `view`, lo que el servidor deja ver a ese asiento, y `canPlay`; y emite
- * `play` con la acción que la persona elige.
+ * Lo que recibe todo tablero (ADR-018, decisión Z7). Un tablero solo dibuja
+ * lo que envía el servidor y emite `play` con la acción que la persona
+ * elige: no decide si una jugada es válida (ADR-014, decisión K7). Para
+ * colorear un asiento usa la clase `seat-N`, que fija `--seat-color`.
  */
+export interface BoardProps<TView = unknown> {
+  /** Lo que el servidor deja ver a este asiento. */
+  readonly view: TView;
+  /** El asiento de quien mira. */
+  readonly yourSeat: number;
+  /** Los asientos que pueden jugar ahora. */
+  readonly activeSeats: readonly number[];
+  readonly players: readonly MatchPlayerView[];
+  /** Los eventos de juego del último cambio, si llegó en vivo; vacía al cargar la página. */
+  readonly events: readonly GameEventView[];
+  /** La versión del juego de la partida. */
+  readonly gameVersion: string;
+  /** Si quien mira puede jugar ahora mismo. */
+  readonly canPlay: boolean;
+}
+
+/** Lo que la aplicación necesita para mostrar un juego. */
 export interface GameUi extends GameTexts {
+  /** El tablero, que recibe `BoardProps` y emite `play`. Se carga cuando hace falta. */
   readonly board: Component;
 }

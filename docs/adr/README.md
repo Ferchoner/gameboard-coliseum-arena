@@ -15,7 +15,7 @@ Cada archivo de esta carpeta recoge una decisión de arquitectura aceptada, con 
 | [ADR-007](0007-linea-base.md) | Línea base de acuerdos de arquitectura | Aceptada, modificada | ADR-014 precisa B6 (K2) |
 | [ADR-008](0008-alcance-del-mvp.md) | Alcance del MVP | Aceptada | El backlog reparte el resto del MVP en los Hitos 4 a 7 (B1) |
 | [ADR-009](0009-reglas-de-dominio.md) | Reglas de dominio de salas, partidas y relojes | Aceptada, modificada | ADR-014 sustituye 7.22 (K2); ADR-015 precisa 7.26 (V2) y añade 7.32 (V5) |
-| [ADR-010](0010-persistencia-de-partida.md) | Persistencia de partida | Aceptada, modificada | ADR-014 sustituye 8.10 (K2) |
+| [ADR-010](0010-persistencia-de-partida.md) | Persistencia de partida | Aceptada, modificada | ADR-014 sustituye 8.10 (K2); ADR-018 precisa 8.2 (Z1 y Z2) |
 | [ADR-011](0011-convenciones-y-glosario.md) | Convenciones de nombres, identificadores y glosario | Aceptada | Ninguno |
 | [ADR-012](0012-decisiones-de-arranque.md) | Decisiones de arranque del Hito 1 | Aceptada, modificada | ADR-014 precisa la regla de dependencias de S2 y cierra S24 y S25 (K7) |
 | [ADR-013](0013-decisiones-del-hito-2.md) | Decisiones del Hito 2, salas y tiempo real | Aceptada, modificada | ADR-014 precisa H1 (K1); ADR-015 cierra H13 (V3) |
@@ -23,6 +23,7 @@ Cada archivo de esta carpeta recoge una decisión de arquitectura aceptada, con 
 | [ADR-015](0015-decisiones-del-hito-4.md) | Decisiones del Hito 4, reconexión y recuperación | Aceptada | Ninguno |
 | [ADR-016](0016-decisiones-del-hito-5.md) | Decisiones del Hito 5, modalidad por turnos | Aceptada | Ninguno |
 | [ADR-017](0017-decisiones-del-hito-6.md) | Decisiones del Hito 6, cuenta, estadísticas y administración | Aceptada | Ninguno |
+| [ADR-018](0018-preparacion-del-segundo-juego.md) | Preparación del segundo juego | Aceptada | Ninguno |
 
 ## Decisiones aplazadas
 
@@ -30,7 +31,7 @@ El alojamiento del backend, el de PostgreSQL, las copias de seguridad, la superv
 
 ## Propuestas pendientes de confirmación
 
-Ninguna. Las decisiones U1 a U18 de [ADR-017](0017-decisiones-del-hito-6.md) y sus elecciones Y1 a Y8 ([sección 15](0017-decisiones-del-hito-6.md#15-lo-que-resultó-al-construir)) se aceptaron el 2026-11-19. Las decisiones N1 a N12 de [ADR-016](0016-decisiones-del-hito-5.md) con sus elecciones Q1 a Q6 se aceptaron el 2026-11-18. Las decisiones V1 a V12 de ADR-015 con sus elecciones W1 a W9, K1 a K22 de ADR-014 con sus elecciones L1 a L7, y las elecciones C1 a C5 de ADR-013 se aceptaron el 2026-11-16.
+Ninguna. Las decisiones Z1 a Z8 de [ADR-018](0018-preparacion-del-segundo-juego.md) se aceptaron el 2026-11-19, al autorizar la cuarta tanda del análisis. Las decisiones U1 a U18 de [ADR-017](0017-decisiones-del-hito-6.md) y sus elecciones Y1 a Y8 ([sección 15](0017-decisiones-del-hito-6.md#15-lo-que-resultó-al-construir)) se aceptaron el 2026-11-19. Las decisiones N1 a N12 de [ADR-016](0016-decisiones-del-hito-5.md) con sus elecciones Q1 a Q6 se aceptaron el 2026-11-18. Las decisiones V1 a V12 de ADR-015 con sus elecciones W1 a W9, K1 a K22 de ADR-014 con sus elecciones L1 a L7, y las elecciones C1 a C5 de ADR-013 se aceptaron el 2026-11-16.
 
 ## Convenciones
 

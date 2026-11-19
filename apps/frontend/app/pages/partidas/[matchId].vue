@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MatchView, RoomView } from '@gameboard/contracts';
+import type { GameEventView, MatchView, RoomView } from '@gameboard/contracts';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useHead, useRoute } from '#imports';
 import PlayerLink from '../../components/PlayerLink.vue';
@@ -57,11 +57,15 @@ const state = ref<MatchState>({ status: 'loading' });
 const sending = ref<'move' | 'resign' | null>(null);
 const actionError = ref<string | null>(null);
 const confirmingResign = ref(false);
+/** Los eventos de juego del último cambio que llegó en vivo, para el tablero (ADR-018, Z7). */
+const lastEvents = ref<readonly GameEventView[]>([]);
 /** El instante actual en el reloj del navegador. Avanza mientras la página está abierta. */
 const now = ref(performance.now());
 
 const match = computed(() => (state.value.status === 'ready' ? state.value.match : null));
-const ui = computed(() => (match.value ? gameUi(match.value.gameSlug) : null));
+const ui = computed(() =>
+  match.value ? gameUi(match.value.gameSlug, match.value.gameVersion) : null,
+);
 const inProgress = computed(() => match.value?.status === 'IN_PROGRESS');
 const myTurn = computed(
   () => inProgress.value && (match.value?.activeSeats.includes(match.value.yourSeat) ?? false),
@@ -178,8 +182,10 @@ function stopListening(): void {
 function listen(): void {
   if (unsubscribe) return;
   unsubscribe = realtime.subscribeMatch(matchId.value, {
-    onMatch: (next, _events, serverTime) => {
+    onMatch: (next, events, serverTime) => {
+      const before = match.value;
       show(next, serverTime);
+      if (match.value !== before) lastEvents.value = events;
       if (next.status !== 'IN_PROGRESS') unsubscribe = null;
     },
     onRejected: () => {
@@ -195,7 +201,10 @@ async function load(): Promise<void> {
     state.value = { status: 'failed', failure: result.failure };
     return;
   }
+  const before = match.value;
   show(result.data);
+  // Lo que llega por la API no trae eventos.
+  if (match.value !== before) lastEvents.value = [];
   if (result.data.status === 'IN_PROGRESS') listen();
 }
 
@@ -329,7 +338,18 @@ onBeforeUnmount(() => {
 
       <p v-if="!ui" class="notice warning">{{ es.match.unknownGame }}</p>
       <p v-else-if="match.view === null" class="empty">{{ es.match.noBoard }}</p>
-      <component :is="ui.board" v-else :view="match.view" :can-play="canPlay" @play="play" />
+      <component
+        :is="ui.board"
+        v-else
+        :view="match.view"
+        :your-seat="match.yourSeat"
+        :active-seats="match.activeSeats"
+        :players="match.players"
+        :events="lastEvents"
+        :game-version="match.gameVersion"
+        :can-play="canPlay"
+        @play="play"
+      />
 
       <p v-if="actionError" class="notice error" role="alert">{{ actionError }}</p>
     </section>

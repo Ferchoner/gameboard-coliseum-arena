@@ -1,0 +1,313 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "22dff1f7-23ba-46cb-a12f-8d50d62eae24",
+  "prevIds": [
+    "85ad323d-f6df-4cf3-ab1c-b1d5c02c368a"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "match_retirements"
+      ],
+      "writes": [
+        "s|tbl|public.match_retirements",
+        "n|tbl|public.match_retirements",
+        "e|tbl|public.match_retirements",
+        "n|rel|public.match_retirements",
+        "n|type|public.match_retirements",
+        "n|rel|public.match_retirements_pk"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "matches",
+        "settings"
+      ],
+      "writes": [
+        "s|col|public.matches.settings",
+        "n|col|public.matches.settings",
+        "e|col|public.matches.settings"
+      ],
+      "reads": [
+        "n|tbl|public.matches",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "matches",
+        "seed"
+      ],
+      "writes": [
+        "s|col|public.matches.seed",
+        "n|col|public.matches.seed",
+        "e|col|public.matches.seed"
+      ],
+      "reads": [
+        "n|tbl|public.matches",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "match_retirements"
+      ],
+      "writes": [
+        "s|fk|public.match_retirements.match_retirements_match_id_matches_id_fkey",
+        "n|fk|public.match_retirements.match_retirements_match_id_matches_id_fkey",
+        "e|fk|public.match_retirements.match_retirements_match_id_matches_id_fkey",
+        "n|con|public.match_retirements.match_retirements_match_id_matches_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.match_retirements",
+        "n|sch|public",
+        "n|tbl|public.matches",
+        "n|sch|public",
+        "n|col|public.match_retirements.match_id",
+        "n|col|public.matches.id",
+        "e|uniqueness|public.matches.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "match_retirements"
+      ],
+      "writes": [
+        "s|fk|public.match_retirements.match_retirements_match_player_fk",
+        "n|fk|public.match_retirements.match_retirements_match_player_fk",
+        "e|fk|public.match_retirements.match_retirements_match_player_fk",
+        "n|con|public.match_retirements.match_retirements_match_player_fk"
+      ],
+      "reads": [
+        "n|tbl|public.match_retirements",
+        "n|sch|public",
+        "n|tbl|public.match_players",
+        "n|sch|public",
+        "n|col|public.match_retirements.match_id",
+        "n|col|public.match_retirements.player_id",
+        "n|col|public.match_players.match_id",
+        "n|col|public.match_players.player_id",
+        "e|uniqueness|public.match_players.match_id.player_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "match_retirements",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_retirements",
+        "name": "match_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_retirements",
+        "name": "sequence",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_retirements",
+        "name": "player_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_retirements",
+        "name": "reason",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_retirements",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "settings",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "matches",
+        "name": "seed",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_retirements",
+        "name": "match_retirements_match_id_matches_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "match_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "matches",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_retirements",
+        "name": "match_retirements_match_player_fk",
+        "nameExplicit": true,
+        "columns": [
+          "match_id",
+          "player_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "match_players",
+        "columnsTo": [
+          "match_id",
+          "player_id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_retirements",
+        "name": "match_retirements_pk",
+        "columns": [
+          "match_id",
+          "sequence"
+        ],
+        "nameExplicit": true,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_retirements",
+        "name": "match_retirements_sequence_valid",
+        "value": "\"sequence\" >= 1",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "match_retirements",
+        "name": "match_retirements_reason_valid",
+        "value": "\"reason\" in ('TIMEOUT', 'RESIGNATION', 'ABANDONMENT')",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

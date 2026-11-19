@@ -48,6 +48,10 @@ export interface NewMatch {
   readonly startedAt: Date;
   /** El jugador de cada asiento: la posición en la lista es el asiento. */
   readonly playerIds: readonly string[];
+  /** Las opciones del juego, tal como las devolvió su motor (ADR-018, decisión Z1). */
+  readonly settings: unknown;
+  /** La semilla con la que el motor creó el estado inicial. */
+  readonly seed: string;
 }
 
 /** Posición en una lista de partidas: la última de la página anterior. */

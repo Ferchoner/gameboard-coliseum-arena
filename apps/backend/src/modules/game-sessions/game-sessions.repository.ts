@@ -5,11 +5,17 @@ import {
   type DbExecutor,
   type Transaction,
 } from '../../database/database.service.js';
-import { gameSessions, matchActions, serverLiveness } from './game-sessions.schema.js';
+import {
+  gameSessions,
+  matchActions,
+  matchRetirements,
+  serverLiveness,
+} from './game-sessions.schema.js';
 
 export type GameSessionRow = typeof gameSessions.$inferSelect;
 export type NewGameSessionRow = typeof gameSessions.$inferInsert;
 export type NewMatchActionRow = typeof matchActions.$inferInsert;
+export type NewMatchRetirementRow = typeof matchRetirements.$inferInsert;
 export type ServerLivenessRow = typeof serverLiveness.$inferSelect;
 
 /** La fila única de `server_liveness`. */
@@ -28,7 +34,10 @@ export type GameSessionChange = Pick<
   | 'updatedAt'
 >;
 
-/** Único punto de acceso a las tablas `game_sessions`, `match_actions` y `server_liveness`. */
+/**
+ * Único punto de acceso a las tablas `game_sessions`, `match_actions`,
+ * `match_retirements` y `server_liveness`.
+ */
 @Injectable()
 export class GameSessionsRepository {
   constructor(private readonly database: DatabaseService) {}
@@ -132,6 +141,12 @@ export class GameSessionsRepository {
 
   async insertAction(row: NewMatchActionRow, tx: Transaction): Promise<void> {
     await tx.insert(matchActions).values(row);
+  }
+
+  /** Anota las retiradas de una partida (ADR-018, decisión Z2). */
+  async insertRetirements(rows: readonly NewMatchRetirementRow[], tx: Transaction): Promise<void> {
+    if (rows.length === 0) return;
+    await tx.insert(matchRetirements).values([...rows]);
   }
 
   /** Si ese jugador ya envió esa petición en esa partida (ADR-010, regla 8.13). */

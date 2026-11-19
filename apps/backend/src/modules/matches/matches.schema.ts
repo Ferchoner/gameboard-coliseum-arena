@@ -45,6 +45,15 @@ export const matches = pgTable(
     /** Copia de la modalidad y del control de tiempo de la sala al empezar. */
     mode: text('mode', { enum: MATCH_MODES }).notNull(),
     timeControl: jsonb('time_control').$type<TimeControl>().notNull(),
+    /**
+     * Las opciones del juego tal como las devolvió su motor al empezar, y la
+     * semilla con la que creó el estado inicial. Con ellas y el registro de
+     * jugadas se puede volver a crear cualquier estado de la partida (ADR-018,
+     * decisión Z1). La semilla es nula solo en las partidas empezadas antes
+     * del 2026-11-19, que no la guardaron.
+     */
+    settings: jsonb('settings').$type<unknown>().notNull(),
+    seed: text('seed'),
     status: text('status', { enum: MATCH_STATUSES }).notNull(),
     abortReason: text('abort_reason', { enum: MATCH_ABORT_REASONS }),
     startedAt: timestamp('started_at', { withTimezone: true }).notNull(),

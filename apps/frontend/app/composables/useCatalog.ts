@@ -1,6 +1,7 @@
 import type { Game, ItemList } from '@gameboard/contracts';
 import { computed } from 'vue';
 import { useState } from '#imports';
+import { knowsGame } from '../games';
 import type { Failure } from '../utils/api';
 import { useApi } from './useApi';
 
@@ -26,12 +27,33 @@ export function useCatalog() {
       : { status: 'failed', failure: result.failure };
   }
 
-  const games = computed(() => (catalog.value.status === 'ready' ? catalog.value.games : []));
+  const allGames = computed(() => (catalog.value.status === 'ready' ? catalog.value.games : []));
+
+  /**
+   * Los juegos que se ofrecen: los del catálogo que esta versión de la
+   * aplicación sabe mostrar (ADR-018, decisión Z5).
+   */
+  const games = computed(() =>
+    allGames.value.filter((game) => knowsGame(game.gameSlug, game.gameVersion)),
+  );
+
+  /** Cuántos juegos del catálogo no sabe mostrar: hay una versión más nueva de la aplicación. */
+  const unknownGames = computed(() => allGames.value.length - games.value.length);
 
   /** El nombre de un juego. Si el catálogo no lo tiene, su nombre corto. */
   function gameName(gameSlug: string): string {
-    return games.value.find((game) => game.gameSlug === gameSlug)?.name ?? gameSlug;
+    return allGames.value.find((game) => game.gameSlug === gameSlug)?.name ?? gameSlug;
   }
 
-  return { catalog, games, load, gameName };
+  /**
+   * Si el catálogo tiene ese juego en una versión que esta aplicación no sabe
+   * mostrar. Una sala no dice su versión: se juega en la vigente del
+   * catálogo. Si el catálogo no tiene el juego, decide el servidor.
+   */
+  function isUnknownGame(gameSlug: string): boolean {
+    const game = allGames.value.find((one) => one.gameSlug === gameSlug);
+    return game !== undefined && !knowsGame(game.gameSlug, game.gameVersion);
+  }
+
+  return { catalog, games, unknownGames, load, gameName, isUnknownGame };
 }

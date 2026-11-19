@@ -29,6 +29,8 @@ export class MatchesService {
         gameVersionId: match.gameVersionId,
         mode: match.mode,
         timeControl: match.timeControl,
+        settings: match.settings,
+        seed: match.seed,
         status: 'IN_PROGRESS',
         abortReason: null,
         startedAt: match.startedAt,

@@ -25,7 +25,7 @@ const route = useRoute();
 const api = useApi();
 const realtime = useRealtime();
 const { me } = useSession();
-const { load: loadCatalog, gameName } = useCatalog();
+const { load: loadCatalog, gameName, isUnknownGame } = useCatalog();
 
 const roomId = computed(() => String(route.params.roomId));
 const state = ref<RoomState>({ status: 'loading' });
@@ -37,6 +37,12 @@ const room = computed(() => (state.value.status === 'ready' ? state.value.room :
 const myMembership = computed(
   () => room.value?.members.find((member) => member.playerId === me.value?.playerId) ?? null,
 );
+/**
+ * Un juego que esta versión de la aplicación no sabe mostrar: no se deja
+ * entrar ni marcarse listo, porque la partida no se podría jugar (ADR-018,
+ * decisión Z5). Salir sí.
+ */
+const unknownGame = computed(() => (room.value ? isUnknownGame(room.value.gameSlug) : false));
 const isOwner = computed(() => room.value?.ownerPlayerId === me.value?.playerId);
 /** Plazas por ocupar. Solo tienen sentido mientras la sala espera jugadores. */
 const freePlaces = computed(() =>
@@ -231,12 +237,15 @@ onBeforeUnmount(stopListening);
         </li>
       </ul>
 
+      <p v-if="unknownGame && room.status !== 'CLOSED'" class="notice warning" role="status">
+        {{ es.room.unknownGame }}
+      </p>
       <p v-if="actionError" class="notice error" role="alert">{{ actionError }}</p>
 
       <div v-if="room.status === 'WAITING'" class="room-actions">
         <template v-if="myMembership">
           <button
-            v-if="canMarkReady(room)"
+            v-if="canMarkReady(room) && !unknownGame"
             type="button"
             class="button"
             :disabled="busy !== null"
@@ -249,7 +258,7 @@ onBeforeUnmount(stopListening);
           </button>
         </template>
         <button
-          v-else-if="freePlaces > 0"
+          v-else-if="freePlaces > 0 && !unknownGame"
           type="button"
           class="button"
           :disabled="busy !== null"

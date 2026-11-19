@@ -190,6 +190,17 @@ describe('partidas', () => {
       expect(room).toMatchObject({ status: 'IN_MATCH', currentMatchId: match.matchId });
     });
 
+    it('guarda con la partida la semilla y las opciones con las que empezó (ADR-018, Z1)', async () => {
+      const seed = vi.spyOn(t.app.get(Randomness), 'seed');
+      await startMatch(t);
+
+      const rows = await query<{ settings: unknown; seed: string }>(
+        'select settings, seed from matches',
+      );
+      expect(rows).toEqual([{ settings: {}, seed: seed.mock.results[0]?.value }]);
+      expect(rows[0]?.seed).toMatch(/.{16,}/);
+    });
+
     it('la partida toma la versión vigente del juego y la conserva', async () => {
       const match = await startMatch(t);
 
@@ -848,6 +859,33 @@ describe('partidas', () => {
       expect(matchChanges()[0]).toMatchObject({
         origin: { playerId: match.second.playerId, requestId },
       });
+    });
+
+    it('la rendición queda en el registro con la numeración de las jugadas (ADR-018, Z2)', async () => {
+      const match = await startMatch(t);
+      await play(match, [3, 4]);
+
+      await sessions.resign(match.first.playerId, match.matchId, randomUUID());
+
+      expect(await query('select sequence from match_actions order by sequence')).toEqual([
+        { sequence: 1 },
+        { sequence: 2 },
+      ]);
+      expect(await query('select sequence, player_id, reason from match_retirements')).toEqual([
+        { sequence: 3, player_id: match.first.playerId, reason: 'RESIGNATION' },
+      ]);
+      expect((await sessionRow(match.matchId)).state_version).toBe(3);
+    });
+
+    it('si el reloj ya se había agotado, se anota solo esa retirada', async () => {
+      const match = await startMatch(t);
+      t.clock.advance(5 * MINUTE_MS + 1);
+
+      await sessions.resign(match.second.playerId, match.matchId, randomUUID());
+
+      expect(await query('select sequence, player_id, reason from match_retirements')).toEqual([
+        { sequence: 1, player_id: match.first.playerId, reason: 'TIMEOUT' },
+      ]);
     });
 
     it('solo se rinde un participante de una partida en curso', async () => {

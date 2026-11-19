@@ -33,7 +33,7 @@ type RoomList =
 
 const api = useApi();
 const { me } = useSession();
-const { catalog, games, load: loadCatalog, gameName } = useCatalog();
+const { catalog, games, unknownGames, load: loadCatalog, gameName } = useCatalog();
 
 const filters = reactive({ gameSlug: '', mode: '' as MatchMode | '' });
 const list = ref<RoomList>({ status: 'loading' });
@@ -132,10 +132,15 @@ onBeforeUnmount(() => {
       <p>{{ failureText(catalog.failure) }}</p>
       <button type="button" class="button quiet" @click="loadCatalog">{{ es.home.retry }}</button>
     </div>
-    <p v-else-if="games.length === 0" class="empty">{{ es.rooms.create.noGames }}</p>
-    <div v-else class="panel">
-      <RoomCreateForm :games="games" @created="onCreated" />
-    </div>
+    <template v-else>
+      <p v-if="unknownGames > 0" class="notice warning" role="status">
+        {{ es.home.unknownGames(unknownGames) }}
+      </p>
+      <p v-if="games.length === 0" class="empty">{{ es.rooms.create.noGames }}</p>
+      <div v-else class="panel">
+        <RoomCreateForm :games="games" @created="onCreated" />
+      </div>
+    </template>
   </section>
 
   <section aria-labelledby="list-title">

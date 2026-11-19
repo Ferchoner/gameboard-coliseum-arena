@@ -79,6 +79,8 @@ La documentación inicial preveía snapshots y una tabla de eventos sin definir 
 
 **Decisión:** snapshot más registro de jugadas. Sustituye la tabla `game_events` de la documentación inicial, cuyo propósito no estaba definido (hallazgo C-08).
 
+*Precisada el 2026-11-19 (ADR-018, Z1 y Z2): para que el registro sirva de verdad para repetir una partida, la partida guarda su semilla y sus opciones, y las retiradas de un asiento quedan en `match_retirements` con la misma numeración que las jugadas. El snapshot sigue siendo la fuente de verdad (8.3).*
+
 ### 8.11. La jugada indica sobre qué versión se hizo
 
 | Opción | A favor | En contra |

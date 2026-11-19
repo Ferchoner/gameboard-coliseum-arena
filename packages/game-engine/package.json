@@ -14,8 +14,8 @@
       "default": "./dist/shared.js"
     },
     "./testing": {
-      "types": "./dist/testing/fake-engine.d.ts",
-      "default": "./dist/testing/fake-engine.js"
+      "types": "./dist/testing/index.d.ts",
+      "default": "./dist/testing/index.js"
     },
     "./four-in-a-row": {
       "types": "./dist/games/four-in-a-row/types.d.ts",

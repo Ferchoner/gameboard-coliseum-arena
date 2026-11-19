@@ -42,6 +42,7 @@ import {
   type GameSessionChange,
   type GameSessionRow,
   GameSessionsRepository,
+  type NewMatchRetirementRow,
 } from './game-sessions.repository.js';
 import {
   clocksAt,
@@ -210,10 +211,12 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       this.randomness.shuffle(items),
     );
 
+    // La semilla y las opciones se guardan con la partida (ADR-018, decisión Z1).
+    const seed = this.randomness.seed();
     const state = engine.createInitialState({
       playerCount: playerIds.length,
       settings: settings.value,
-      seed: this.randomness.seed(),
+      seed,
     });
     const status = engine.getStatus(state);
     if (status.finished) {
@@ -249,7 +252,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       createdAt: now,
       updatedAt: now,
     };
-    await this.matches.create(record, tx);
+    await this.matches.create({ ...record, settings: settings.value, seed }, tx);
     await this.repository.insertSession(session, tx);
 
     const players = await this.findPlayers(playerIds, tx);
@@ -790,6 +793,8 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
     const retired = new Set<number>();
     // Quien pierde por abandono sale de la sala al terminar la partida (regla 7.32).
     const departing: string[] = [];
+    // Cada retirada se anota con el `stateVersion` que produce (ADR-018, decisión Z2).
+    const recorded: NewMatchRetirementRow[] = [];
 
     for (const { seat, reason } of retirements) {
       if (retired.has(seat) || game.engine.getStatus(state).finished) continue;
@@ -801,8 +806,18 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       retired.add(seat);
       events.push(...(retirement.events as readonly GameEventView[]));
       const playerId = loaded.record.playerIds[seat];
-      if (reason === 'ABANDONMENT' && playerId !== undefined) departing.push(playerId);
+      if (playerId === undefined) throw new Error(`La partida no tiene el asiento ${seat}`);
+      recorded.push({
+        matchId: loaded.record.matchId,
+        sequence: stateVersion,
+        playerId,
+        reason,
+        createdAt: now,
+      });
+      if (reason === 'ABANDONMENT') departing.push(playerId);
     }
+
+    await this.repository.insertRetirements(recorded, tx);
 
     const snapshot = await this.save(
       loaded,

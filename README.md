@@ -79,6 +79,8 @@ Nada es obligatorio en local. Para cambiar la base de datos, el registro de acti
 
 Para administrar la plataforma: [`docs/guia-administracion.md`](docs/guia-administracion.md).
 
+Para añadir un juego: [`docs/guia-nuevo-juego.md`](docs/guia-nuevo-juego.md).
+
 Para saber por qué se decidió algo, el ADR correspondiente está en [`docs/adr/`](docs/adr/README.md).
 
 ## Decisiones principales

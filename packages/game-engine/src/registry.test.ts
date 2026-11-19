@@ -29,6 +29,54 @@ describe('registro de motores', () => {
     ).toThrow(/duplicado/);
   });
 
+  it('rechaza un motor cuyos metadatos no cumplen la regla 7.2 (ADR-018, Z4)', () => {
+    const HOUR_MS = 60 * 60 * 1000;
+    const cases = [
+      { REALTIME: [{ type: 'TOTAL_PER_PLAYER', totalMs: 31 * 60 * 1000 }], TURN_BASED: [] },
+      { REALTIME: [{ type: 'TOTAL_PER_PLAYER', totalMs: 0 }], TURN_BASED: [] },
+      { REALTIME: [], TURN_BASED: [{ type: 'TOTAL_PER_PLAYER', totalMs: 8 * HOUR_MS }] },
+      { REALTIME: [], TURN_BASED: [] },
+      {
+        REALTIME: [
+          { type: 'TOTAL_PER_PLAYER', totalMs: 60_000 },
+          { type: 'TOTAL_PER_PLAYER', totalMs: 60_000 },
+        ],
+        TURN_BASED: [],
+      },
+    ] as const;
+    for (const timeControls of cases) {
+      expect(() =>
+        createGameEngineRegistry([createFakeEngine('counter', '1.0.0', { timeControls })]),
+      ).toThrow(/metadatos del motor counter@1.0.0 no son válidos/);
+    }
+  });
+
+  it('rechaza un número de jugadores sin sentido', () => {
+    for (const players of [
+      { minPlayers: 3, maxPlayers: 2 },
+      { minPlayers: 0, maxPlayers: 2 },
+      { minPlayers: 2, maxPlayers: 2.5 },
+    ]) {
+      expect(() =>
+        createGameEngineRegistry([createFakeEngine('counter', '1.0.0', players)]),
+      ).toThrow(/minPlayers/);
+    }
+  });
+
+  it('admite los límites de la regla 7.2: 30 minutos, y 12, 24 y 36 horas', () => {
+    const HOUR_MS = 60 * 60 * 1000;
+    const engine = createFakeEngine('counter', '1.0.0', {
+      timeControls: {
+        REALTIME: [{ type: 'TOTAL_PER_PLAYER', totalMs: 30 * 60 * 1000 }],
+        TURN_BASED: [12, 24, 36].map((hours) => ({
+          type: 'TOTAL_PER_PLAYER' as const,
+          totalMs: hours * HOUR_MS,
+        })),
+      },
+    });
+    expect(createGameEngineRegistry([engine]).list()).toEqual([engine]);
+  });
+
   it('admite una lista vacía', () => {
     const registry = createGameEngineRegistry([]);
 
