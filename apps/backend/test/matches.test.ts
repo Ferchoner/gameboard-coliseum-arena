@@ -6,8 +6,11 @@ import { createFakeEngine } from '@gameboard/game-engine/testing';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MatchSnapshot } from '../src/modules/broadcast/match-snapshot.js';
 import { type RealtimeEvent, RealtimeEvents } from '../src/modules/broadcast/realtime-events.js';
+import { DatabaseService } from '../src/database/database.service.js';
+import { GameSessionsRepository } from '../src/modules/game-sessions/game-sessions.repository.js';
 import { GameSessionsService } from '../src/modules/game-sessions/game-sessions.service.js';
 import { Randomness } from '../src/modules/game-sessions/randomness.js';
+import { TurnTimers } from '../src/modules/game-sessions/turn-timers.js';
 import { API, createTestApp, type TestApp } from './app.js';
 import { expectMatchesContract } from './contract.js';
 import { query, resetDatabase } from './database.js';
@@ -495,6 +498,102 @@ describe('partidas', () => {
     });
   });
 
+  // --- Carreras entre operaciones distintas (análisis del 2026-11-19, T-13) -
+
+  describe('operaciones distintas a la vez', () => {
+    it('una rendición y una jugada simultáneas dejan un solo resultado: la rendición', async () => {
+      const match = await startMatch(t);
+
+      const [move, resigned] = await Promise.allSettled([
+        drop(match.first, match.matchId, 3, 0),
+        sessions.resign(match.second.playerId, match.matchId, randomUUID()),
+      ]);
+
+      expect(resigned.status).toBe('fulfilled');
+      if (move.status === 'rejected') {
+        expect(move.reason).toMatchObject({ code: 'MATCH_NOT_IN_PROGRESS' });
+      }
+      expect(await query('select reason from match_results')).toEqual([{ reason: 'RESIGNATION' }]);
+      expect(await query('select match_id from player_results')).toHaveLength(2);
+      expect((await getRoom(match.owner, match.roomId)).status).toBe('WAITING');
+    });
+
+    it('una anulación del administrador y una jugada simultáneas dejan la partida anulada y sin resultado', async () => {
+      const match = await startMatch(t);
+
+      const [move, aborted] = await Promise.allSettled([
+        drop(match.first, match.matchId, 3, 0),
+        sessions.abortByAdmin(match.matchId, { closeRoom: false }),
+      ]);
+
+      expect(aborted).toEqual({ status: 'fulfilled', value: true });
+      if (move.status === 'rejected') {
+        expect(move.reason).toMatchObject({ code: 'MATCH_NOT_IN_PROGRESS' });
+      }
+      expect(await query('select status, abort_reason from matches')).toEqual([
+        { status: 'ABORTED', abort_reason: 'ADMIN' },
+      ]);
+      expect(await query('select match_id from match_results')).toEqual([]);
+      expect(await query('select match_id from player_results')).toEqual([]);
+      expect((await getRoom(match.owner, match.roomId)).status).toBe('WAITING');
+    });
+
+    it('dos marcas de listo simultáneas que completan la sala empiezan una sola partida', async () => {
+      const owner = await signUp(t);
+      const guest = await signUp(t);
+      const { roomId } = (await owner.post('/rooms', FOUR_IN_A_ROW)).body.data as RoomView;
+      await guest.put(`/rooms/${roomId}/members/me`);
+
+      const responses = await Promise.all([
+        owner.put(`/rooms/${roomId}/members/me/ready`, { ready: true }),
+        guest.put(`/rooms/${roomId}/members/me/ready`, { ready: true }),
+      ]);
+
+      // La segunda llega con la sala ya en partida, o la completa ella.
+      for (const response of responses) {
+        expect([200, 409], response.text).toContain(response.status);
+        if (response.status === 409) expect(response.body.error.code).toBe('ROOM_NOT_WAITING');
+      }
+      expect(await query('select id from matches')).toHaveLength(1);
+      expect(await query('select match_id from game_sessions')).toHaveLength(1);
+      const room = await getRoom(owner, roomId);
+      expect(room.status).toBe('IN_MATCH');
+    });
+
+    it('la segunda barrera: el estado no se guarda si su versión ya no es la esperada (8.8)', async () => {
+      const match = await startMatch(t);
+      await drop(match.first, match.matchId, 3, 0);
+      const repository = t.app.get(GameSessionsRepository);
+
+      // Con la fila bloqueada, se intenta guardar sobre la versión 0, que ya no es la actual.
+      const updated = await t.app.get(DatabaseService).transaction(async (tx) => {
+        const current = await repository.lockSession(match.matchId, tx);
+        if (!current) throw new Error('La partida no tiene sesión');
+        const { status, activeSeats, clocks, turnStartedAt, turnDeadlineAt } = current;
+        return repository.updateSession(
+          match.matchId,
+          0,
+          {
+            status,
+            state: { roto: true },
+            stateVersion: 1,
+            activeSeats,
+            clocks,
+            turnStartedAt,
+            turnDeadlineAt,
+            updatedAt: new Date(),
+          },
+          tx,
+        );
+      });
+
+      expect(updated).toBe(false);
+      const row = await sessionRow(match.matchId);
+      expect(row.state_version).toBe(1);
+      expect(row).not.toMatchObject({ state: { roto: true } });
+    });
+  });
+
   // --- Final ---------------------------------------------------------------
 
   describe('final de partida', () => {
@@ -632,6 +731,17 @@ describe('partidas', () => {
       expect(await sessions.expireIfDue(match.matchId)).toBe(false);
       expect(await sessions.expireDueMatches()).toBe(0);
       expect(await query('select status from matches')).toEqual([{ status: 'IN_PROGRESS' }]);
+    });
+
+    it('un aviso que llega antes de tiempo vuelve a poner el temporizador a la fecha límite', async () => {
+      const match = await startMatch(t);
+      const { turn_deadline_at: deadline } = await sessionRow(match.matchId);
+      const arm = vi.spyOn(t.app.get(TurnTimers), 'arm');
+      t.clock.advance(5 * MINUTE_MS - 1000);
+
+      expect(await sessions.expireIfDue(match.matchId)).toBe(false);
+
+      expect(arm).toHaveBeenCalledExactlyOnceWith(match.matchId, deadline);
     });
 
     it('quien agota su tiempo pierde la partida', async () => {
@@ -1011,6 +1121,42 @@ describe('partidas', () => {
       const view = await getMatch(match.first, match.matchId);
       expect(view).toMatchObject({ status: 'ABORTED', abortReason: 'FAILURE', result: null });
       expect(view.view).toBeNull();
+    });
+
+    // ADR-014, K21; catálogo de errores, sección 9 (análisis del 2026-11-19, T-04).
+    it('si el motor dice que el juego ya terminó, la jugada se rechaza y no se guarda nada', async () => {
+      const match = await startMatch(t);
+      vi.spyOn(fourInARowEngine, 'applyAction').mockReturnValueOnce({
+        ok: false,
+        code: 'GAME_ALREADY_FINISHED',
+      });
+      events = [];
+
+      await expect(drop(match.first, match.matchId, 3, 0)).rejects.toMatchObject({
+        code: 'MATCH_NOT_IN_PROGRESS',
+      });
+
+      expect(await sessionRow(match.matchId)).toMatchObject({ status: 'ACTIVE', state_version: 0 });
+      expect(await query('select status from matches')).toEqual([{ status: 'IN_PROGRESS' }]);
+      expect(await query('select sequence from match_actions')).toEqual([]);
+      expect(events).toEqual([]);
+    });
+
+    it('si el motor responde INVALID_SETTINGS a una jugada, se anula como un estado que no reconoce', async () => {
+      const match = await startMatch(t);
+      vi.spyOn(fourInARowEngine, 'applyAction').mockReturnValueOnce({
+        ok: false,
+        code: 'INVALID_SETTINGS',
+      });
+
+      await expect(drop(match.first, match.matchId, 3, 0)).rejects.toMatchObject({
+        code: 'MATCH_NOT_IN_PROGRESS',
+      });
+
+      expect(await query('select status, abort_reason from matches')).toEqual([
+        { status: 'ABORTED', abort_reason: 'FAILURE' },
+      ]);
+      expect(await query('select match_id from match_results')).toEqual([]);
     });
 
     it('también se anula si el fallo se descubre al vencer el reloj', async () => {

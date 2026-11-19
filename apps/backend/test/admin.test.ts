@@ -253,6 +253,19 @@ describe('administración', () => {
       await rivalSocket.close();
     });
 
+    it('un administrador puede suspender a otro administrador (P3)', async () => {
+      const other = await signUp(t, { username: 'otra_admin' });
+      await query(`update users set role = 'ADMIN' where id = $1`, [other.me.userId]);
+
+      const response = await admin.put(`/admin/users/${other.me.userId}/status`, {
+        status: 'SUSPENDED',
+      });
+
+      expect(response.status, response.text).toBe(200);
+      expect(response.body.data).toMatchObject({ role: 'ADMIN', status: 'SUSPENDED' });
+      expect((await other.get('/admin/users')).status).toBe(401);
+    });
+
     it('nadie puede cambiar su propio estado, y una cuenta que no existe es USER_NOT_FOUND', async () => {
       const own = await admin.put(`/admin/users/${admin.me.userId}/status`, {
         status: 'SUSPENDED',
@@ -327,6 +340,16 @@ describe('administración', () => {
       // La sala puede jugar otra.
       const again = await startMatchIn(match.roomId, match.owner, match.guest);
       expect(again.matchId).not.toBe(match.matchId);
+    });
+
+    it('un administrador que no juega no puede ver la partida, aunque sí anularla (P1 y P5)', async () => {
+      const match = await startMatch(t);
+
+      const response = await admin.get(`/matches/${match.matchId}`);
+
+      expect(response.status).toBe(403);
+      expect(response.body.error.code).toBe('PLAYER_NOT_IN_MATCH');
+      expect((await admin.post(`/admin/matches/${match.matchId}/abort`)).status).toBe(204);
     });
 
     it('una partida terminada no se puede anular', async () => {

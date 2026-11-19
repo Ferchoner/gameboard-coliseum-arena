@@ -649,6 +649,25 @@ describe('salas', () => {
       expect(view.body.data).toMatchObject({ status: 'CLOSED', closeReason: 'OWNER_LEFT' });
     });
 
+    it('si el anfitrión sale mientras alguien entra, la sala acaba cerrada y no retiene a nadie (T-13)', async () => {
+      const [ana, bea] = [await signUp(t), await signUp(t)];
+      const room = await createRoom(ana, DUEL);
+
+      const [left, joined] = await Promise.all([
+        ana.delete(`/rooms/${room.roomId}/members/me`),
+        bea.put(`/rooms/${room.roomId}/members/me`),
+      ]);
+
+      expect(left.status).toBe(204);
+      // Bea entra antes de que se cierre, o llega con la sala ya cerrada.
+      expect([200, 409]).toContain(joined.status);
+      if (joined.status === 409) expect(joined.body.error.code).toBe('ROOM_NOT_WAITING');
+      const view = await bea.get(`/rooms/${room.roomId}`);
+      expect(view.body.data).toMatchObject({ status: 'CLOSED', closeReason: 'OWNER_LEFT' });
+      // La sala cerrada no le cuenta a Bea: puede crear la suya en tiempo real.
+      expect((await bea.post('/rooms', DUEL)).status).toBe(201);
+    });
+
     it('quien no es miembro recibe la misma respuesta, sin cambiar nada', async () => {
       const [ana, bea] = [await signUp(t), await signUp(t)];
       const room = await createRoom(ana, DUEL);

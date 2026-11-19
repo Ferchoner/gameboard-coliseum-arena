@@ -9,6 +9,7 @@ import { APP_CREATE_OPTIONS, configureApp } from '../src/app.setup.js';
 import { Clock } from '../src/common/clock.js';
 import { type AppConfig, loadConfig } from '../src/config/config.js';
 import { GAME_ENGINE_REGISTRY } from '../src/modules/games/games.service.js';
+import { checkAgainstContract } from './contract.js';
 import { TEST_DATABASE_URL } from './database.js';
 
 export const FRONTEND_ORIGIN = 'http://localhost:3001';
@@ -98,8 +99,8 @@ export async function createTestApp(options: TestAppOptions = {}): Promise<TestA
     app,
     config,
     clock,
-    request: () => supertest(app.getHttpServer()),
-    agent: () => supertest.agent(app.getHttpServer()),
+    request: () => checked(supertest(app.getHttpServer())),
+    agent: () => checked(supertest.agent(app.getHttpServer())),
     listen: async () => {
       await app.listen(0, '127.0.0.1');
       const address = app.getHttpServer().address() as AddressInfo;
@@ -107,6 +108,36 @@ export async function createTestApp(options: TestAppOptions = {}): Promise<TestA
     },
     close: () => app.close(),
   };
+}
+
+const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'options', 'head']);
+
+/**
+ * Hace que toda petición creada con `client` compruebe su respuesta contra
+ * el contrato al terminar (ADR-012, S7; análisis del 2026-11-19, T-02). Si
+ * no lo cumple, la petición falla con el motivo.
+ */
+function checked<T extends object>(client: T): T {
+  return new Proxy(client, {
+    get(target, property, receiver) {
+      const value: unknown = Reflect.get(target, property, receiver);
+      if (
+        typeof property !== 'string' ||
+        !HTTP_METHODS.has(property) ||
+        typeof value !== 'function'
+      ) {
+        return value;
+      }
+      return (url: string, ...rest: unknown[]) => {
+        const test = (value as (url: string, ...rest: unknown[]) => supertest.Test).call(
+          target,
+          url,
+          ...rest,
+        );
+        return test.expect((response) => checkAgainstContract(property, url, response));
+      };
+    },
+  });
 }
 
 /** Datos de registro válidos, distintos en cada llamada. */

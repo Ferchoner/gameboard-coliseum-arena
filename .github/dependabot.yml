@@ -1,0 +1,16 @@
+# Actualizaciones de las acciones de GitHub, que se fijan por SHA en los
+# flujos (análisis del 2026-11-19, T-10; aprobado por Fernando Hernandez
+# Argueta el 2026-11-19). Las dependencias de npm no se actualizan solas: el
+# proyecto fija versiones comprobadas a propósito (ADR-012, S3 y S16).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      acciones:
+        patterns:
+          - '*'
+    commit-message:
+      prefix: ci
