@@ -423,7 +423,8 @@ paths:
           description: |-
             Códigos posibles:
 
-            - `PLAYER_NOT_FOUND`: no existe ningún jugador con ese nombre de usuario.
+            - `PLAYER_NOT_FOUND`: no existe ningún jugador con ese nombre de usuario, o su cuenta está
+              suspendida (ADR-017, U15).
           content:
             application/json:
               schema:
@@ -468,7 +469,8 @@ paths:
           description: |-
             Códigos posibles:
 
-            - `PLAYER_NOT_FOUND`: no existe ningún jugador con ese nombre de usuario.
+            - `PLAYER_NOT_FOUND`: no existe ningún jugador con ese nombre de usuario, o su cuenta está
+              suspendida (ADR-017, U15).
           content:
             application/json:
               schema:
@@ -980,7 +982,8 @@ paths:
       - Administración
       summary: Suspender o reactivar una cuenta
       description: Al suspender una cuenta se cierran todas sus sesiones y sus conexiones de tiempo real, con efecto
-        inmediato.
+        inmediato, y la cuenta sale de las salas en espera en las que estaba. Sus partidas en curso siguen sus
+        reglas de reloj y de abandono (ADR-017, U4).
       parameters:
       - $ref: '#/components/parameters/UserId'
       requestBody:
@@ -1070,7 +1073,7 @@ paths:
       - Administración
       summary: Anular una partida
       description: Una partida anulada no tiene resultado y no cuenta en las estadísticas. Si la partida ya estaba
-        anulada, responde igual.
+        anulada, responde igual. Si ya terminó con resultado, responde `409`.
       parameters:
       - $ref: '#/components/parameters/MatchId'
       responses:
@@ -1093,7 +1096,7 @@ paths:
           description: |-
             Códigos posibles:
 
-            - `MATCH_NOT_IN_PROGRESS`: la partida no está en curso: terminó o se anuló.
+            - `MATCH_NOT_IN_PROGRESS`: la partida ya terminó con resultado.
           content:
             application/json:
               schema:
@@ -1141,7 +1144,8 @@ paths:
       - Administración
       summary: Activar o desactivar un juego
       description: Desactivar un juego lo retira del catálogo e impide crear salas nuevas. Las partidas en curso
-        continúan.
+        continúan. Sus salas en espera se cierran, y las que tienen una partida se cierran al terminarla. Al
+        empezar una partida se vuelve a comprobar que el juego y la versión siguen activos (ADR-017, U5 e Y4).
       parameters:
       - $ref: '#/components/parameters/GameSlug'
       requestBody:
@@ -1262,7 +1266,9 @@ paths:
       tags:
       - Administración
       summary: Elegir la versión vigente de un juego
-      description: La versión vigente es la que toman las partidas nuevas.
+      description: La versión vigente es la que toman las partidas nuevas. Las salas en espera cuyas opciones
+        no admite la nueva versión se cierran (ADR-017, U5). Al empezar una partida se vuelve a comprobar que la
+        versión sigue activa (Y4).
       parameters:
       - $ref: '#/components/parameters/GameSlug'
       requestBody:

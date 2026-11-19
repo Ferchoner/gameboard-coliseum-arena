@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta |
+| **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta. Enmendada el 2026-11-19 con precisiones de ADR-017 y de la decisión del catálogo |
 | **Cubre** | Las 28 operaciones de [`01-rest-api.yaml`](01-rest-api.yaml) y las 6 órdenes de [`02-realtime.md`](02-realtime.md) |
 | **Aplica** | ADR-004 (sesión con cookie), ADR-008 (punto 15, administración mínima), ADR-009 (reglas de dominio), ADR-011 (convenciones 9.11 a 9.15) |
 | **Resuelve** | Vacío G-03 (roles y permisos) y pendiente P7 en la parte de permisos |
@@ -109,8 +109,8 @@ Todas exigen el rol `ADMIN`. Un jugador sin ese rol recibe `FORBIDDEN`, y un an�
 | Activar o desactivar un juego: `PUT /admin/games/{gameSlug}/status` | Sí | |
 | Activar o desactivar una versión: `PUT /admin/games/{gameSlug}/versions/{gameVersion}/status` | Sí | No puede desactivar la vigente ni activar una sin motor |
 | Elegir la versión vigente: `PUT /admin/games/{gameSlug}/current-version` | Sí | Tiene que estar activa |
-| Conceder o retirar el rol de administrador | No por la API | Se hace en la base de datos (decisión A5) |
-| Crear juegos y versiones | No por la API | Se dan de alta al desplegar su motor (decisión A5) |
+| Conceder o retirar el rol de administrador | No por la API | Se hace con la orden `pnpm admin:role` (decisión A5, precisada el 2026-11-19 por ADR-017, U3) |
+| Crear juegos y versiones | No por la API | Se dan de alta al desplegar su motor, inactivos, y se activan desde aquí (decisión A5; decisión del 2026-11-16 sobre el catálogo) |
 | Cambiar el perfil o la contraseña de otra cuenta | No. No existe | |
 | Cambiar el resultado de una partida terminada | No. No existe | |
 
@@ -125,8 +125,8 @@ Un administrador es además un jugador como cualquier otro. En las secciones 2 a
 | Correo, rol y fecha de alta de una cuenta | Su dueño y los administradores |
 | Estado de una cuenta, activa o suspendida | Los administradores |
 | Contraseña e identificador de sesión | Nadie. El servidor solo guarda un hash de cada uno (ADR-004) |
-| Nombre de usuario, nombre visible, avatar y biografía | Cualquier jugador |
-| Estadísticas por juego | Cualquier jugador |
+| Nombre de usuario, nombre visible, avatar y biografía | Cualquier jugador, salvo los de una cuenta suspendida, que responden como si no existiera. Su nombre sigue en las partidas pasadas (ADR-017, U15) |
+| Estadísticas por juego | Cualquier jugador, salvo las de una cuenta suspendida (ADR-017, U15) |
 | Lista de salas en espera y estado de una sala, con sus miembros y si están conectados | Cualquier jugador |
 | Estado de una partida: tablero, relojes, turno y resultado | Sus participantes. Cada uno recibe la vista de su asiento, de modo que un juego con información oculta no la revela |
 | Lista de partidas de un jugador | Solo ese jugador |
