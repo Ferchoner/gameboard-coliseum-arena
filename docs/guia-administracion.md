@@ -161,7 +161,7 @@ La aplicación solo ofrece los juegos que sabe mostrar, y elige el tablero por j
 1. Desplegar el backend con el motor y la migración que da de alta el juego o la versión, inactivos.
 2. Desplegar el frontend que sabe mostrarlo. Como se alojan por separado, puede ir antes o después del backend, pero siempre antes de activar.
 3. Comprobar con `GET /admin/games` que la versión tiene su motor (`engineRegistered`) y, en el frontend desplegado, que el juego se ve.
-4. Activar la versión y, si es un juego nuevo, el juego. Para una versión nueva de un juego que ya existe, hacerla vigente.
+4. Activar la versión y hacerla vigente. Si es un juego nuevo, activar después el juego. *Precisado el 2026-11-19 (ADR-019): un juego nuevo también tiene que hacer vigente su versión, porque entra sin versión vigente.*
 
 Quien tenga abierta una versión anterior de la aplicación ve un aviso que le pide recargar, y no puede entrar en salas de ese juego hasta hacerlo.
 

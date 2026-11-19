@@ -1,6 +1,6 @@
 # Plataforma de Juegos de Mesa en Línea
 
-Una plataforma web para jugar juegos de mesa en línea contra otras personas, en tiempo real o por turnos. El primer juego es Cuatro en raya.
+Una plataforma web para jugar juegos de mesa en línea contra otras personas, en tiempo real o por turnos. El primer juego es Cuatro en raya. El segundo, Batalla naval, está construido y entra inactivo hasta que se active desde la administración (ADR-019).
 
 **Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **corte vertical** completo: el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo); el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo), y el **Hito 3**, Cuatro en raya en tiempo real (la partida empieza sola cuando todos están listos, con tablero, relojes, rendición, resultado, historial y revancha). Están construidos también el **Hito 4**, la recuperación ante cortes y reinicios (quien pasa 2 minutos sin conexión pierde por abandono, y un reinicio del servidor no descuenta a nadie el tiempo parado), el **Hito 5**, la modalidad por turnos con aviso de turno y aplicación instalable, y el **Hito 6**, cuenta, estadísticas y administración por la API, todos fusionados en `main` (el Hito 6, el 2026-11-19, en la PR #8). Falta el Hito 7, la preparación para publicar, que **no está autorizado**. El reparto del resto del MVP en hitos se aceptó al terminar el corte vertical. Cada hito se implementa solo cuando se autoriza de forma explícita.
 
@@ -16,7 +16,7 @@ Una plataforma web para jugar juegos de mesa en línea contra otras personas, en
 | [`apps/backend/`](apps/backend/) | El servidor: la API y el canal de tiempo real |
 | [`apps/frontend/`](apps/frontend/) | La aplicación web |
 | [`packages/contracts/`](packages/contracts/) | Tipos y esquemas de la API y del protocolo, y catálogo de errores. Lo usan el backend y el frontend |
-| [`packages/game-engine/`](packages/game-engine/) | El contrato de los motores de juego, su registro y el motor de Cuatro en raya. No depende de nada |
+| [`packages/game-engine/`](packages/game-engine/) | El contrato de los motores de juego, su registro y los motores de Cuatro en raya y Batalla naval. No depende de nada |
 | [`e2e/`](e2e/) | Pruebas en navegador: dos personas juegan una partida entera contra el servidor y la base de datos reales |
 
 ## Cómo ejecutarlo en local

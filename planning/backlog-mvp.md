@@ -163,7 +163,7 @@ Las tareas de mejora del [análisis de la aplicación](analisis/informe-de-anali
 Decididos el 2026-11-19 ([ADR-019](../docs/adr/0019-batalla-naval-y-jugadas-simultaneas.md), F1): Batalla naval y después Dominó. Se construyen antes de desplegar en servidores.
 
 - [x] Jugadas simultáneas: versión por asiento activo y reloj de otro asiento (T-23; ADR-019, X15 a X17).
-- [ ] Batalla naval: motor, tablero, alta inactiva y pruebas (ADR-019, X1 a X14).
+- [x] Batalla naval: motor, tablero, alta inactiva y pruebas (ADR-019, X1 a X14). Entra inactiva; se activa desde la administración.
 - [ ] Dominó: su ADR, asientos retirados con más de dos jugadores (T-24; F8), motor, tablero y pruebas.
 
 ---

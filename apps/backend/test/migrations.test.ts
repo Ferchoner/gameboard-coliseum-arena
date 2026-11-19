@@ -39,11 +39,12 @@ describe('migraciones', () => {
     await query(`drop database if exists ${name}`);
   });
 
-  it('dan de alta Cuatro en raya con su versión vigente', async () => {
+  it('dan de alta Cuatro en raya activo y Batalla naval inactivo, cada uno con su versión vigente', async () => {
     const rows = await fresh(
       `select games.slug, games.name, games.status, game_versions.version,
               game_versions.status as version_status, game_versions.is_current
-       from games join game_versions on game_versions.game_id = games.id`,
+       from games join game_versions on game_versions.game_id = games.id
+       order by games.slug`,
     );
 
     expect(rows).toEqual([
@@ -55,6 +56,16 @@ describe('migraciones', () => {
         version_status: 'ACTIVE',
         is_current: true,
       },
+      // Los juegos nuevos llegan inactivos (ADR-018, Z8; ADR-019, X1).
+      {
+        slug: 'naval-battle',
+        name: 'Batalla naval',
+        status: 'INACTIVE',
+        version: '1.0.0',
+        version_status: 'INACTIVE',
+        // La vigente tiene que estar activa: se hace vigente al activarla.
+        is_current: false,
+      },
     ]);
   });
 
@@ -62,20 +73,21 @@ describe('migraciones', () => {
     const registry = createGameEngineRegistry(GAME_ENGINES);
     const rows = await fresh<{ slug: string; version: string }>(
       `select games.slug, game_versions.version
-       from games join game_versions on game_versions.game_id = games.id
-       where game_versions.status = 'ACTIVE'`,
+       from games join game_versions on game_versions.game_id = games.id`,
     );
 
-    // Es lo mismo que comprueba el servidor al arrancar: si faltara un motor, no arrancaría.
+    // Para las activas es lo que comprueba el servidor al arrancar; una
+    // inactiva sin motor no se podría activar (409 ENGINE_NOT_REGISTERED).
     for (const { slug, version } of rows) {
       expect(registry.resolve(slug, version), `${slug}@${version}`).toBeDefined();
     }
   });
 
   it('aplicarlas otra vez no cambia nada', async () => {
+    const before = await fresh('select slug from games order by slug');
     await runMigrations(url.toString());
 
-    expect(await fresh('select slug from games')).toHaveLength(1);
+    expect(await fresh('select slug from games order by slug')).toEqual(before);
   });
 });
 

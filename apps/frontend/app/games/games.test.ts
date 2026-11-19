@@ -23,4 +23,38 @@ describe('qué juegos sabe mostrar la aplicación (ADR-018, decisión Z5)', () =
   it('da un nombre a cada asiento de Cuatro en raya', () => {
     expect(gameUi('four-in-a-row', '1.0.0')?.seatNames).toHaveLength(2);
   });
+
+  it('sabe mostrar Batalla naval 1 y da un nombre a cada asiento (ADR-019)', () => {
+    expect(knowsGame('naval-battle', '1.0.0')).toBe(true);
+    expect(knowsGame('naval-battle', '2.0.0')).toBe(false);
+    expect(gameUi('naval-battle', '1.0.0')?.seatNames).toHaveLength(2);
+  });
+
+  it('tiene un texto para cada motivo con el que Batalla naval rechaza una jugada', () => {
+    expect(Object.keys(gameUi('naval-battle', '1.0.0')?.rejections ?? {}).sort()).toEqual(
+      [
+        'CELL_ALREADY_FIRED',
+        'CELL_OUT_OF_RANGE',
+        'INVALID_FLEET',
+        'MALFORMED_ACTION',
+        'SHIPS_OVERLAP',
+        'SHIPS_TOUCHING',
+        'SHIP_OUT_OF_BOUNDS',
+        'WRONG_PHASE',
+      ].sort(),
+    );
+  });
+
+  it('dice cómo terminó Batalla naval solo si alguien hundió toda la flota', () => {
+    const ui = gameUi('naval-battle', '1.0.0');
+    const fleet = [{ ship: 'S2', size: 2 }];
+    const grid = (sunk: number) => ({
+      placed: true,
+      ships: null,
+      sunk: Array.from({ length: sunk }, () => ({ ship: 'S2', cells: [] })),
+      shots: [],
+    });
+    expect(ui?.endText({ fleet, grids: [grid(0), grid(1)] })).toBe('Hundió toda la flota rival.');
+    expect(ui?.endText({ fleet, grids: [grid(0), grid(0)] })).toBeNull();
+  });
 });

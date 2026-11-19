@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { AnyGameEngine, Seat } from './contract.js';
 import { GAME_ENGINES } from './engines.js';
 import { COLUMN_COUNT } from './games/four-in-a-row/engine.js';
+import { GRID_SIZE, type NavalBattleState } from './games/naval-battle/engine.js';
 import { checkEngineConformance, type ConformanceFixture } from './testing/conformance.js';
 import { createFakeEngine, createSimultaneousFakeEngine } from './testing/fake-engine.js';
 
@@ -20,6 +21,49 @@ const FIXTURES: Readonly<Record<string, ConformanceFixture>> = {
       { type: 'OTRA_COSA' },
     ],
   },
+  'naval-battle@1.0.0': {
+    settings: {},
+    // En la colocación, una flota válida y otra con barcos que se tocan. En
+    // los disparos, algunas casillas sin disparar y una ya disparada.
+    // Siempre, una acción mal formada.
+    candidateActions: (state, seat) => {
+      const { fleets, shots } = state as NavalBattleState;
+      if (fleets.some((fleet) => fleet === null)) {
+        return [VALID_FLEET, TOUCHING_FLEET, { type: 'OTRA_COSA' }];
+      }
+      const own = shots[seat] ?? [];
+      const fired = new Set(own.map(({ row, col }) => `${row},${col}`));
+      const open = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, index) => ({
+        row: Math.floor(index / GRID_SIZE),
+        col: index % GRID_SIZE,
+      })).filter(({ row, col }) => !fired.has(`${row},${col}`));
+      // Tres casillas sin disparar, repartidas, bastan: cada disparo deja menos.
+      const picks = [open[0], open[Math.floor(open.length / 2)], open.at(-1)];
+      return [
+        ...picks.flatMap((cell) => (cell ? [{ type: 'FIRE', ...cell }] : [])),
+        ...own.slice(0, 1).map((cell) => ({ type: 'FIRE', ...cell })),
+        { type: 'OTRA_COSA' },
+      ];
+    },
+  },
+};
+
+/** Una flota de Batalla naval válida: cinco barcos en filas pares, sin tocarse. */
+const VALID_FLEET = {
+  type: 'PLACE_FLEET',
+  ships: [
+    { ship: 'S5', row: 0, col: 0, orientation: 'H' },
+    { ship: 'S4', row: 2, col: 0, orientation: 'H' },
+    { ship: 'S3A', row: 4, col: 0, orientation: 'H' },
+    { ship: 'S3B', row: 6, col: 0, orientation: 'H' },
+    { ship: 'S2', row: 8, col: 0, orientation: 'H' },
+  ],
+};
+
+/** La misma flota con el destructor pegado al portaaviones. */
+const TOUCHING_FLEET = {
+  ...VALID_FLEET,
+  ships: VALID_FLEET.ships.map((ship) => (ship.ship === 'S2' ? { ...ship, row: 1 } : ship)),
 };
 
 const keyOf = (engine: AnyGameEngine) => `${engine.gameSlug}@${engine.gameVersion}`;

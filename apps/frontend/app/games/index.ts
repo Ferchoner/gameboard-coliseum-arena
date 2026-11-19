@@ -1,5 +1,6 @@
 import { defineAsyncComponent } from 'vue';
 import { fourInARowTexts } from './four-in-a-row';
+import { navalBattleTexts } from './naval-battle';
 import type { GameUi } from './game-ui';
 import { gameUiKey } from './keys';
 
@@ -15,6 +16,10 @@ const GAME_UIS: Readonly<Record<string, GameUi>> = {
   'four-in-a-row@1': {
     ...fourInARowTexts,
     board: defineAsyncComponent(() => import('./four-in-a-row/FourInARowBoard.vue')),
+  },
+  'naval-battle@1': {
+    ...navalBattleTexts,
+    board: defineAsyncComponent(() => import('./naval-battle/NavalBattleBoard.vue')),
   },
 };
 
