@@ -6,6 +6,8 @@
  * `http://localhost:3000`). Por eso `pnpm dev` no puede estar en marcha
  * mientras corren. La base de datos es otra, propia de estas pruebas.
  */
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const API_PORT = 3000;
@@ -34,6 +36,13 @@ export const DATABASE_URL =
   process.env.E2E_DATABASE_URL ?? 'postgres://gameboard:gameboard@localhost:5432/gameboard_e2e';
 
 export const BACKEND_DIR = fileURLToPath(new URL('../../apps/backend/', import.meta.url));
+
+/**
+ * Carpeta del correo simulado de la API de estas pruebas (ADR-017, U6).
+ * Se vacía en cada ejecución. Las pruebas leen ahí el enlace de recuperación.
+ */
+export const MAIL_OUTBOX_DIR =
+  process.env.E2E_MAIL_OUTBOX_DIR ?? join(tmpdir(), 'gameboard-e2e-mail');
 /** Lo que deja `pnpm build` del frontend: archivos estáticos. */
 export const FRONTEND_DIST = fileURLToPath(
   new URL('../../apps/frontend/.output/public/', import.meta.url),

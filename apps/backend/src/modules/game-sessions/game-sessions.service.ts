@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type {
   GameEventView,
   ListMyMatchesQuery,
+  MatchAbortReason,
   MatchEndReason,
   MatchSummaryView,
   Page,
@@ -35,6 +36,7 @@ import {
   type RoomReadyToStart,
 } from '../rooms/match-starter.js';
 import { RoomsService } from '../rooms/rooms.service.js';
+import { StatisticsService } from '../statistics/statistics.service.js';
 import { AbandonmentWatch } from './abandonment-watch.js';
 import {
   type GameSessionChange,
@@ -140,6 +142,7 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
     private readonly starterSlot: MatchStarterSlot,
     private readonly games: GamesService,
     private readonly players: PlayersService,
+    private readonly statistics: StatisticsService,
     private readonly events: RealtimeEvents,
     private readonly timers: TurnTimers,
     private readonly absences: AbandonmentWatch,
@@ -640,6 +643,36 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
     };
   }
 
+  // --- Administración ------------------------------------------------------
+
+  /**
+   * Un administrador anula una partida en curso (API,
+   * `POST /admin/matches/{matchId}/abort`). Si ya estaba anulada, no hace
+   * nada. Con `closeRoom`, la sala se cierra en la misma transacción; sin
+   * él, vuelve a la espera o se cierra como al terminar (decisión R8).
+   *
+   * Devuelve si la anuló esta llamada.
+   */
+  async abortByAdmin(matchId: string, options: { readonly closeRoom: boolean }): Promise<boolean> {
+    return this.database.transaction(async (tx) => {
+      const session = await this.repository.lockSession(matchId, tx);
+      const record = session && (await this.matches.find(matchId, tx));
+      if (!session || !record) throw matchNotFound();
+      if (record.status === 'ABORTED') return false;
+      if (record.status !== 'IN_PROGRESS') throw matchNotInProgress();
+
+      const loaded = await this.load(record, session, tx);
+      await this.abort(
+        loaded,
+        'ADMIN',
+        this.clock.now(),
+        tx,
+        options.closeRoom ? 'CLOSE' : 'FOLLOW_MATCH_END',
+      );
+      return true;
+    });
+  }
+
   // --- Piezas: cargar ------------------------------------------------------
 
   /**
@@ -860,6 +893,16 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       tx,
     );
     await this.matches.finish(loaded.record, result, now, tx);
+    // En la misma transacción que el resultado: una partida no cuenta dos veces (regla 8.15).
+    await this.statistics.recordFinishedMatch(
+      loaded.version.gameId,
+      result.seats.map(({ seat, outcome }) => ({
+        playerId: requirePlayer(loaded.record, seat),
+        outcome,
+      })),
+      now,
+      tx,
+    );
     await this.rooms.matchEnded(loaded.record.roomId, now, tx, departing);
 
     const record: MatchRecord = { ...loaded.record, status: 'FINISHED', endedAt: now, result };
@@ -869,20 +912,30 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
   /**
    * Anula una partida que no puede continuar por un fallo: su versión ya no
    * tiene motor o el motor no reconoce el snapshot (ADR-009, regla 7.20;
-   * ADR-014, decisión K12). No deja resultado. La sala vuelve a la espera
-   * o se cierra, igual que al terminar.
+   * ADR-014, decisión K12).
    */
-  private async abortForFailure(
+  private abortForFailure(loaded: LoadedMatch, now: Date, tx: Transaction): Promise<MatchSnapshot> {
+    this.logger.error(
+      `La partida ${loaded.record.matchId} se anula: el motor de ` +
+        `${loaded.version.gameSlug}@${loaded.version.gameVersion} no existe o no reconoce su estado guardado.`,
+    );
+    return this.abort(loaded, 'FAILURE', now, tx, 'FOLLOW_MATCH_END');
+  }
+
+  /**
+   * Anula una partida en curso, sin resultado ni estadísticas (regla 7.20).
+   * Con `FOLLOW_MATCH_END`, la sala vuelve a la espera o se cierra, igual
+   * que al terminar; con `CLOSE`, se cierra, porque la cierra un
+   * administrador (modelo de datos, decisión R8).
+   */
+  private async abort(
     loaded: LoadedMatch,
+    reason: MatchAbortReason,
     now: Date,
     tx: Transaction,
+    room: 'FOLLOW_MATCH_END' | 'CLOSE',
   ): Promise<MatchSnapshot> {
     const { matchId, roomId } = loaded.record;
-    this.logger.error(
-      `La partida ${matchId} se anula: el motor de ${loaded.version.gameSlug}@${loaded.version.gameVersion} ` +
-        'no existe o no reconoce su estado guardado.',
-    );
-
     const session = await this.updateSession(
       loaded.session,
       {
@@ -897,13 +950,17 @@ export class GameSessionsService implements MatchStarter, OnModuleInit {
       },
       tx,
     );
-    await this.matches.abort(matchId, 'FAILURE', now, tx);
-    await this.rooms.matchEnded(roomId, now, tx);
+    await this.matches.abort(matchId, reason, now, tx);
+    if (room === 'CLOSE') {
+      await this.rooms.closeByAdmin(roomId, now, tx);
+    } else {
+      await this.rooms.matchEnded(roomId, now, tx);
+    }
 
     const record: MatchRecord = {
       ...loaded.record,
       status: 'ABORTED',
-      abortReason: 'FAILURE',
+      abortReason: reason,
       endedAt: now,
     };
     const snapshot = this.snapshotOf({ ...loaded, record, session });
@@ -995,4 +1052,12 @@ function requireRef(refs: ReadonlyMap<string, PlayerRef>, playerId: string): Pla
   const ref = refs.get(playerId);
   if (!ref) throw new Error(`El jugador ${playerId} no tiene cuenta`);
   return ref;
+}
+
+function requirePlayer(record: MatchRecord, seat: number): string {
+  const playerId = record.playerIds[seat];
+  if (playerId === undefined) {
+    throw new Error(`La partida ${record.matchId} no tiene el asiento ${seat}`);
+  }
+  return playerId;
 }

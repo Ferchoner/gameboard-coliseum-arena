@@ -8,7 +8,7 @@
 
 **Cómo leer este documento.** El contenido de cada hito sale del alcance aceptado en ADR-008. Lo que este documento decide por su cuenta es **cómo se reparte el resto del MVP en los hitos 4 a 7** (B1, [sección final](#reparto-del-resto-del-mvp)). Se propuso al cerrar el Hito 0 y se aceptó el 2026-11-16, al terminar el corte vertical.
 
-Los hitos 1 a 4 están autorizados, todos el 2026-11-16, y el Hito 5, el 2026-11-18. Ninguna tarea de los hitos 6 y 7 puede empezar sin una autorización explícita.
+Los hitos 1 a 4 están autorizados, todos el 2026-11-16, el Hito 5, el 2026-11-18, y el Hito 6, el 2026-11-19. Ninguna tarea del Hito 7 puede empezar sin una autorización explícita.
 
 ---
 
@@ -129,10 +129,16 @@ Construido el 2026-11-18. Lo que resultó al construir, incluidas seis eleccione
 
 ### Hito 6. Cuenta, estadísticas y administración
 
-- [ ] Edición del perfil y cambio de contraseña.
-- [ ] Recuperación de contraseña, con el envío de correo simulado en local.
-- [ ] Perfil público y estadísticas básicas por juego, actualizadas en la transacción del final de partida (8.15). La tabla se crea aquí y se rellena con los resultados de las partidas ya jugadas (ADR-014, K4).
-- [ ] Administración mínima por API: suspender y reactivar cuentas, cerrar salas, anular partidas, y activar o desactivar juegos y versiones. Los juegos y versiones nuevos llegan inactivos con su motor, y se activan desde aquí (decidido el 2026-11-16, ver [`decisiones-y-pendientes.md`](decisiones-y-pendientes.md)).
+- [x] Edición del perfil y cambio de contraseña.
+- [x] Recuperación de contraseña, con el envío de correo simulado en local.
+- [x] Perfil público y estadísticas básicas por juego, actualizadas en la transacción del final de partida (8.15). La tabla se crea aquí y se rellena con los resultados de las partidas ya jugadas (ADR-014, K4).
+- [x] Administración mínima por API: suspender y reactivar cuentas, cerrar salas, anular partidas, y activar o desactivar juegos y versiones. Los juegos y versiones nuevos llegan inactivos con su motor, y se activan desde aquí (decidido el 2026-11-16, ver [`decisiones-y-pendientes.md`](decisiones-y-pendientes.md)).
+
+Decisiones del hito en [ADR-017](../docs/adr/0017-decisiones-del-hito-6.md). La administración se hace solo por la API, con la guía de [`docs/guia-administracion.md`](../docs/guia-administracion.md) (U2).
+
+Construido el 2026-11-19, en revisión en la PR #8. Lo que resultó al construir, incluidas ocho elecciones menores que no estaban en ADR-017 y se confirmaron el 2026-11-19, está en su sección 15. El criterio de aceptación se comprueba en cada pull request con cuatro pruebas en navegador.
+
+**Criterio de aceptación** (ADR-017, U1): una persona cambia su nombre visible, que ven los demás, y su contraseña. Después la olvida, la recupera con el enlace del correo simulado y sus sesiones abiertas en otro navegador se cierran. Su perfil público muestra sus estadísticas de Cuatro en raya, que cuentan también las partidas jugadas antes de este hito y se ponen al día al terminar una partida nueva. Un administrador, solo con la API: suspende una cuenta y su dueño sale al instante de todas sus pestañas; anula una partida en curso y los dos jugadores ven que se anuló y que no cuenta; y retira Cuatro en raya del catálogo y lo vuelve a poner, sin desplegar ni tocar la base de datos.
 
 ### Hito 7. Preparación para publicar
 

@@ -21,6 +21,7 @@ import {
 import { Presence } from '../broadcast/presence.js';
 import { RealtimeEvents } from '../broadcast/realtime-events.js';
 import { GamesService } from '../games/games.service.js';
+import { checkRoomOptions } from '../games/room-options.js';
 import { PlayersService } from '../players/players.service.js';
 import { MatchStarterSlot } from './match-starter.js';
 import { decodeRoomCursor, encodeRoomCursor } from './room-cursor.js';
@@ -156,29 +157,23 @@ export class RoomsService {
   /** Crea una sala. Quien la crea es su anfitrión y su primer miembro. */
   async create(playerId: string, request: CreateRoomRequest): Promise<RoomView> {
     const game = await this.games.getPlayableGame(request.gameSlug);
-    const { minPlayers, maxPlayers, timeControls } = game.engine.metadata;
 
     // Lo que el juego admite lo declara su motor (modelo de datos, decisión R1).
-    const admitted = timeControls[request.mode];
-    if (admitted.length === 0) throw unsupportedOption('mode');
-    const { timeControl } = request;
-    if (
-      !admitted.some((one) => one.type === timeControl.type && one.totalMs === timeControl.totalMs)
-    ) {
-      throw unsupportedOption('timeControl');
-    }
-    if (request.maxPlayers < minPlayers || request.maxPlayers > maxPlayers) {
-      throw unsupportedOption('maxPlayers');
-    }
-
-    const settings = game.engine.parseSettings(request.settings ?? {});
-    if (!settings.ok) {
+    const checked = checkRoomOptions(game.engine, {
+      mode: request.mode,
+      timeControl: request.timeControl,
+      maxPlayers: request.maxPlayers,
+      settings: request.settings ?? {},
+    });
+    if (!checked.ok) {
+      if (checked.option !== 'settings') throw unsupportedOption(checked.option);
       throw new AppError(
         'INVALID_SETTINGS',
         'The game rejected the settings',
-        settings.reason === undefined ? undefined : { reason: settings.reason },
+        checked.reason === undefined ? undefined : { reason: checked.reason },
       );
     }
+    const { timeControl } = request;
 
     return this.database.transaction(async (tx) => {
       await this.players.lock(playerId, tx);
@@ -196,7 +191,7 @@ export class RoomsService {
           // En tiempo real la sala siempre vuelve a la espera (regla 7.11). Por
           // turnos lo elige el anfitrión (regla 7.31).
           rematchEnabled: request.mode === 'REALTIME' ? true : request.rematchEnabled,
-          settings: isPlainObject(settings.value) ? settings.value : {},
+          settings: isPlainObject(checked.settings) ? checked.settings : {},
           status: 'WAITING',
           closeReason: null,
           createdAt: now,
@@ -365,12 +360,108 @@ export class RoomsService {
       await this.close(roomId, 'MATCH_ENDED', now, tx);
       return;
     }
+    // Si un administrador retiró el juego o cambió su versión por una que no
+    // admite la sala, la sala no vuelve a la espera (ADR-017, U5).
+    if (!(await this.isPlayable(room, tx))) {
+      await this.close(roomId, 'ADMIN', now, tx);
+      return;
+    }
     await this.repository.backToWaiting(roomId, now, tx);
     await this.repository.clearReadyMarks(roomId, tx);
     this.announceChange(roomId, tx);
   }
 
+  // --- Administración (ADR-017) ---------------------------------------------
+
+  /**
+   * Un administrador cierra una sala sin partida en curso (API,
+   * `POST /admin/rooms/{roomId}/close`). Si la sala tiene una partida en
+   * curso no la cierra, y devuelve esa partida: quien dirige la partida la
+   * anula y cierra la sala a la vez, con `closeByAdmin` (decisión R8).
+   */
+  async closeIfIdleByAdmin(roomId: string): Promise<{ readonly matchInProgress: string | null }> {
+    return this.database.transaction(async (tx) => {
+      const room = await this.repository.lockRoom(roomId, tx);
+      if (!room) throw roomNotFound();
+      if (room.status === 'IN_MATCH') {
+        const { currentMatchId } = await this.matchStarter.current.describeRoom(roomId, tx);
+        if (currentMatchId !== null) return { matchInProgress: currentMatchId };
+      }
+      if (room.status !== 'CLOSED') await this.close(roomId, 'ADMIN', this.clock.now(), tx);
+      return { matchInProgress: null };
+    });
+  }
+
+  /**
+   * Cierra la sala por decisión de un administrador, dentro de la
+   * transacción que anula su partida. Quien la llama ya tiene bloqueada la
+   * sesión de juego (decisión K10).
+   */
+  async closeByAdmin(roomId: string, now: Date, tx: Transaction): Promise<void> {
+    const room = await this.repository.lockRoom(roomId, tx);
+    if (!room || room.status === 'CLOSED') return;
+    await this.close(roomId, 'ADMIN', now, tx);
+  }
+
+  /**
+   * Saca al jugador de todas sus salas en espera, como si saliera él: deja
+   * libre su plaza y, si era el anfitrión, la sala se cierra (regla 7.12).
+   * Lo usa la suspensión de una cuenta (ADR-017, U4). Las salas con una
+   * partida en curso no cambian: la partida sigue sus reglas.
+   *
+   * Quien la llama ya tiene bloqueado al jugador, que va antes que la sala
+   * (ADR-013, decisión H7).
+   */
+  async removeFromWaitingRooms(playerId: string, tx: Transaction): Promise<number> {
+    let removed = 0;
+    for (const roomId of await this.repository.findOpenRoomIdsOfPlayer(playerId, tx)) {
+      const room = await this.repository.lockRoom(roomId, tx);
+      if (!room || room.status !== 'WAITING') continue;
+      await this.repository.deleteMember(roomId, playerId, tx);
+      removed += 1;
+      const now = this.clock.now();
+      if (room.ownerPlayerId === playerId) {
+        await this.close(roomId, 'OWNER_LEFT', now, tx);
+      } else {
+        await this.repository.touchRoom(roomId, now, tx);
+        this.announceChange(roomId, tx);
+      }
+    }
+    return removed;
+  }
+
+  /**
+   * Cierra las salas en espera de un juego que ya no pueden jugar: el juego
+   * se desactivó, o su versión vigente nueva no admite sus opciones
+   * (ADR-017, U5). Las salas con una partida en curso la terminan y se
+   * cierran al acabar (`matchEnded`). Devuelve cuántas cerró.
+   */
+  async closeUnplayableWaitingRooms(gameId: string, tx: Transaction): Promise<number> {
+    let closed = 0;
+    for (const roomId of await this.repository.findWaitingRoomIdsOfGame(gameId, tx)) {
+      const room = await this.repository.lockRoom(roomId, tx);
+      if (!room || room.status !== 'WAITING' || (await this.isPlayable(room, tx))) continue;
+      await this.close(roomId, 'ADMIN', this.clock.now(), tx);
+      closed += 1;
+    }
+    return closed;
+  }
+
   // --- Piezas --------------------------------------------------------------
+
+  /** Si la versión vigente del juego de la sala admite sus opciones (U5). */
+  private isPlayable(room: RoomRow, executor: DbExecutor): Promise<boolean> {
+    return this.games.isRoomPlayable(
+      room.gameId,
+      {
+        mode: room.mode,
+        timeControl: room.timeControl,
+        maxPlayers: room.maxPlayers,
+        settings: room.settings,
+      },
+      executor,
+    );
+  }
 
   /** El límite cuenta las pertenencias a salas no cerradas de esa modalidad (decisión R7). */
   private async assertBelowMatchLimit(
@@ -408,6 +499,12 @@ export class RoomsService {
       if (room.mode !== 'TURN_BASED') return room;
       const { hasPlayed } = await starter.describeRoom(room.id, tx);
       if (hasPlayed) return room;
+    }
+
+    // Una sala que se quedó en espera mientras su juego cambiaba se cierra en vez de empezar (U5).
+    if (!(await this.isPlayable(room, tx))) {
+      await this.close(room.id, 'ADMIN', this.clock.now(), tx);
+      return { ...room, status: 'CLOSED', closeReason: 'ADMIN' };
     }
 
     const matchId = await starter.startMatch(

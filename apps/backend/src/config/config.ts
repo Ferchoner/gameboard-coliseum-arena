@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import type { MatchMode } from '@gameboard/contracts';
 import { z } from 'zod';
 
@@ -33,6 +34,19 @@ const envSchema = z
     SESSION_COOKIE_SECURE: booleanFlag.default(true),
     SESSION_IDLE_DAYS: z.coerce.number().int().min(1).default(30),
     SESSION_ABSOLUTE_DAYS: z.coerce.number().int().min(1).default(90),
+    /** Cada cuánto se borran las sesiones y los enlaces de recuperación caducados (ADR-017, U14). */
+    AUTH_CLEANUP_MINUTES: z.coerce.number().int().min(1).default(60),
+
+    /** Validez del enlace de recuperación de la contraseña (ADR-017, U7). */
+    PASSWORD_RESET_MINUTES: z.coerce.number().int().min(1).default(60),
+    /**
+     * Cómo se envía el correo. Por ahora solo existe el simulado, que guarda
+     * cada correo como un archivo (ADR-017, U6). El servicio real llega con
+     * el alojamiento.
+     */
+    MAIL_TRANSPORT: z.enum(['outbox']).default('outbox'),
+    /** Carpeta del correo simulado. Por defecto, `apps/backend/var/mail`. */
+    MAIL_OUTBOX_DIR: z.string().min(1).optional(),
 
     /** Certificado y clave para servir por HTTPS en local (ADR-012, decisión S14). */
     TLS_CERT_FILE: z.string().min(1).optional(),
@@ -86,6 +100,14 @@ const envSchema = z
         message: 'no puede desactivarse en producción',
       });
     }
+    if (env.NODE_ENV === 'production' && env.MAIL_TRANSPORT === 'outbox') {
+      // Nadie recibiría los enlaces de recuperación (ADR-017, U18).
+      context.addIssue({
+        code: 'custom',
+        path: ['MAIL_TRANSPORT'],
+        message: 'el correo simulado no puede usarse en producción',
+      });
+    }
     if (Boolean(env.TLS_CERT_FILE) !== Boolean(env.TLS_KEY_FILE)) {
       context.addIssue({
         code: 'custom',
@@ -103,6 +125,10 @@ const envSchema = z
   });
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const MINUTE_MS = 60 * 1000;
+
+/** La carpeta del correo simulado si no se indica otra: `apps/backend/var/mail`. */
+const DEFAULT_OUTBOX_DIR = fileURLToPath(new URL('../../var/mail', import.meta.url));
 
 export interface AppConfig {
   readonly environment: 'development' | 'test' | 'production';
@@ -125,6 +151,17 @@ export interface AppConfig {
     readonly idleMs: number;
     /** Tope que la renovación no puede superar. */
     readonly absoluteMs: number;
+    /** Intervalo de la limpieza de sesiones y enlaces caducados. */
+    readonly cleanupIntervalMs: number;
+  };
+  readonly passwordReset: {
+    /** Validez del enlace de recuperación. */
+    readonly ttlMs: number;
+  };
+  readonly mail: {
+    readonly transport: 'outbox';
+    /** Carpeta donde el correo simulado guarda cada correo. */
+    readonly outboxDir: string;
   };
   readonly rooms: {
     /** Máximo de partidas simultáneas por jugador y modalidad (regla 7.30). */
@@ -196,6 +233,14 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
       cookieSecure: value.SESSION_COOKIE_SECURE,
       idleMs: value.SESSION_IDLE_DAYS * DAY_MS,
       absoluteMs: value.SESSION_ABSOLUTE_DAYS * DAY_MS,
+      cleanupIntervalMs: value.AUTH_CLEANUP_MINUTES * MINUTE_MS,
+    },
+    passwordReset: {
+      ttlMs: value.PASSWORD_RESET_MINUTES * MINUTE_MS,
+    },
+    mail: {
+      transport: value.MAIL_TRANSPORT,
+      outboxDir: value.MAIL_OUTBOX_DIR ?? DEFAULT_OUTBOX_DIR,
     },
     rooms: {
       maxMatchesPerPlayer: {

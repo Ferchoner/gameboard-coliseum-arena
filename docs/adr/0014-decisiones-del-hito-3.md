@@ -120,6 +120,8 @@ La regla 8.15 dice que las estadísticas se actualizan en la transacción del fi
 
 ## 5. El juego
 
+*Anotado el 2026-11-19:* las estadísticas las crea y rellena el Hito 6, en la misma migración, y desde entonces se actualizan en la transacción del final de partida (ADR-017, U8).
+
 ### K5. Cómo entra Cuatro en raya en el catálogo
 
 La decisión A5 de la API dice que los juegos y sus versiones no se crean por la API, sino en la base de datos. No dice cómo.

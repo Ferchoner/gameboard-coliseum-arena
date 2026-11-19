@@ -177,12 +177,24 @@ module.exports = {
       comment:
         '`game-sessions` conoce a `rooms`, `matches`, `games` y `players`, y ninguno de ellos ' +
         'la conoce a ella. Solo el canal de tiempo real le pasa las órdenes de juego ' +
-        '(ADR-014, decisión K1).',
+        '(ADR-014, decisión K1), y la administración le pide anular partidas (ADR-017).',
       from: {
         path: '^apps/backend/src/modules/',
-        pathNot: '^apps/backend/src/modules/(game-sessions|realtime)/',
+        pathNot: '^apps/backend/src/modules/(game-sessions|realtime|admin)/',
       },
       to: { path: '^apps/backend/src/modules/game-sessions/' },
+    },
+    {
+      name: 'nadie-depende-de-admin',
+      severity: 'error',
+      comment:
+        'La administración usa los servicios de los demás módulos y ninguno la conoce a ella ' +
+        '(ADR-017).',
+      from: {
+        path: '^apps/backend/src/modules/',
+        pathNot: '^apps/backend/src/modules/admin/',
+      },
+      to: { path: '^apps/backend/src/modules/admin/' },
     },
     {
       name: 'infraestructura-no-depende-de-modulos',

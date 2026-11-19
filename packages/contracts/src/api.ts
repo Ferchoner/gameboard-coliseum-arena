@@ -409,6 +409,18 @@ export const listMyMatchesQuerySchema = z.object({
 });
 export type ListMyMatchesQuery = z.infer<typeof listMyMatchesQuerySchema>;
 
+/** Parámetros de `GET /admin/users`. */
+export const adminListUsersQuerySchema = z.object({
+  /** El nombre de usuario empieza por este texto, sin distinguir mayúsculas. */
+  username: z.string().min(1).exactOptional(),
+  /** El correo coincide entero, sin distinguir mayúsculas. */
+  email: z.string().min(1).exactOptional(),
+  status: userStatusSchema.exactOptional(),
+  cursor: z.string().min(1).exactOptional(),
+  limit: z.coerce.number().int().min(1).max(PAGE_LIMIT_MAX).default(PAGE_LIMIT_DEFAULT),
+});
+export type AdminListUsersQuery = z.infer<typeof adminListUsersQuerySchema>;
+
 export const setUserStatusRequestSchema = z.strictObject({
   status: userStatusSchema,
 });

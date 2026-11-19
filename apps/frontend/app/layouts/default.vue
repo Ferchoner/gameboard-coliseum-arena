@@ -106,10 +106,10 @@ async function onSignOut(): Promise<void> {
               <span class="visually-hidden">{{ es.nav.yourTurnIn(turns) }}</span>
             </span>
           </NuxtLink>
-          <span class="who">
+          <NuxtLink class="who" to="/cuenta" :title="es.nav.account" data-testid="nav-account">
             <span class="visually-hidden">{{ es.nav.signedInAs }}</span>
             {{ me.displayName }}
-          </span>
+          </NuxtLink>
           <button type="button" class="button quiet" :disabled="signingOut" @click="onSignOut">
             {{ signingOut ? es.nav.signingOut : es.nav.signOut }}
           </button>

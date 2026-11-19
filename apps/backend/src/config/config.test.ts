@@ -46,6 +46,21 @@ describe('configuración', () => {
     ).toThrow(/SESSION_COOKIE_SECURE/);
   });
 
+  it('no arranca en producción con el correo simulado (ADR-017, U18)', () => {
+    expect(() => loadConfig({ ...base, NODE_ENV: 'production' })).toThrow(/MAIL_TRANSPORT/);
+  });
+
+  it('guarda el correo simulado en apps/backend/var/mail si no se indica otra carpeta', () => {
+    expect(loadConfig(base).mail.outboxDir).toMatch(/apps[/\\]backend[/\\]var[/\\]mail$/);
+    expect(loadConfig({ ...base, MAIL_OUTBOX_DIR: '/tmp/correo' }).mail.outboxDir).toBe(
+      '/tmp/correo',
+    );
+  });
+
+  it('el enlace de recuperación vale una hora por defecto (ADR-017, U7)', () => {
+    expect(loadConfig(base).passwordReset.ttlMs).toBe(60 * 60 * 1000);
+  });
+
   it('exige el certificado y la clave juntos', () => {
     expect(() => loadConfig({ ...base, TLS_CERT_FILE: 'cert.pem' })).toThrow(/TLS_CERT_FILE/);
     expect(

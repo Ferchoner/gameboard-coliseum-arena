@@ -19,6 +19,7 @@
     "db:up": "docker compose up -d --wait postgres",
     "db:down": "docker compose down",
     "db:migrate": "pnpm --filter @gameboard/backend run db:migrate",
+    "admin:role": "pnpm --filter @gameboard/backend run admin:role",
     "dev": "node scripts/dev.mjs http",
     "dev:https": "node scripts/dev.mjs https",
     "dev:cert": "node scripts/dev-cert.mjs",

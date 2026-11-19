@@ -8,6 +8,7 @@ import {
 } from '@gameboard/contracts';
 import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { navigateTo, useHead } from '#imports';
+import PlayerLink from '../../components/PlayerLink.vue';
 import RoomCreateForm from '../../components/RoomCreateForm.vue';
 import { useApi } from '../../composables/useApi';
 import { useCatalog } from '../../composables/useCatalog';
@@ -178,7 +179,7 @@ onBeforeUnmount(() => {
         <li v-for="room in list.items" :key="room.roomId" class="room">
           <div>
             <h3>{{ gameName(room.gameSlug) }}</h3>
-            <p>{{ es.rooms.ownedBy(room.owner.displayName) }}</p>
+            <p>{{ es.rooms.ownedBy }} <PlayerLink :player="room.owner" /></p>
             <p class="muted">
               {{ es.home.modes[room.mode] }} · {{ formatDuration(room.timeControl.totalMs) }}
               {{ es.home.timePerPlayer }} ·

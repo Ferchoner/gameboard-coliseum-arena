@@ -9,7 +9,7 @@
  * atiende peticiones.
  */
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, rmSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import process from 'node:process';
@@ -25,6 +25,7 @@ import {
   DISCONNECT_GRACE_SECONDS,
   FRONTEND_ORIGIN,
   HEARTBEAT_SECONDS,
+  MAIL_OUTBOX_DIR,
 } from './settings.mjs';
 
 const migrate = resolve(BACKEND_DIR, 'dist/database/migrate.js');
@@ -58,6 +59,9 @@ try {
   await admin.end();
 }
 
+// El correo de ejecuciones anteriores no debe confundir a las pruebas.
+rmSync(MAIL_OUTBOX_DIR, { recursive: true, force: true });
+
 const env = {
   ...process.env,
   NODE_ENV: 'development',
@@ -73,6 +77,7 @@ const env = {
   MATCH_ABANDON_SECONDS: String(ABANDON_SECONDS),
   REALTIME_HEARTBEAT_SECONDS: String(HEARTBEAT_SECONDS),
   REALTIME_DISCONNECT_GRACE_SECONDS: String(DISCONNECT_GRACE_SECONDS),
+  MAIL_OUTBOX_DIR,
   LOG_FORMAT: 'text',
   LOG_LEVEL: 'warn',
 };

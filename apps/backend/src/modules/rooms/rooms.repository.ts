@@ -79,6 +79,19 @@ export class RoomsRepository {
       .limit(query.limit);
   }
 
+  /** Las salas en espera de ese juego. */
+  async findWaitingRoomIdsOfGame(
+    gameId: string,
+    executor: DbExecutor = this.database.db,
+  ): Promise<string[]> {
+    const rows = await executor
+      .select({ id: rooms.id })
+      .from(rooms)
+      .where(and(eq(rooms.status, 'WAITING'), eq(rooms.gameId, gameId)))
+      .orderBy(asc(rooms.id));
+    return rows.map((row) => row.id);
+  }
+
   /** Salas en espera de esa modalidad sin actividad desde antes de ese instante. */
   async findIdleRoomIds(
     mode: MatchMode,

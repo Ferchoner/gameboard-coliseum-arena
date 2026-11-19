@@ -2,6 +2,7 @@
 import type { MatchView, RoomView } from '@gameboard/contracts';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useHead, useRoute } from '#imports';
+import PlayerLink from '../../components/PlayerLink.vue';
 import { useApi } from '../../composables/useApi';
 import { useCatalog } from '../../composables/useCatalog';
 import { useRealtime } from '../../composables/useRealtime';
@@ -289,7 +290,7 @@ onBeforeUnmount(() => {
         >
           <span class="token" :class="`seat-${player.seat}`" aria-hidden="true" />
           <span class="member-name">
-            {{ player.displayName }}
+            <PlayerLink :player="player" />
             <span v-if="player.seatName" class="muted">({{ player.seatName }})</span>
           </span>
           <span

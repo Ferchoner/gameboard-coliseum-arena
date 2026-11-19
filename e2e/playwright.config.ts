@@ -35,15 +35,16 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: /reinicio\.spec\.ts$/,
+      testIgnore: /(reinicio|administracion)\.spec\.ts$/,
       use: { ...devices['Desktop Chrome'] },
     },
-    // Reinicia la API de verdad, así que va aparte, después de todas las demás (ADR-015, V6).
+    // Las que cambian lo que comparten todas van aparte, después de las demás: una reinicia la
+    // API de verdad (ADR-015, V6) y otra retira Cuatro en raya del catálogo (ADR-017, U10).
     {
       name: 'reinicio',
-      testMatch: /reinicio\.spec\.ts$/,
+      testMatch: /(reinicio|administracion)\.spec\.ts$/,
       dependencies: ['chromium'],
-      // De una en una: dos reinicios a la vez se estorbarían.
+      // De una en una: se estorbarían entre sí.
       workers: 1,
       use: { ...devices['Desktop Chrome'] },
     },

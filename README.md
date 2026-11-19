@@ -2,14 +2,14 @@
 
 Una plataforma web para jugar juegos de mesa en línea contra otras personas, en tiempo real o por turnos. El primer juego es Cuatro en raya.
 
-**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **corte vertical** completo: el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo); el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo), y el **Hito 3**, Cuatro en raya en tiempo real (la partida empieza sola cuando todos están listos, con tablero, relojes, rendición, resultado, historial y revancha). Está construido también el **Hito 4**, la recuperación ante cortes y reinicios (quien pasa 2 minutos sin conexión pierde por abandono, y un reinicio del servidor no descuenta a nadie el tiempo parado), fusionado en `main`. Falta el resto del MVP: modalidad por turnos, cuenta, estadísticas y administración. El reparto del resto del MVP en hitos se aceptó al terminar el corte vertical. Cada hito se implementa solo cuando se autoriza de forma explícita.
+**Estado:** la arquitectura está decidida, los contratos están en su versión 1 y está implementado el **corte vertical** completo: el **Hito 1**, la base de la plataforma (cuentas con registro, entrada y salida, catálogo de juegos y un frontend mínimo); el **Hito 2**, las salas y el canal de tiempo real (crear una sala, entrar, salir, marcarse listo y ver los cambios en vivo), y el **Hito 3**, Cuatro en raya en tiempo real (la partida empieza sola cuando todos están listos, con tablero, relojes, rendición, resultado, historial y revancha). Están construidos también el **Hito 4**, la recuperación ante cortes y reinicios (quien pasa 2 minutos sin conexión pierde por abandono, y un reinicio del servidor no descuenta a nadie el tiempo parado), y el **Hito 5**, la modalidad por turnos con aviso de turno y aplicación instalable, fusionados en `main`. El **Hito 6**, cuenta, estadísticas y administración por la API, está en revisión. Falta el Hito 7, la preparación para publicar. El reparto del resto del MVP en hitos se aceptó al terminar el corte vertical. Cada hito se implementa solo cuando se autoriza de forma explícita.
 
 ## Qué hay aquí
 
 | Carpeta | Contenido |
 |---|---|
 | [`docs/`](docs/) | Visión, arquitectura, modelo de datos y flujos |
-| [`docs/adr/`](docs/adr/README.md) | Las quince decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
+| [`docs/adr/`](docs/adr/README.md) | Las diecisiete decisiones de arquitectura aceptadas, con sus alternativas y consecuencias |
 | [`docs/auditoria/`](docs/auditoria/README.md) | El análisis que precedió a las decisiones. Es histórico y no se mantiene al día |
 | [`contracts/`](contracts/) | La API, el protocolo de tiempo real, el contrato del motor de juego, el catálogo de errores y la matriz de permisos |
 | [`planning/`](planning/) | El backlog por hitos y el registro de lo decidido y lo abierto |
@@ -29,7 +29,7 @@ pnpm db:up       # arranca PostgreSQL 18 en Docker
 pnpm dev         # compila, aplica las migraciones y arranca la API y el frontend
 ```
 
-Con eso, el frontend queda en <http://localhost:3001> y la API en <http://localhost:3000>. Son dos orígenes del mismo sitio, igual que en producción (ADR-004). Al cambiar un archivo, lo afectado se vuelve a compilar y se reinicia solo.
+Con eso, el frontend queda en <http://localhost:3001> y la API en <http://localhost:3000>. Son dos orígenes del mismo sitio, igual que en producción (ADR-004). Al cambiar un archivo, lo afectado se vuelve a compilar y se reinicia solo. Los correos, como el enlace para recuperar la contraseña, no se envían: se guardan como archivos de texto en `apps/backend/var/mail/`.
 
 ### Modo HTTPS
 
@@ -54,10 +54,11 @@ Nada es obligatorio en local. Para cambiar la base de datos, el registro de acti
 | `pnpm db:up`, `pnpm db:down` | Arranca o detiene la base de datos |
 | `pnpm db:migrate` | Aplica las migraciones pendientes |
 | `pnpm test` | Ejecuta las pruebas. Las del backend usan la base de datos `gameboard_test`, que `pnpm db:up` crea |
-| `pnpm test:e2e` | Ejecuta las pruebas en navegador. Antes hay que construir con `pnpm build`, tener la base de datos en marcha y `pnpm dev` parado, porque usan sus mismos puertos. La primera vez hay que descargar el navegador con `pnpm --filter @gameboard/e2e exec playwright install chromium`. Usan su propia base de datos, `gameboard_e2e`, que crean de cero cada vez, y el puerto 3010 para que una prueba pueda reiniciar la API. La prueba del reinicio va en su propio grupo, después de las demás |
+| `pnpm test:e2e` | Ejecuta las pruebas en navegador. Antes hay que construir con `pnpm build`, tener la base de datos en marcha y `pnpm dev` parado, porque usan sus mismos puertos. La primera vez hay que descargar el navegador con `pnpm --filter @gameboard/e2e exec playwright install chromium`. Usan su propia base de datos, `gameboard_e2e`, que crean de cero cada vez, y el puerto 3010 para que una prueba pueda reiniciar la API. La del reinicio y la de la administración, que retira un juego del catálogo, van en su propio grupo, después de las demás y de una en una |
 | `pnpm check` | Todo lo que se comprueba en cada pull request: formato, análisis, reglas de dependencias, compilación, tipos y pruebas |
 | `pnpm build` | Compila los paquetes y el backend, y genera el frontend como archivos estáticos en `apps/frontend/.output/public` |
 | `pnpm format` | Da formato al código |
+| `pnpm admin:role <usuario> ADMIN` | Concede el rol de administrador a una cuenta, y con `USER` lo retira. Antes hay que construir con `pnpm build`. Cómo usar la administración, en [`docs/guia-administracion.md`](docs/guia-administracion.md) |
 
 ## Orden de lectura
 
@@ -73,6 +74,8 @@ Nada es obligatorio en local. Para cambiar la base de datos, el registro de acti
 10. [`planning/decisiones-y-pendientes.md`](planning/decisiones-y-pendientes.md): qué está decidido y qué sigue abierto.
 11. [`planning/backlog-mvp.md`](planning/backlog-mvp.md): hitos.
 12. [`planning/cierre-hito-0.md`](planning/cierre-hito-0.md): comprobación de que la arquitectura quedó cerrada.
+
+Para administrar la plataforma: [`docs/guia-administracion.md`](docs/guia-administracion.md).
 
 Para saber por qué se decidió algo, el ADR correspondiente está en [`docs/adr/`](docs/adr/README.md).
 

@@ -29,6 +29,17 @@ export class PlayersRepository {
     return row ?? null;
   }
 
+  async findByUserIds(
+    userIds: readonly string[],
+    executor: DbExecutor = this.database.db,
+  ): Promise<PlayerRow[]> {
+    if (userIds.length === 0) return [];
+    return executor
+      .select()
+      .from(players)
+      .where(inArray(players.userId, [...userIds]));
+  }
+
   async findByIds(
     ids: readonly string[],
     executor: DbExecutor = this.database.db,

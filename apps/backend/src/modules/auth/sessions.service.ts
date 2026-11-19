@@ -4,7 +4,11 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Clock } from '../../common/clock.js';
 import type { AppConfig } from '../../config/config.js';
 import { APP_CONFIG } from '../../config/config.module.js';
-import type { DbExecutor } from '../../database/database.service.js';
+import {
+  DatabaseService,
+  type DbExecutor,
+  type Transaction,
+} from '../../database/database.service.js';
 import { RealtimeEvents } from '../broadcast/realtime-events.js';
 import { PlayersService } from '../players/players.service.js';
 import { UsersService } from '../users/users.service.js';
@@ -44,6 +48,7 @@ const RENEW_AFTER_MS = 60 * 60 * 1000;
 export class SessionsService {
   constructor(
     private readonly repository: SessionsRepository,
+    private readonly database: DatabaseService,
     private readonly users: UsersService,
     private readonly players: PlayersService,
     private readonly events: RealtimeEvents,
@@ -100,6 +105,25 @@ export class SessionsService {
     if (!token || !looksLikeSessionToken(token)) return;
     const sessionId = await this.repository.deleteByTokenHash(hashSessionToken(token));
     if (sessionId !== null) this.announceEnd(sessionId);
+  }
+
+  /**
+   * Cierra todas las sesiones de la cuenta, salvo `exceptSessionId` si se
+   * indica, dentro de la transacción de quien lo pide. Sus conexiones de
+   * tiempo real se cierran cuando la transacción se confirma (ADR-004,
+   * condición 5.8). Lo usan el cambio y la recuperación de la contraseña y
+   * la suspensión de la cuenta.
+   */
+  async endAllOf(
+    userId: string,
+    tx: Transaction,
+    exceptSessionId: string | null = null,
+  ): Promise<number> {
+    const sessionIds = await this.repository.deleteByUserId(userId, exceptSessionId, tx);
+    this.database.afterCommit(tx, () => {
+      for (const sessionId of sessionIds) this.announceEnd(sessionId);
+    });
+    return sessionIds.length;
   }
 
   /** Limpieza: borra las sesiones caducadas por inactividad. Devuelve cuántas eran. */

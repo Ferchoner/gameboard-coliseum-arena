@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { MatchSummaryView } from '@gameboard/contracts';
 import { useCatalog } from '../composables/useCatalog';
+import PlayerNames from './PlayerNames.vue';
 import { es } from '../i18n/es';
 import { formatDateTime } from '../utils/format';
 
@@ -8,9 +9,6 @@ import { formatDateTime } from '../utils/format';
 defineProps<{ readonly items: readonly MatchSummaryView[] }>();
 
 const { gameName } = useCatalog();
-
-const rivals = (match: MatchSummaryView) =>
-  es.matches.against(match.opponents.map((opponent) => opponent.displayName).join(', '));
 
 /** Hasta cuándo puede jugar quien tiene el turno, en la hora de quien lo lee. */
 const deadline = (match: MatchSummaryView) =>
@@ -28,7 +26,7 @@ const deadline = (match: MatchSummaryView) =>
     >
       <div>
         <h3>{{ gameName(match.gameSlug) }}</h3>
-        <p>{{ rivals(match) }}</p>
+        <p>{{ es.matches.against }} <PlayerNames :players="match.opponents" /></p>
         <p class="muted">
           {{ es.home.modes[match.mode] }} ·
           {{ es.matches.startedAt(formatDateTime(match.startedAt)) }}

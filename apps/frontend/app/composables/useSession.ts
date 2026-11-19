@@ -1,4 +1,12 @@
-import type { LoginRequest, Me, RegisterRequest } from '@gameboard/contracts';
+import type {
+  ChangePasswordRequest,
+  LoginRequest,
+  Me,
+  PasswordResetConfirmRequest,
+  PasswordResetRequest,
+  RegisterRequest,
+  UpdateMeRequest,
+} from '@gameboard/contracts';
 import { computed } from 'vue';
 import { type ApiResult, codeOf } from '../utils/api';
 import { useApi } from './useApi';
@@ -62,6 +70,33 @@ export function useSession() {
     return result;
   }
 
+  /** Cambia el perfil propio y deja la sesión con la cuenta como queda (ADR-017, U9). */
+  async function updateMe(body: UpdateMeRequest): Promise<ApiResult<Me>> {
+    return accept(await api.patch<Me>('/me', body));
+  }
+
+  /** Cambia la contraseña. Las demás sesiones se cierran; esta sigue abierta. */
+  function changePassword(body: ChangePasswordRequest): Promise<ApiResult<undefined>> {
+    return api.put<undefined>('/me/password', body);
+  }
+
+  /** Pide el enlace de recuperación. Responde lo mismo exista o no la cuenta. */
+  function requestPasswordReset(body: PasswordResetRequest): Promise<ApiResult<undefined>> {
+    return api.post<undefined>('/auth/password-reset/request', body);
+  }
+
+  /**
+   * Fija la contraseña nueva con el enlace. Cierra todas las sesiones de la
+   * cuenta, también la de este navegador si la había.
+   */
+  async function confirmPasswordReset(
+    body: PasswordResetConfirmRequest,
+  ): Promise<ApiResult<undefined>> {
+    const result = await api.post<undefined>('/auth/password-reset/confirm', body);
+    if (result.ok) session.value = { status: 'anonymous' };
+    return result;
+  }
+
   return {
     session,
     me: computed(() => (session.value.status === 'signedIn' ? session.value.me : null)),
@@ -70,5 +105,9 @@ export function useSession() {
     register,
     signIn,
     signOut,
+    updateMe,
+    changePassword,
+    requestPasswordReset,
+    confirmPasswordReset,
   };
 }

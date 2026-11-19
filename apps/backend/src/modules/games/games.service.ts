@@ -1,9 +1,17 @@
-import type { Game } from '@gameboard/contracts';
+import type { AdminGame, AdminGameVersion, CatalogStatus, Game } from '@gameboard/contracts';
 import type { AnyGameEngine, GameEngineRegistry } from '@gameboard/game-engine';
 import { Inject, Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { AppError } from '../../common/errors/app-error.js';
-import type { DbExecutor } from '../../database/database.service.js';
-import { type CatalogEntryRow, GamesRepository, type GameVersionRow } from './games.repository.js';
+import { Clock } from '../../common/clock.js';
+import type { DbExecutor, Transaction } from '../../database/database.service.js';
+import {
+  type CatalogEntryRow,
+  type GameRow,
+  GamesRepository,
+  type GameVersionFullRow,
+  type GameVersionRow,
+} from './games.repository.js';
+import { checkRoomOptions, type RoomOptions } from './room-options.js';
 
 /** Con esta clave se inyecta el registro de motores (acuerdo B3). */
 export const GAME_ENGINE_REGISTRY = Symbol('GAME_ENGINE_REGISTRY');
@@ -40,6 +48,7 @@ export class GamesService implements OnApplicationBootstrap {
 
   constructor(
     private readonly repository: GamesRepository,
+    private readonly clock: Clock,
     @Inject(GAME_ENGINE_REGISTRY) private readonly engines: GameEngineRegistry,
   ) {}
 
@@ -92,6 +101,132 @@ export class GamesService implements OnApplicationBootstrap {
       throw new AppError('GAME_NOT_FOUND', 'The game does not exist or is not active');
     }
     return { gameId: row.gameId, gameSlug: row.slug, gameVersion: row.version, engine };
+  }
+
+  /**
+   * Si una sala de ese juego puede jugar su siguiente partida: el juego
+   * sigue en el catálogo y su versión vigente, con motor, admite las
+   * opciones de la sala. Si no, la sala se retira (ADR-017, U5).
+   */
+  async isRoomPlayable(
+    gameId: string,
+    options: RoomOptions,
+    executor?: DbExecutor,
+  ): Promise<boolean> {
+    const row = await this.repository.findCatalogEntryById(gameId, executor);
+    const engine = row ? this.engines.resolve(row.slug, row.version) : undefined;
+    return engine !== undefined && checkRoomOptions(engine, options).ok;
+  }
+
+  // --- Administración (ADR-017) ---------------------------------------------
+
+  /** Todos los juegos y sus versiones, activos o no (API, `GET /admin/games`). */
+  async listForAdmin(): Promise<AdminGame[]> {
+    const games = await this.repository.listAllGames();
+    const versions = await this.repository.listAllVersionsOf(games.map((game) => game.id));
+    return games.map((game) =>
+      this.toAdminGame(
+        game,
+        versions.filter((version) => version.gameId === game.id),
+      ),
+    );
+  }
+
+  /**
+   * Activa o desactiva un juego. Desactivarlo lo retira del catálogo e
+   * impide crear salas; las partidas en curso continúan. Devuelve el juego
+   * como queda, y su identificador para retirar sus salas en la misma
+   * transacción.
+   */
+  async setGameStatus(
+    gameSlug: string,
+    status: CatalogStatus,
+    tx: Transaction,
+  ): Promise<{ gameId: string; game: AdminGame }> {
+    const game = await this.lockGame(gameSlug, tx);
+    await this.repository.updateGameStatus(game.id, status, this.clock.now(), tx);
+    return { gameId: game.id, game: await this.adminGameOf({ ...game, status }, tx) };
+  }
+
+  /**
+   * Activa o desactiva una versión. No se puede activar sin motor ni
+   * desactivar la vigente (API, `PUT /admin/games/{gameSlug}/versions/{gameVersion}/status`).
+   */
+  async setVersionStatus(
+    gameSlug: string,
+    gameVersion: string,
+    status: CatalogStatus,
+    tx: Transaction,
+  ): Promise<AdminGame> {
+    const game = await this.lockGame(gameSlug, tx);
+    const version = await this.findVersionOf(game, gameVersion, tx);
+    if (status === 'ACTIVE' && !this.engines.resolve(game.slug, version.version)) {
+      throw new AppError(
+        'ENGINE_NOT_REGISTERED',
+        'The engine of that version is not registered in the server',
+      );
+    }
+    if (status === 'INACTIVE' && version.isCurrent) {
+      throw new AppError('GAME_VERSION_IS_CURRENT', 'The current version cannot be deactivated');
+    }
+    await this.repository.updateVersionStatus(version.id, status, tx);
+    return this.adminGameOf(game, tx);
+  }
+
+  /**
+   * Elige la versión vigente, que es la que toman las partidas nuevas.
+   * Tiene que estar activa. Devuelve el juego como queda y su identificador.
+   */
+  async setCurrentVersion(
+    gameSlug: string,
+    gameVersion: string,
+    tx: Transaction,
+  ): Promise<{ gameId: string; game: AdminGame }> {
+    const game = await this.lockGame(gameSlug, tx);
+    const version = await this.findVersionOf(game, gameVersion, tx);
+    if (version.status !== 'ACTIVE') {
+      throw new AppError('GAME_VERSION_NOT_ACTIVE', 'The version is not active');
+    }
+    if (!version.isCurrent) await this.repository.makeCurrent(game.id, version.id, tx);
+    return { gameId: game.id, game: await this.adminGameOf(game, tx) };
+  }
+
+  private async lockGame(gameSlug: string, tx: Transaction): Promise<GameRow> {
+    const game = await this.repository.lockGameBySlug(gameSlug, tx);
+    if (!game) throw new AppError('GAME_NOT_FOUND', 'The game does not exist');
+    return game;
+  }
+
+  private async findVersionOf(
+    game: GameRow,
+    gameVersion: string,
+    tx: Transaction,
+  ): Promise<GameVersionFullRow> {
+    const versions = await this.repository.listAllVersionsOf([game.id], tx);
+    const version = versions.find((one) => one.version === gameVersion);
+    if (!version) throw new AppError('GAME_VERSION_NOT_FOUND', 'The version does not exist');
+    return version;
+  }
+
+  private async adminGameOf(game: GameRow, executor: DbExecutor): Promise<AdminGame> {
+    return this.toAdminGame(game, await this.repository.listAllVersionsOf([game.id], executor));
+  }
+
+  private toAdminGame(game: GameRow, versions: readonly GameVersionFullRow[]): AdminGame {
+    return {
+      gameSlug: game.slug,
+      name: game.name,
+      status: game.status,
+      versions: [...versions]
+        .sort((a, b) => compareVersions(b.version, a.version))
+        .map((version): AdminGameVersion => ({
+          gameVersion: version.version,
+          status: version.status,
+          isCurrent: version.isCurrent,
+          engineRegistered: this.engines.resolve(game.slug, version.version) !== undefined,
+          releasedAt: version.releasedAt?.toISOString() ?? null,
+        })),
+    };
   }
 
   /** La versión vigente de un juego, que es la que toma una partida al empezar. */
@@ -161,4 +296,16 @@ export class GamesService implements OnApplicationBootstrap {
       },
     };
   }
+}
+
+/** Compara dos versiones semánticas por sus números (ADR-011, 9.7). */
+function compareVersions(a: string, b: string): number {
+  const parts = (version: string) => version.split(/[.-]/).map((part) => Number(part) || 0);
+  const left = parts(a);
+  const right = parts(b);
+  for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+    const difference = (left[index] ?? 0) - (right[index] ?? 0);
+    if (difference !== 0) return difference;
+  }
+  return 0;
 }

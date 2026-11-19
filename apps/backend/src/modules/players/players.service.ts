@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import type { PlayerRef } from '@gameboard/contracts';
+import type { PlayerRef, PublicPlayer } from '@gameboard/contracts';
 import { Injectable } from '@nestjs/common';
 import { Clock } from '../../common/clock.js';
+import { AppError } from '../../common/errors/app-error.js';
 import type { DbExecutor, Transaction } from '../../database/database.service.js';
 import { ProfilesService } from '../profiles/profiles.service.js';
 import { UsersService } from '../users/users.service.js';
@@ -37,6 +38,34 @@ export class PlayersService {
   async findByUserId(userId: string): Promise<Player | null> {
     const row = await this.repository.findByUserId(userId);
     return row ? toPlayer(row) : null;
+  }
+
+  /** El jugador de cada cuenta, por el identificador de la cuenta. */
+  async findIdsByUserIds(userIds: readonly string[]): Promise<Map<string, string>> {
+    const rows = await this.repository.findByUserIds([...new Set(userIds)]);
+    return new Map(rows.flatMap((row) => (row.userId ? [[row.userId, row.id] as const] : [])));
+  }
+
+  /**
+   * El perfil público del jugador con ese nombre de usuario, sin distinguir
+   * mayúsculas. El de una cuenta suspendida no se muestra: la suspensión
+   * es el remedio para un perfil inaceptable (matriz de permisos, P7;
+   * ADR-017, U15).
+   */
+  async getPublic(username: string): Promise<PublicPlayer> {
+    const user = await this.users.findByUsername(username);
+    const player = user?.status === 'ACTIVE' ? await this.findByUserId(user.id) : null;
+    const profile = player && user ? await this.profiles.findByUserId(user.id) : null;
+    if (!user || !player || !profile) {
+      throw new AppError('PLAYER_NOT_FOUND', 'There is no player with that username');
+    }
+    return {
+      playerId: player.id,
+      username: user.username,
+      displayName: profile.displayName,
+      avatarUrl: profile.avatarUrl,
+      biography: profile.biography,
+    };
   }
 
   /**
