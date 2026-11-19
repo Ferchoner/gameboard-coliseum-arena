@@ -2,15 +2,13 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, aceptada el 2026-11-15 por Fernando Hernandez Argueta |
+| **Estado** | Versión 1, aceptada el 2026-11-15 por Fernando Hernandez Argueta. Enmendada el 2026-11-19 con precisiones de ADR-014 y ADR-016, sin cambiar la interfaz |
 | **Contrato** | [`packages/game-engine/src/contract.ts`](../packages/game-engine/src/contract.ts). Contiene solo tipos, sin lógica. Hasta el Hito 1 era `contracts/03-game-engine.ts` |
 | **Sustituye a** | El contrato de referencia preliminar |
 | **Aplica** | ADR-001 (condición 5.5), ADR-007 (acuerdos B2 y B3), ADR-009 (reglas 7.7, 7.8 y 7.16 a 7.18), ADR-010 (reglas 8.1, 8.2 y 8.5), ADR-011 (convenciones 9.5, 9.7, 9.9 y 9.19) y el modelo de datos (decisión R1) |
 | **Resuelve** | Hallazgos C-12, C-14 y C-15; vacíos G-06 y G-10 |
 
 **Cómo leer este documento.** El contrato es el archivo TypeScript. Este documento explica qué hace cada parte, cómo lo usa la plataforma y qué decisiones de diseño contiene. Las decisiones de diseño propias de este entregable están en la [sección 5](#5-decisiones-de-diseño-propias-de-este-entregable).
-
-El archivo vive por ahora en `contracts/`. Al iniciar el Hito 1 pasa al paquete del motor previsto en ADR-005.
 
 ---
 
@@ -26,7 +24,7 @@ Las seis reglas que debe cumplir están en la cabecera del contrato: puro y dete
 |---|---|---|
 | `parseSettings` | Valida las opciones del juego y las devuelve con su tipo | Al crear una sala |
 | `createInitialState` | Crea el estado inicial a partir del número de asientos, las opciones y la semilla | Al empezar una partida |
-| `restoreState` | Comprueba que un snapshot guardado es un estado válido | Al cargar en memoria una sesión de juego desde la base de datos |
+| `restoreState` | Comprueba que un snapshot guardado es un estado válido | Cada vez que lee una sesión de juego de la base de datos para aplicarle una orden. No hay copia en memoria. *Precisada el 2026-11-19 (ADR-014, K2)* |
 | `getStatus` | Dice qué asientos pueden jugar ahora o, si el juego terminó, el resultado de cada asiento | Tras crear el estado y tras cada jugada |
 | `applyAction` | Valida y aplica una acción. Devuelve el estado nuevo, la acción aceptada y los eventos de juego, o un rechazo | Cuando llega una jugada |
 | `retireSeat` | Retira un asiento por tiempo agotado, rendición o abandono. El juego decide si termina o continúa con los demás | Cuando la capa de sesión detecta uno de esos tres casos |
@@ -73,7 +71,7 @@ En un juego de dos jugadores siempre ocurre lo primero: pierde el asiento retira
 
 ## 4. Ejemplo ilustrativo: Cuatro en raya
 
-Este ejemplo no forma parte del contrato. Muestra cómo encajan los tipos de un juego concreto. Los nombres y valores definitivos se fijan al implementar el juego.
+Este ejemplo no forma parte del contrato. Muestra cómo encajan los tipos de un juego concreto. Los nombres y valores definitivos se fijaron al implementar el juego, en el Hito 3, y coinciden con este ejemplo: están en [`packages/game-engine/src/games/four-in-a-row/`](../packages/game-engine/src/games/four-in-a-row/types.ts), con los motivos de rechazo `MALFORMED_ACTION`, `COLUMN_OUT_OF_RANGE` y `COLUMN_FULL` (ADR-014, K6).
 
 | Tipo | En Cuatro en raya |
 |---|---|
@@ -147,8 +145,8 @@ La nota de la documentación inicial que decía que el motor incluía `initializ
 
 | Asunto | Situación |
 |---|---|
-| **Valores concretos del control de tiempo en Cuatro en raya.** | Cerrado el 2026-11-16: 3, 5 y 10 minutos por jugador en tiempo real. Los de la modalidad por turnos se añaden en el Hito 5 (ADR-014, decisión K6) |
-| **Juegos con jugadas simultáneas.** El contrato y el modelo de datos ya los admiten. Falta precisar cómo se aplica la regla 8.11 cuando dos asientos juegan sobre la misma versión del estado: tal como está, la segunda jugada se rechaza como obsoleta y hay que reenviarla | Se precisa cuando llegue el primer juego de ese tipo |
-| **Jugador retirado en una partida que continúa.** El contrato ya lo admite. Faltan las reglas de la plataforma para ese caso, que solo se da con más de dos jugadores: cuándo puede salir de la sala, cuándo deja de contar para sus límites de partidas, cuándo se anotan sus estadísticas y cómo se marca en el modelo de datos | Se define cuando llegue el primer juego de más de dos jugadores |
+| **Valores concretos del control de tiempo en Cuatro en raya.** | Cerrado el 2026-11-16: 3, 5 y 10 minutos por jugador en tiempo real (ADR-014, decisión K6). Los de la modalidad por turnos, 12, 24 y 36 horas, se añadieron el 2026-11-18 en la misma versión (ADR-016, decisión N1) |
+| **Juegos con jugadas simultáneas.** El contrato y el modelo de datos ya los admiten. Falta precisar cómo se aplica la regla 8.11 cuando dos asientos juegan sobre la misma versión del estado: tal como está, la segunda jugada se rechaza como obsoleta y hay que reenviarla. Además, si se agota el reloj de un asiento, la jugada de otro asiento activo se rechaza con `CLOCK_EXPIRED` aunque le quede tiempo (análisis del 2026-11-19, T-23) | Se precisa cuando llegue el primer juego de ese tipo |
+| **Jugador retirado en una partida que continúa.** El contrato ya lo admite. Faltan las reglas de la plataforma para ese caso, que solo se da con más de dos jugadores: cuándo puede salir de la sala, cuándo deja de contar para sus límites de partidas, cuándo se anotan sus estadísticas y cómo se marca en el modelo de datos. Hoy la plataforma no guarda qué asientos se retiraron, así que podría llamar a `retireSeat` dos veces con el mismo asiento, cosa que este contrato no permite (análisis del 2026-11-19, T-24) | Se define cuando llegue el primer juego de más de dos jugadores |
 | **Uso del motor en el frontend** | Cerrado el 2026-11-16: el frontend no ejecuta el motor. Toma de él solo los tipos de cada juego (ADR-014, decisión K7) |
-| **Comprobación automática de las seis reglas**, en especial el aislamiento y el determinismo | La herramienta se elige al iniciar el Hito 1 (ADR-001) |
+| **Comprobación automática de las seis reglas**, en especial el aislamiento y el determinismo | El aislamiento se comprueba desde el Hito 1 con dependency-cruiser y una regla del analizador que prohíbe al motor la hora, el azar y el entorno (ADR-012, S4). El determinismo, la inmutabilidad y que el estado se pueda serializar solo los prueba cada motor por su cuenta. Una batería común está propuesta en el análisis del 2026-11-19 (T-15) |

@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta |
+| **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta. Enmendada el 2026-11-19 con precisiones de ADR-017 y de la decisión del catálogo, sin cambiar la API |
 | **Contrato** | [`01-rest-api.yaml`](01-rest-api.yaml), en formato OpenAPI 3.1 |
 | **Sustituye a** | El contrato REST preliminar |
 | **Aplica** | ADR-004 (sesión con cookie), ADR-008 (alcance del MVP), ADR-009 (reglas de dominio), ADR-011 (convenciones), el modelo de datos y el protocolo de tiempo real (decisiones T1 y T2) |
@@ -37,7 +37,7 @@ El significado de cada código de error está en el [catálogo único de errores
 | Alcance de la cookie | Ligada solo al host de la API. En producción se llama `__Host-session`; en local sin HTTPS, `session` | ADR-012, decisión S13 |
 | Duración | 30 días de inactividad, con un tope de 90 días | ADR-004, condición 5.6 |
 | CORS | Solo se admite el origen exacto del frontend, con credenciales. El frontend envía sus peticiones con las credenciales incluidas | ADR-004, condición 5.4 |
-| CSRF | El servidor rechaza con `403` y el código `ORIGIN_NOT_ALLOWED` las peticiones que cambian algo y no vienen del origen del frontend | ADR-004, condición 5.3 |
+| CSRF | El servidor rechaza con `403` y el código `ORIGIN_NOT_ALLOWED` las peticiones que cambian algo y que un navegador envía desde otro origen, según `Origin` o `Sec-Fetch-Site`. Las que no traen ni `Origin` ni cabeceras `Sec-Fetch-*`, como las de `curl`, se admiten y dependen solo de la cookie, porque no las envía un navegador. *Precisada el 2026-11-19 (ADR-017, sección 15)* | ADR-004, condición 5.3 |
 | Ya no existe | `POST /auth/refresh`. Con sesión de servidor no hay nada que renovar | ADR-004. Resuelve C-03 |
 
 ### Códigos de estado
@@ -220,8 +220,8 @@ Al superarlos, la API responde `429` con el código `RATE_LIMITED` y la cabecera
 | Subida de avatar | No está en el alcance. El campo `avatarUrl` existe y queda vacío |
 | Consulta del registro de jugadas de una partida | Los datos se guardan (8.2), pero ninguna pantalla del MVP los muestra |
 | Salas privadas, invitaciones y espectadores | Posteriores al MVP (ADR-008, punto 21) |
-| Crear juegos y versiones | No se hace por la API. Un juego y sus versiones se dan de alta al desplegar su motor |
-| Conceder el rol de administrador | No se hace por la API. Se asigna directamente en la base de datos |
+| Crear juegos y versiones | No se hace por la API. Un juego y sus versiones se dan de alta al desplegar su motor, con una migración, e **inactivos**: se activan desde la administración. Cuatro en raya, el primero, entró activo. *Precisada el 2026-11-19 (decisión del 2026-11-16 sobre el catálogo)* |
+| Conceder el rol de administrador | No se hace por la API. Se hace con la orden `pnpm admin:role <usuario> ADMIN`, y con `USER` se retira. *Precisada el 2026-11-19 (ADR-017, U3)* |
 | Comprobación de salud del servidor | `GET /health`, fuera de `/api/v1` y sin el sobre de respuesta. Responde `200` si el servidor y la base de datos contestan y `503` si no. Es una operación de servicio, no parte de la API para clientes (ADR-012, decisión S19) |
 
 ---
@@ -275,4 +275,4 @@ Estas decisiones no derivan de un ADR: se tomaron al escribir la API. Fueron **a
 
 - El archivo OpenAPI se validó contra la especificación 3.1 con un validador automático, sin errores.
 - Todas las referencias entre esquemas existen y no queda ningún esquema sin usar.
-- Las formas de sala, partida y resumen de partida coinciden campo a campo con las del protocolo de tiempo real. Hoy están escritas dos veces, una en cada contrato. Al iniciar el Hito 1 pasarán a definirse una sola vez en el paquete de contratos (ADR-005).
+- Las formas de sala, partida y resumen de partida coinciden campo a campo con las del protocolo de tiempo real. Hoy están escritas dos veces, una en cada contrato. Al iniciar el Hito 1 pasarán a definirse una sola vez en el paquete de contratos (ADR-005). *Hecho el 2026-11-16 (ADR-012, S2): se definen una sola vez en `packages/contracts`.*

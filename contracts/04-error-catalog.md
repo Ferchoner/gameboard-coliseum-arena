@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta |
+| **Estado** | Versión 1, aceptada el 2026-11-16 por Fernando Hernandez Argueta. Enmendada el 2026-11-19 en la sección 9 (ADR-014, K21 y L2) |
 | **Reúne** | Los códigos de [`01-rest-api.yaml`](01-rest-api.yaml), [`realtime.ts`](../packages/contracts/src/realtime.ts) y [`contract.ts`](../packages/game-engine/src/contract.ts) |
 | **Aplica** | ADR-011 (convención 9.1), ADR-009 (reglas de dominio), ADR-010 (reglas 8.11 y 8.12) |
 | **Resuelve** | Vacío G-04 (catálogo de errores unificado) |
@@ -159,11 +159,11 @@ El motor emite cinco códigos. La plataforma decide cuáles llegan al cliente.
 
 | Código del motor | Cuándo lo emite | Qué recibe el cliente |
 |---|---|---|
-| `INVALID_SETTINGS` | Al crear una sala con opciones que el juego no admite | El mismo código, por la API, con el motivo del juego si lo hay |
+| `INVALID_SETTINGS` | Al crear una sala con opciones que el juego no admite | El mismo código, por la API, con el motivo del juego si lo hay. Si el motor lo devuelve al aplicar una jugada, la plataforma lo trata como `INVALID_GAME_STATE`. *Precisada el 2026-11-19 (ADR-014, K21)* |
 | `INVALID_ACTION` | Al enviar una jugada que las reglas no permiten | El mismo código, por tiempo real, con el motivo del juego si lo hay |
 | `NOT_YOUR_TURN` | Al enviar una jugada desde un asiento que no puede jugar ahora | El mismo código, por tiempo real |
-| `GAME_ALREADY_FINISHED` | Al enviar una jugada a un juego terminado | `INTERNAL_ERROR`. La plataforma ya comprueba antes que la partida esté en curso, así que este caso indica un defecto del servidor y se registra |
-| `INVALID_GAME_STATE` | Al recuperar un estado guardado que el motor no reconoce | `INTERNAL_ERROR`. Se registra. Si no puede recuperarse, la partida se anula por fallo técnico (7.20) |
+| `GAME_ALREADY_FINISHED` | Al enviar una jugada a un juego terminado | `MATCH_NOT_IN_PROGRESS`, por tiempo real, y no se guarda nada. La plataforma ya comprueba antes que la partida esté en curso, así que solo llega si el motor y la plataforma no coinciden. *Cambiada el 2026-11-19 (ADR-014, K21): antes decía `INTERNAL_ERROR`* |
+| `INVALID_GAME_STATE` | Al recuperar un estado guardado que el motor no reconoce | La partida se anula por fallo técnico (7.20) y se registra. Quien envió la orden recibe `MATCH_NOT_IN_PROGRESS`, y todos los suscritos reciben la partida ya anulada. Lo mismo pasa si falta el motor de la versión de la partida. *Cambiada el 2026-11-19 (ADR-014, K12, K21 y L2): antes decía `INTERNAL_ERROR`* |
 
 **Motivos propios de cada juego.** El `reason` que acompaña a `INVALID_ACTION` o a `INVALID_SETTINGS`, como `COLUMN_FULL` en Cuatro en raya, no forma parte de este catálogo. Cada juego documenta los suyos junto a su motor, con el mismo formato que los códigos. El cliente del juego los conoce; el resto de la aplicación trata uno desconocido como una jugada no permitida.
 

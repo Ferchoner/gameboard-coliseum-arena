@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Versión 1, aceptada el 2026-11-15 por Fernando Hernandez Argueta |
+| **Estado** | Versión 1, aceptada el 2026-11-15 por Fernando Hernandez Argueta. Enmendada el 2026-11-19 con precisiones de ADR-013, ADR-014 y ADR-015, sin cambiar el protocolo |
 | **Tipos** | [`packages/contracts/src/realtime.ts`](../packages/contracts/src/realtime.ts). Contiene solo tipos, sin lógica. Hasta el Hito 1 era `contracts/02-realtime.ts` |
 | **Sustituye a** | El contrato de tiempo real preliminar |
 | **Aplica** | ADR-003 (WebSocket nativo), ADR-004 (sesión con cookie), ADR-008 (alcance del MVP), ADR-009 (reglas de dominio), ADR-010 (reglas 8.9, 8.11 y 8.12) y ADR-011 (convenciones 9.10 y 9.16 a 9.18) |
@@ -110,9 +110,9 @@ Es una notificación con el mismo `requestId`: la que confirma la orden, o `COMM
 | Orden | Qué pide | Quién puede | Respuesta si se acepta |
 |---|---|---|---|
 | `SUBSCRIBE_ROOM` | Recibir los cambios de una sala | Un miembro de la sala | `ROOM_SUBSCRIBED`, con el estado completo de la sala |
-| `UNSUBSCRIBE_ROOM` | Dejar de recibirlos | Quien esté suscrito | `ROOM_UNSUBSCRIBED` |
-| `SUBSCRIBE_MATCH` | Recibir los cambios de una partida | Un participante de la partida | `MATCH_SUBSCRIBED`, con el estado completo desde su asiento |
-| `UNSUBSCRIBE_MATCH` | Dejar de recibirlos | Quien esté suscrito | `MATCH_UNSUBSCRIBED` |
+| `UNSUBSCRIBE_ROOM` | Dejar de recibirlos | Quien esté suscrito. A quien no lo está se le responde igual (ADR-013, C1) | `ROOM_UNSUBSCRIBED` |
+| `SUBSCRIBE_MATCH` | Recibir los cambios de una partida | Un participante de la partida | `MATCH_SUBSCRIBED`, con el estado completo desde su asiento. Si la partida ya terminó o se anuló, se responde con el estado final y no queda ninguna suscripción, porque no habrá más cambios (ADR-014, K17) |
+| `UNSUBSCRIBE_MATCH` | Dejar de recibirlos | Quien esté suscrito. A quien no lo está se le responde igual (ADR-013, C1) | `MATCH_UNSUBSCRIBED` |
 | `SUBMIT_ACTION` | Hacer una jugada | Un participante de una partida en curso | `MATCH_UPDATED`, con el estado nuevo |
 | `RESIGN_MATCH` | Rendirse (7.19) | Un participante de una partida en curso, sea o no su turno | `MATCH_UPDATED`, con la partida terminada |
 
@@ -289,10 +289,10 @@ El servidor nunca envía el estado completo del juego. Envía a cada conexión l
 
 | Regla | Origen |
 |---|---|
-| Un jugador está presente mientras tenga al menos una conexión abierta, muestre lo que muestre | 7.25 |
+| Un jugador está presente mientras tenga al menos una conexión abierta, muestre lo que muestre. Deja de estarlo cuando el servidor lleva 5 segundos sin ninguna conexión suya, de modo que recargar la página no lo muestra desconectado | 7.25; ADR-015, V3 |
 | La presencia no se guarda. Se muestra en el campo `connected` de las vistas de sala y de partida | 7.24 |
 | Cuando un jugador pasa a estar presente o deja de estarlo, los suscritos a sus salas y a sus partidas reciben `ROOM_UPDATED` o `MATCH_UPDATED`. La versión del estado no cambia | |
-| En una partida en tiempo real, un jugador sin ninguna conexión durante 2 minutos seguidos pierde por abandono. La vista muestra en `abandonAt` cuándo ocurrirá | 7.26 |
+| En una partida en tiempo real, un jugador sin ninguna conexión durante 2 minutos seguidos, contados desde que deja de estar presente, pierde por abandono. Solo pierde si algún rival está conectado: si faltan todos, decide el reloj, y en cuanto un rival se conecta, quien lleve 2 minutos o más ausente pierde en ese momento. La vista muestra en `abandonAt` cuándo ocurrirá | 7.26; ADR-015, V2 y V3 |
 | En una partida por turnos la desconexión no tiene consecuencias | 7.27 |
 
 ---
@@ -388,7 +388,7 @@ Estas decisiones no derivan de un ADR: se tomaron al escribir el protocolo. Fuer
 
 | Asunto | Situación |
 |---|---|
-| **Jugadas simultáneas.** Si dos asientos juegan sobre la misma versión del estado, la segunda jugada recibe `STALE_STATE_VERSION` y hay que reenviarla | Se precisa cuando llegue el primer juego de ese tipo |
+| **Jugadas simultáneas.** Si dos asientos juegan sobre la misma versión del estado, la segunda jugada recibe `STALE_STATE_VERSION` y hay que reenviarla. Además, si se agota el reloj de un asiento, la jugada de otro asiento activo se rechaza con `CLOCK_EXPIRED` (análisis del 2026-11-19, T-23) | Se precisa cuando llegue el primer juego de ese tipo |
 | **Aviso de turno con la aplicación cerrada.** Este protocolo solo avisa a quien tiene una conexión abierta | Las notificaciones push son la primera ampliación tras el MVP (ADR-008, punto 12) |
 | **Espectadores** | Posterior al MVP. Bastará con ampliar quién puede suscribirse a una partida; el motor ya da una vista para quien no ocupa asiento |
-| **Valores definitivos de los límites** | Se ajustan con datos reales tras el corte vertical |
+| **Valores definitivos de los límites** | Se ajustan con datos reales en el Hito 7, junto con los límites de frecuencia |
