@@ -8,7 +8,7 @@
 
 **Cómo leer este documento.** El contenido de cada hito sale del alcance aceptado en ADR-008. Lo que este documento decide por su cuenta es **cómo se reparte el resto del MVP en los hitos 4 a 7** (B1, [sección final](#reparto-del-resto-del-mvp)). Se propuso al cerrar el Hito 0 y se aceptó el 2026-11-16, al terminar el corte vertical.
 
-Los hitos 1 a 4 están autorizados, todos el 2026-11-16, y el Hito 5, el 2026-11-18. Ninguna tarea de los hitos 6 y 7 puede empezar sin una autorización explícita.
+Los hitos 1 a 4 están autorizados, todos el 2026-11-16, el Hito 5, el 2026-11-18, y el Hito 6, el 2026-11-19. Ninguna tarea del Hito 7 puede empezar sin una autorización explícita.
 
 ---
 

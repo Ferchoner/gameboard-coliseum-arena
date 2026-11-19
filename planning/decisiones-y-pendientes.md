@@ -87,7 +87,9 @@ Las inconsistencias que el registro inicial pedía normalizar están resueltas. 
 
 No son decisiones. No deben tratarse como aprobadas.
 
-Ninguna. Las decisiones N1 a N12 del Hito 5 y sus elecciones Q1 a Q6 ([ADR-016, sección 14](../docs/adr/0016-decisiones-del-hito-5.md#14-lo-que-resultó-al-construir)) se confirmaron el 2026-11-18, y las elecciones W1 a W9 del Hito 4, el 2026-11-16.
+Las decisiones U1 a U18 del Hito 6, en [ADR-017](../docs/adr/0017-decisiones-del-hito-6.md), propuestas el 2026-11-19.
+
+Las decisiones N1 a N12 del Hito 5 y sus elecciones Q1 a Q6 ([ADR-016, sección 14](../docs/adr/0016-decisiones-del-hito-5.md#14-lo-que-resultó-al-construir)) se confirmaron el 2026-11-18, y las elecciones W1 a W9 del Hito 4, el 2026-11-16.
 
 ---
 
@@ -163,4 +165,4 @@ Cerrado. Las decisiones de arranque se aceptaron el 2026-11-16 y están en [ADR-
 - Toda propuesta se presenta con sus alternativas, sus consecuencias y una recomendación.
 - Una decisión aceptada no se reescribe. Si cambia, se anota el cambio con su fecha en el documento que la contiene, o se añade un ADR que la sustituye.
 - No se añade ninguna dependencia, no se cambia ningún contrato y no se implementa nada fuera del alcance sin aprobación previa.
-- No se escribe código de un hito hasta recibir su autorización explícita. Los Hitos 1 a 4 están autorizados, todos desde el 2026-11-16, y el Hito 5, desde el 2026-11-18. El Hito 6 y los siguientes no lo están.
+- No se escribe código de un hito hasta recibir su autorización explícita. Los Hitos 1 a 4 están autorizados, todos desde el 2026-11-16, el Hito 5, desde el 2026-11-18, y el Hito 6, desde el 2026-11-19. El Hito 7 no lo está.
