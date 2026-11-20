@@ -5,3 +5,6 @@ export { MAX_REALTIME_TOTAL_MS, metadataProblems, TURN_BASED_TOTALS_MS } from '.
 export { GAME_ENGINES } from './engines.js';
 export { fourInARowEngine } from './games/four-in-a-row/engine.js';
 export { navalBattleEngine } from './games/naval-battle/engine.js';
+export { dominoesEngine } from './games/dominoes/engine.js';
+export { isRandomState, nextRandom, randomInt, seedRandom, shuffle } from './random.js';
+export type { RandomState } from './random.js';

@@ -24,6 +24,10 @@
     "./naval-battle": {
       "types": "./dist/games/naval-battle/types.d.ts",
       "default": "./dist/games/naval-battle/types.js"
+    },
+    "./dominoes": {
+      "types": "./dist/games/dominoes/types.d.ts",
+      "default": "./dist/games/dominoes/types.js"
     }
   },
   "files": [

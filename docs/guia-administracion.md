@@ -231,6 +231,8 @@ api PUT admin/games/naval-battle/current-version @{ gameVersion = '1.0.0' }
 api PUT admin/games/naval-battle/status @{ status = 'ACTIVE' }
 ```
 
+Para el Dominó son las mismas tres órdenes, con `dominoes` en lugar de `naval-battle`.
+
 ### Si un juego no aparece
 
 Un juego sale en la aplicación solo si se cumplen las cuatro últimas condiciones de esta tabla (U16; ADR-018, Z5); las dos primeras son para que las órdenes de activación surtan efecto. Se revisan en orden:

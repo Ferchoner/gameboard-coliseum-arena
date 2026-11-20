@@ -502,7 +502,8 @@ a {
 
 .match-player {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  /* El nombre se parte antes de empujar el reloj fuera de la tarjeta. */
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   align-content: start;
   gap: 0.35rem 0.5rem;
@@ -510,6 +511,14 @@ a {
   border: 2px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
+}
+
+.match-player .member-name {
+  overflow-wrap: anywhere;
+}
+
+.match-player .member-name > .muted {
+  margin-left: 0.3em;
 }
 
 .match-badges {
@@ -773,6 +782,196 @@ button.naval-cell:not(:disabled):focus-visible {
 
 .naval-cell.last {
   box-shadow: 0 0 0 2px var(--text);
+}
+
+/*
+ * Dominó (ADR-020, DO16 y DO17): fichas con puntos en CSS. La línea se
+ * parte en varias filas cuando no cabe a lo ancho; la mano va abajo.
+ */
+.domino-board {
+  display: grid;
+  gap: 0.75rem;
+  width: min(100%, 52rem);
+}
+
+.domino-board h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.domino-meta,
+.domino-event {
+  margin: 0;
+}
+
+.domino-teams,
+.domino-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.domino-teams li {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.domino-teams li.yours {
+  border-color: var(--accent);
+}
+
+.domino-player {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 9rem;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.domino-player.turn {
+  border-color: var(--accent);
+}
+
+.domino-player.retired {
+  opacity: 0.6;
+}
+
+.domino-player-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.domino-table {
+  min-height: 4.5rem;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  background: var(--ok);
+}
+
+.domino-table > p {
+  margin: 0;
+  color: var(--surface);
+}
+
+.domino-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.domino {
+  --domino-unit: 1.5rem;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  flex: none;
+  width: calc(var(--domino-unit) * 2);
+  height: var(--domino-unit);
+  border: 1px solid #00000059;
+  border-radius: 4px;
+  background: #fbf9f3;
+  vertical-align: middle;
+}
+
+.domino.vertical {
+  grid-template-columns: none;
+  grid-template-rows: 1fr 1fr;
+  width: var(--domino-unit);
+  height: calc(var(--domino-unit) * 2);
+}
+
+.domino.small {
+  --domino-unit: 1rem;
+  margin-left: 0.2rem;
+}
+
+.domino-half {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 12%;
+}
+
+.domino-half + .domino-half {
+  border-left: 1px solid #0000004d;
+}
+
+.domino.vertical .domino-half + .domino-half {
+  border-top: 1px solid #0000004d;
+  border-left: 0;
+}
+
+.domino-half .pip {
+  justify-self: center;
+  align-self: center;
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #1d1f23;
+}
+
+.domino-hand-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.domino-button {
+  padding: 0.2rem;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+
+.domino-button .domino {
+  --domino-unit: 1.9rem;
+}
+
+.domino-button:not(:disabled):hover,
+.domino-button:not(:disabled):focus-visible,
+.domino-button.chosen {
+  border-color: var(--accent);
+}
+
+.domino-button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.domino-own-score {
+  font-weight: 400;
+}
+
+.domino-choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.domino-choice > p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.domino-summary ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 /* Aviso de turno (ADR-016, decisión N2) */
