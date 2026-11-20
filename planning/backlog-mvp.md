@@ -170,7 +170,7 @@ Decididos el 2026-11-19 ([ADR-019](../docs/adr/0019-batalla-naval-y-jugadas-simu
 El 2026-11-20 quien decide pidió, como prueba, un juego de deducción moderno que tiene en casa ([ADR-022](../docs/adr/0022-cinco-a-ciegas-y-jugadas-fuera-de-turno.md)).
 
 - [x] Jugadas fuera de turno: un motor puede aceptar jugadas de un asiento que no está activo, sin gastar reloj; la página de la partida y la batería común las admiten (T-25; ADR-022, CA19).
-- [ ] Cinco a ciegas: motor, tablero, hoja de deducción, alta inactiva y pruebas (ADR-022, CA1 a CA18 y CA20).
+- [x] Cinco a ciegas: motor, tablero, hoja de deducción, alta inactiva y pruebas (ADR-022, CA1 a CA18 y CA20).
 
 ---
 

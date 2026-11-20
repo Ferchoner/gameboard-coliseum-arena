@@ -1,4 +1,5 @@
 import type { AnyGameEngine } from './contract.js';
+import { blindFiveEngine } from './games/blind-five/engine.js';
 import { dominoesEngine } from './games/dominoes/engine.js';
 import { fourInARowEngine } from './games/four-in-a-row/engine.js';
 import { navalBattleEngine } from './games/naval-battle/engine.js';
@@ -16,4 +17,5 @@ export const GAME_ENGINES: readonly AnyGameEngine[] = [
   fourInARowEngine,
   navalBattleEngine,
   dominoesEngine,
+  blindFiveEngine,
 ];

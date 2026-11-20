@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AnyGameEngine, Seat } from './contract.js';
 import { GAME_ENGINES } from './engines.js';
+import { type BlindFiveState, SUITS } from './games/blind-five/engine.js';
 import type { DominoesState } from './games/dominoes/engine.js';
 import { COLUMN_COUNT } from './games/four-in-a-row/engine.js';
 import { GRID_SIZE, type NavalBattleState } from './games/naval-battle/engine.js';
@@ -47,6 +48,34 @@ const FIXTURES: Readonly<Record<string, ConformanceFixture>> = {
       return [
         ...picks.flatMap((cell) => (cell ? [{ type: 'FIRE', ...cell }] : [])),
         ...own.slice(0, 1).map((cell) => ({ type: 'FIRE', ...cell })),
+        { type: 'OTRA_COSA' },
+      ];
+    },
+  },
+  'blind-five@1.0.0': {
+    settings: {},
+    // Revelar cada palo, pistas con las fichas boca arriba, una cantada mal
+    // escrita y, de vez en cuando, una cantada correcta o una errónea. Cantar
+    // vale fuera de turno (ADR-022, CA9). Juega partidas de 2, 3 y 4.
+    games: 21,
+    allowedOutOfTurn: (action) => (action as { type?: unknown }).type === 'DECLARE',
+    candidateActions: (state, seat) => {
+      const { faceUp, stands, clues } = state as BlindFiveState;
+      const own = stands[seat] ?? [];
+      const declarations = [{ type: 'DECLARE', numbers: [5, 4, 3, 2, 1] }];
+      if (clues.length % 7 === 6) declarations.push({ type: 'DECLARE', numbers: [...own] });
+      if (clues.length % 5 === 4) {
+        const wrong = own.map((one, index) => (index === 4 ? (one === 60 ? 59 : 60) : one));
+        if (wrong[4] !== own[4] && (wrong[3] ?? 0) < (wrong[4] ?? 0)) {
+          declarations.push({ type: 'DECLARE', numbers: wrong });
+        }
+      }
+      return [
+        ...SUITS.map((suit) => ({ type: 'REVEAL', suit })),
+        ...faceUp.slice(0, 2).map((tile) => ({ type: 'CLUE', tile, clue: 'SORT' })),
+        ...faceUp.slice(-1).map((tile) => ({ type: 'CLUE', tile, clue: 'COMPARE', position: 2 })),
+        { type: 'CLUE', tile: 0, clue: 'SORT' },
+        ...declarations,
         { type: 'OTRA_COSA' },
       ];
     },

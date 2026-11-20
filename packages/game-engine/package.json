@@ -28,6 +28,10 @@
     "./dominoes": {
       "types": "./dist/games/dominoes/types.d.ts",
       "default": "./dist/games/dominoes/types.js"
+    },
+    "./blind-five": {
+      "types": "./dist/games/blind-five/types.d.ts",
+      "default": "./dist/games/blind-five/types.js"
     }
   },
   "files": [
