@@ -5,7 +5,11 @@ import type { DominoesState } from './games/dominoes/engine.js';
 import { COLUMN_COUNT } from './games/four-in-a-row/engine.js';
 import { GRID_SIZE, type NavalBattleState } from './games/naval-battle/engine.js';
 import { checkEngineConformance, type ConformanceFixture } from './testing/conformance.js';
-import { createFakeEngine, createSimultaneousFakeEngine } from './testing/fake-engine.js';
+import {
+  createFakeEngine,
+  createOutOfTurnFakeEngine,
+  createSimultaneousFakeEngine,
+} from './testing/fake-engine.js';
 
 /**
  * Cada motor registrado pasa la comprobación común del contrato (ADR-018,
@@ -122,6 +126,27 @@ describe('comprobación común de los motores', () => {
       candidateActions: () => [{ type: 'SUBMIT' }, { type: 'OTRA_COSA' }],
     };
     expect(checkEngineConformance(engine, fixture)).toEqual([]);
+  });
+
+  it('el motor de pruebas de jugadas fuera de turno también las cumple (ADR-022)', () => {
+    const engine = createOutOfTurnFakeEngine('calls', '1.0.0');
+    const fixture: ConformanceFixture = {
+      settings: {},
+      candidateActions: () => [{ type: 'INCREMENT' }, { type: 'CALL' }, { type: 'OTRA_COSA' }],
+      allowedOutOfTurn: (action) => (action as { type?: unknown }).type === 'CALL',
+    };
+    expect(checkEngineConformance(engine, fixture)).toEqual([]);
+  });
+
+  it('sin declarar las jugadas fuera de turno, la comprobación las señala', () => {
+    const engine = createOutOfTurnFakeEngine('calls', '1.0.0');
+    const fixture: ConformanceFixture = {
+      settings: {},
+      candidateActions: () => [{ type: 'INCREMENT' }, { type: 'CALL' }],
+    };
+    expect(checkEngineConformance(engine, fixture)).toContain(
+      'applyAction no rechaza con NOT_YOUR_TURN la acción de un asiento que no puede jugar',
+    );
   });
 });
 

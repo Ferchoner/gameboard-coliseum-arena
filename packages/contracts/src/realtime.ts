@@ -112,7 +112,7 @@ export interface MatchView {
   /** El asiento de quien recibe esta vista. */
   readonly yourSeat: number;
   readonly players: readonly MatchPlayerView[];
-  /** Asientos que pueden jugar ahora. Vacía si la partida no está en curso. */
+  /** Asientos a los que les toca jugar ahora. Vacía si la partida no está en curso. */
   readonly activeSeats: readonly number[];
   /** Instante en que se agota el primer reloj de los asientos activos. */
   readonly turnDeadlineAt: IsoDateTime | null;

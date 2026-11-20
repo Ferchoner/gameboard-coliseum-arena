@@ -38,6 +38,8 @@ const columns = computed(() =>
 );
 
 function drop(column: number): void {
+  // Solo en el turno propio: este juego no tiene jugadas fuera de turno (ADR-022, CA19).
+  if (!props.canPlay) return;
   emit('play', { type: 'DROP_TOKEN', column });
 }
 </script>

@@ -53,7 +53,7 @@ export const gameSessions = pgTable(
     state: jsonb('state').$type<unknown>().notNull(),
     /** Contador de cambios. Empieza en 0 y sube con cada jugada y con cada retirada. */
     stateVersion: integer('state_version').notNull(),
-    /** Asientos que pueden jugar ahora: sus relojes son los que corren. Vacía si está cerrada. */
+    /** Asientos a los que les toca jugar ahora: sus relojes son los que corren. Vacía si está cerrada. */
     activeSeats: smallint('active_seats').array().notNull(),
     /**
      * Desde qué versión del estado está activo cada asiento de `activeSeats`,

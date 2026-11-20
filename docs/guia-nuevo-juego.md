@@ -23,6 +23,7 @@ Lo que el motor debe cumplir y que se olvida con facilidad:
 - **`restoreState`** acepta un estado serializado y rechaza lo que no lo es.
 - **`retireSeat`** en juegos de dos: el asiento retirado pierde y gana el otro (regla 7.18).
 - **La vista no filtra información oculta de otro asiento** (`getPlayerView`).
+- **Jugadas fuera de turno**, solo si las reglas las tienen (ADR-022, CA19): el motor puede aceptar una acción de un asiento que no está en `activeSeats` pero sigue en juego, como cantar que se tiene la solución. Cualquier otra acción de ese asiento se rechaza con `NOT_YOUR_TURN`. En `FIXTURES`, `allowedOutOfTurn` dice cuáles son, para que la batería común no las cuente como fallo.
 
 ### Metadatos y controles de tiempo
 
@@ -105,7 +106,7 @@ En `apps/frontend/app/games/<gameSlug>/` (ADR-018, Z7):
 
 - `texts.ts`: los textos del juego (nombre de cada asiento, cómo terminó, motivos de rechazo). No van en `i18n/es.ts`.
 - `index.ts`: los textos como `GameTexts`.
-- `<Nombre>Board.vue`: el tablero. Recibe `BoardProps` (`games/game-ui.ts`): la vista, el asiento propio, los asientos activos, los jugadores, los eventos del último cambio, la versión y si se puede jugar. Emite `play` con la acción. **No decide si una jugada es válida**: eso lo hace el servidor (ADR-014, K7).
+- `<Nombre>Board.vue`: el tablero. Recibe `BoardProps` (`games/game-ui.ts`): la vista, el asiento propio, los asientos activos, los jugadores, los eventos del último cambio, la versión y si se puede jugar. Emite `play` con la acción. **No decide si una jugada es válida**: eso lo hace el servidor (ADR-014, K7). Emite solo cuando `canPlay` (le toca); un juego con jugadas fuera de turno emite esas con `canSend` (ADR-022, CA19).
 
 Para los colores de cada asiento, la clase `seat-N` fija la variable `--seat-color` (hay colores para seis asientos en `assets/css/main.css`). El tablero no define colores de asiento propios.
 

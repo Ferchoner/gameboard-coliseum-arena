@@ -71,12 +71,22 @@ const inProgress = computed(() => match.value?.status === 'IN_PROGRESS');
 const myTurn = computed(
   () => inProgress.value && (match.value?.activeSeats.includes(match.value.yourSeat) ?? false),
 );
-/** El tablero se bloquea mientras una orden espera respuesta y si no hay conexión. */
-const canPlay = computed(
-  () => myTurn.value && sending.value === null && realtime.state.value.status === 'open',
-);
 /** Se retiró y la partida sigue, o siguió, sin él (ADR-020, DO21). */
 const retired = computed(() => (match.value ? youRetired(match.value) : false));
+/**
+ * Se puede enviar una jugada, le toque o no, mientras la partida sigue y no
+ * se ha retirado: el servidor decide si la acepta fuera de turno (ADR-022,
+ * decisión CA19). El tablero se bloquea mientras una orden espera respuesta
+ * y si no hay conexión.
+ */
+const canSend = computed(
+  () =>
+    inProgress.value &&
+    !retired.value &&
+    sending.value === null &&
+    realtime.state.value.status === 'open',
+);
+const canPlay = computed(() => myTurn.value && canSend.value);
 const myOutcome = computed(() =>
   match.value ? outcomeOf(match.value, match.value.yourSeat) : null,
 );
@@ -229,7 +239,7 @@ async function send(kind: 'move' | 'resign', order: () => Promise<CommandResult>
 
 function play(action: unknown): void {
   const current = match.value;
-  if (!current || !canPlay.value) return;
+  if (!current || !canSend.value) return;
   // La jugada indica la versión del estado que la persona tenía delante.
   void send('move', () => realtime.submitAction(current.matchId, current.stateVersion, action));
 }
@@ -358,6 +368,7 @@ onBeforeUnmount(() => {
         :events="lastEvents"
         :game-version="match.gameVersion"
         :can-play="canPlay"
+        :can-send="canSend"
         @play="play"
       />
 

@@ -25,7 +25,7 @@ export interface MatchSnapshot {
   readonly stateVersion: number;
   /** El jugador de cada asiento: la posición en la lista es el asiento. */
   readonly players: readonly PlayerRef[];
-  /** Asientos que pueden jugar ahora. Vacía si la partida no está en curso. */
+  /** Asientos a los que les toca jugar ahora. Vacía si la partida no está en curso. */
   readonly activeSeats: readonly number[];
   /** Asientos retirados de una partida que siguió sin ellos (ADR-020, DO18). */
   readonly retiredSeats: readonly number[];

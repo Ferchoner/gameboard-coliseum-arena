@@ -132,9 +132,15 @@ export type GameStatus =
   | {
       readonly finished: false;
       /**
-       * Asientos que pueden jugar ahora. Sus relojes son los que corren.
-       * Nunca está vacía. En un juego por turnos contiene un solo asiento;
-       * en un juego con jugadas simultáneas, varios.
+       * Asientos a los que les toca jugar ahora. Sus relojes son los que
+       * corren. Nunca está vacía. En un juego por turnos contiene un solo
+       * asiento; en un juego con jugadas simultáneas, varios.
+       *
+       * Un juego puede aceptar además, si sus reglas lo dicen, jugadas fuera
+       * de turno de otros asientos que sigan en juego, como cantar que se
+       * tiene la solución (ADR-022, decisión CA19). Esas jugadas no gastan
+       * reloj y se hacen sobre la versión actual del estado. Cualquier otra
+       * acción de un asiento que no está aquí se rechaza con `NOT_YOUR_TURN`.
        */
       readonly activeSeats: readonly Seat[];
     }

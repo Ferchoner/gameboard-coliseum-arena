@@ -167,6 +167,11 @@ Decididos el 2026-11-19 ([ADR-019](../docs/adr/0019-batalla-naval-y-jugadas-simu
 - [x] Asientos retirados con más de dos jugadores: la sesión los guarda, no se retiran dos veces, siguen en la sala sin contar para su límite y salen al terminar (T-24; ADR-020, DO18 a DO22).
 - [x] Dominó: motor, generador con semilla, tablero, alta inactiva y pruebas (ADR-020, DO1 a DO17).
 
+El 2026-11-20 quien decide pidió, como prueba, un juego de deducción moderno que tiene en casa ([ADR-022](../docs/adr/0022-cinco-a-ciegas-y-jugadas-fuera-de-turno.md)).
+
+- [x] Jugadas fuera de turno: un motor puede aceptar jugadas de un asiento que no está activo, sin gastar reloj; la página de la partida y la batería común las admiten (T-25; ADR-022, CA19).
+- [ ] Cinco a ciegas: motor, tablero, hoja de deducción, alta inactiva y pruebas (ADR-022, CA1 a CA18 y CA20).
+
 ---
 
 ## Posterior al MVP
