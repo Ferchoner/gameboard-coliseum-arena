@@ -77,6 +77,8 @@ function pick(tile: DominoesTile): void {
 
 function playAt(tile: DominoesTile, end: DominoesEnd | null): void {
   choosing.value = null;
+  // Solo en el turno propio: este juego no tiene jugadas fuera de turno (ADR-022, CA19).
+  if (!props.canPlay) return;
   emit('play', end ? { type: 'PLAY', tile, end } : { type: 'PLAY', tile });
 }
 

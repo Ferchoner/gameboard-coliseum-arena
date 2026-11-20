@@ -29,8 +29,15 @@ export interface BoardProps<TView = unknown> {
   readonly events: readonly GameEventView[];
   /** La versión del juego de la partida. */
   readonly gameVersion: string;
-  /** Si quien mira puede jugar ahora mismo. */
+  /** Si a quien mira le toca y puede jugar ahora mismo. */
   readonly canPlay: boolean;
+  /**
+   * Si quien mira puede enviar ahora una jugada aunque no le toque: la
+   * partida está en curso, no se ha retirado, hay conexión y no espera
+   * otra respuesta. Solo la usan los juegos con jugadas fuera de turno
+   * (ADR-022, decisión CA19); los demás tableros emiten solo con `canPlay`.
+   */
+  readonly canSend: boolean;
 }
 
 /** Lo que la aplicación necesita para mostrar un juego. */

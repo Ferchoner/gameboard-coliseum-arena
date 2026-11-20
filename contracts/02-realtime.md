@@ -144,7 +144,7 @@ El servidor comprueba, en este orden:
 | 4 | La partida está en curso | `MATCH_NOT_IN_PROGRESS` |
 | 5 | `stateVersion` es la versión actual o, si el asiento de quien envía está activo, una versión anterior desde la que lo está sin interrupción. *Precisada el 2026-11-19 (ADR-019, X15 y X16): con varios asientos activos, la jugada de uno no deja obsoleta la de otro. El asiento que juega y sigue activo cuenta desde su propia jugada* | `STALE_STATE_VERSION`, con la versión actual |
 | 6 | El reloj del jugador no está agotado. *Precisada el 2026-11-19 (ADR-019, X17): si se agotó el de otro asiento activo, se aplica su vencimiento; si con eso la partida termina, se responde `MATCH_NOT_IN_PROGRESS`, y si sigue y quien envía sigue activo, se pasa a la comprobación 7 sobre el estado nuevo* | `CLOCK_EXPIRED`. Además se aplica el vencimiento (7.5) |
-| 7 | El motor acepta la acción | `NOT_YOUR_TURN` o `INVALID_ACTION`, con el motivo propio del juego si lo hay |
+| 7 | El motor acepta la acción. *Precisada el 2026-11-20 (ADR-022, CA19): el motor decide también si quien envía puede jugar; a un asiento que no está activo solo le acepta las jugadas que su juego admite fuera de turno, que no gastan reloj. En la comprobación 5, a ese asiento solo le vale la versión actual* | `NOT_YOUR_TURN` o `INVALID_ACTION`, con el motivo propio del juego si lo hay |
 
 Si todo se cumple, el servidor guarda la jugada y solo después envía `MATCH_UPDATED` (8.9).
 
@@ -233,7 +233,7 @@ Cómo se lee:
 | Campo | Significado |
 |---|---|
 | `stateVersion` | El valor que debe indicar la siguiente jugada. El cliente descarta una notificación cuya versión sea menor que la que ya tiene |
-| `activeSeats` | Asientos que pueden jugar ahora. Sus relojes son los que corren |
+| `activeSeats` | Asientos a los que les toca jugar ahora. Sus relojes son los que corren. Un juego puede aceptar además jugadas fuera de turno de otros asientos (ADR-022, CA19) |
 | `clockRemainingMs` | Tiempo que le queda a cada jugador, medido en el instante `serverTime`. El cliente descuenta desde ahí el de los asientos activos. El tiempo válido es siempre el del servidor (7.4) |
 | `abandonAt` | Instante en que un jugador desconectado perderá por abandono. Solo en tiempo real (7.26) |
 | `retired` | El jugador se retiró y la partida sigue, o siguió, sin él. Solo con más de dos jugadores. Ya no juega, no pierde por abandono y no puede rendirse otra vez; sale de la sala al terminar la partida (7.33). *Añadido el 2026-11-19 (ADR-020, DO21)* |

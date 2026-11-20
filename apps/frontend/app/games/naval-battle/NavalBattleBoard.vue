@@ -126,6 +126,8 @@ function randomize(): void {
 }
 
 function submitFleet(): void {
+  // Solo en el turno propio: este juego no tiene jugadas fuera de turno (ADR-022, CA19).
+  if (!props.canPlay) return;
   emit('play', { type: 'PLACE_FLEET', ships: draft.value });
 }
 
@@ -178,6 +180,8 @@ function cellLabel(state: CellState): string {
 }
 
 function fire(state: CellState): void {
+  // Solo en el turno propio: este juego no tiene jugadas fuera de turno (ADR-022, CA19).
+  if (!props.canPlay) return;
   emit('play', { type: 'FIRE', ...state.cell });
 }
 </script>

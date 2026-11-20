@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Aceptada |
+| **Estado** | Aceptada; F9 enmendada por ADR-022 (CA1) |
 | **Fecha** | 2026-11-19 |
 | **Decidida por** | Fernando Hernandez Argueta |
 | **Parte de** | La [propuesta de los próximos juegos](../../planning/propuesta-de-juegos.md), con las decisiones F1 a F9 (sección 0) |
@@ -25,7 +25,7 @@ El 2026-11-19 quien decide pidió crear dos o tres juegos más antes de desplega
 | F6 | Dominó: la partida se juega **hasta 100 puntos** |
 | F7 | Dominó: de **2 a 4 jugadores**; con 4, en parejas |
 | F8 | Con más de dos jugadores, **quien pierde por abandono se queda en la sala como retirado** hasta que la partida termina, y deja de contar para su límite de partidas (7.30). Cierra W6 de ADR-015 cuando se construya, con T-24 y el Dominó |
-| F9 | **Regla de derechos** para todos los juegos: mecánicas tradicionales o de dominio público; nombre genérico en español e identificador genérico en inglés, nunca una marca; arte propio en CSS o SVG; reglas escritas por nosotros en el `README.md` del motor, con una línea sobre su origen. No es asesoría legal. Cierra el resto del pendiente 12 (ADR-008, sección 4) |
+| F9 | **Regla de derechos** para todos los juegos: mecánicas tradicionales o de dominio público; nombre genérico en español e identificador genérico en inglés, nunca una marca; arte propio en CSS o SVG; reglas escritas por nosotros en el `README.md` del motor, con una línea sobre su origen. No es asesoría legal. Cierra el resto del pendiente 12 (ADR-008, sección 4). *Enmendada el 2026-11-20 ([ADR-022](0022-cinco-a-ciegas-y-jugadas-fuera-de-turno.md), CA1): se admiten también mecánicas de juegos modernos con nombre, arte, textos y presentación propios. La marca original no aparece en la aplicación; el `README.md` del motor dice en una línea en qué juego se inspira, sin dar a entender ninguna relación con su editorial. Antes de abrir la plataforma al público se revisan estos juegos* |
 
 El Dominó tendrá su propio ADR, con T-24, antes de construirlo.
 

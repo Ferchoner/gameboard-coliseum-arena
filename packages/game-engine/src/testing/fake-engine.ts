@@ -210,3 +210,134 @@ export function createSimultaneousFakeEngine(
     },
   };
 }
+
+interface CallsState {
+  readonly count: number;
+  readonly playerCount: number;
+  /** Cuántas veces ha cantado cada asiento. */
+  readonly calls: readonly number[];
+  readonly retired: readonly number[];
+}
+
+/**
+ * Motor mínimo con jugadas fuera de turno (ADR-022, decisión CA19). Por
+ * turnos, cada asiento suma uno con `INCREMENT`, como en el motor de
+ * pruebas. Además, cualquier asiento que siga en juego puede cantar con
+ * `CALL` en cualquier momento, le toque o no; cantar no cambia de quién es
+ * el turno. Quien canta dos veces gana. Si no, el juego termina en empate
+ * al llegar la cuenta a cinco. Quien se retira pierde, y si queda uno, gana.
+ */
+export function createOutOfTurnFakeEngine(
+  gameSlug: string,
+  gameVersion: string,
+  metadata?: Partial<GameMetadata>,
+): GameEngine<
+  Record<string, never>,
+  CallsState,
+  { readonly type: 'INCREMENT' } | { readonly type: 'CALL' },
+  GameEvent,
+  CallsState
+> {
+  const playing = (state: CallsState): number[] =>
+    Array.from({ length: state.playerCount }, (_, seat) => seat).filter(
+      (seat) => !state.retired.includes(seat),
+    );
+  return {
+    gameSlug,
+    gameVersion,
+    metadata: {
+      minPlayers: 2,
+      maxPlayers: 3,
+      timeControls: {
+        REALTIME: [{ type: 'TOTAL_PER_PLAYER', totalMs: 300_000 }],
+        TURN_BASED: [],
+      },
+      ...metadata,
+    },
+    parseSettings(input) {
+      if (input === undefined || (typeof input === 'object' && input !== null)) {
+        return { ok: true, value: {} };
+      }
+      return { ok: false, code: 'INVALID_SETTINGS' };
+    },
+    createInitialState(setup) {
+      return {
+        count: 0,
+        playerCount: setup.playerCount,
+        calls: Array.from({ length: setup.playerCount }, () => 0),
+        retired: [],
+      };
+    },
+    restoreState(snapshot) {
+      if (
+        typeof snapshot === 'object' &&
+        snapshot !== null &&
+        typeof (snapshot as CallsState).count === 'number' &&
+        Array.isArray((snapshot as CallsState).calls)
+      ) {
+        return { ok: true, value: snapshot as CallsState };
+      }
+      return { ok: false, code: 'INVALID_GAME_STATE' };
+    },
+    getStatus(state) {
+      const seats = playing(state);
+      const caller = seats.find((seat) => (state.calls[seat] ?? 0) >= 2);
+      if (caller !== undefined || seats.length < 2 || state.count >= 5) {
+        return {
+          finished: true,
+          results: Array.from({ length: state.playerCount }, (_, seat) => ({
+            seat,
+            outcome:
+              caller !== undefined
+                ? seat === caller
+                  ? 'WIN'
+                  : 'LOSS'
+                : state.retired.includes(seat)
+                  ? 'LOSS'
+                  : seats.length < 2
+                    ? 'WIN'
+                    : 'DRAW',
+          })),
+        };
+      }
+      return { finished: false, activeSeats: [seats[state.count % seats.length] ?? 0] };
+    },
+    applyAction(state, seat, input) {
+      const status = this.getStatus(state);
+      if (status.finished) return { ok: false, code: 'GAME_ALREADY_FINISHED' };
+      const type =
+        typeof input === 'object' && input !== null ? (input as { type?: unknown }).type : null;
+      if (type === 'CALL') {
+        // Fuera de turno también, mientras el asiento siga en juego.
+        if (state.retired.includes(seat)) return { ok: false, code: 'NOT_YOUR_TURN' };
+        return {
+          ok: true,
+          value: {
+            state: {
+              ...state,
+              calls: state.calls.map((count, one) => (one === seat ? count + 1 : count)),
+            },
+            action: { type: 'CALL' },
+            events: [{ type: 'CALLED', seat }],
+          },
+        };
+      }
+      if (!status.activeSeats.includes(seat)) return { ok: false, code: 'NOT_YOUR_TURN' };
+      if (type !== 'INCREMENT') return { ok: false, code: 'INVALID_ACTION' };
+      return {
+        ok: true,
+        value: {
+          state: { ...state, count: state.count + 1 },
+          action: { type: 'INCREMENT' },
+          events: [{ type: 'INCREMENTED' }],
+        },
+      };
+    },
+    retireSeat(state, seat) {
+      return { state: { ...state, retired: [...state.retired, seat] }, events: [] };
+    },
+    getView(state) {
+      return state;
+    },
+  };
+}

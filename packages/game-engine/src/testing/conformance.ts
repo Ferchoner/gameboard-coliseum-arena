@@ -29,6 +29,13 @@ export interface ConformanceFixture {
   readonly maxSteps?: number;
   /** Semilla del generador que elige asientos y acciones. Por defecto, `conformance`. */
   readonly seed?: string;
+  /**
+   * Solo para juegos con jugadas fuera de turno (ADR-022, decisión CA19):
+   * si el juego puede aceptar esta acción de un asiento que no está activo.
+   * A esas acciones no se les exige `NOT_YOUR_TURN`; de vez en cuando, la
+   * comprobación juega una desde un asiento que no está activo.
+   */
+  readonly allowedOutOfTurn?: (action: unknown) => boolean;
 }
 
 const ENGINE_ERROR_CODES: readonly EngineErrorCode[] = [
@@ -129,10 +136,13 @@ function play(
     const frozen = deepFreeze(clone(state));
     const seat = pick(status.activeSeats, random) as Seat;
 
-    // Un asiento que no puede jugar no juega, aunque la acción sea válida.
+    // Un asiento que no puede jugar no juega, aunque la acción sea válida,
+    // salvo las jugadas que el juego admite fuera de turno (CA19).
+    const outOfTurn = fixture.allowedOutOfTurn ?? (() => false);
     const waiting = seats(playerCount).filter((one) => !status.activeSeats.includes(one));
     for (const other of waiting) {
       for (const action of fixture.candidateActions(state, seat)) {
+        if (outOfTurn(action)) continue;
         const response = guard(report, 'applyAction', () =>
           engine.applyAction(frozen, other, action),
         );
@@ -144,11 +154,18 @@ function play(
       }
     }
 
-    const candidates = shuffle(fixture.candidateActions(state, seat), random);
+    // De vez en cuando juega fuera de turno un asiento que no está activo (CA19).
+    const offTurn =
+      fixture.allowedOutOfTurn && waiting.length > 0 && random() < 0.1
+        ? (pick(waiting, random) as Seat)
+        : null;
+    const player = offTurn ?? seat;
+    const all = fixture.candidateActions(state, player);
+    const candidates = shuffle(offTurn === null ? all : all.filter(outOfTurn), random);
     let next: unknown;
     for (const action of candidates) {
-      const first = guard(report, 'applyAction', () => engine.applyAction(frozen, seat, action));
-      const second = guard(report, 'applyAction', () => engine.applyAction(frozen, seat, action));
+      const first = guard(report, 'applyAction', () => engine.applyAction(frozen, player, action));
+      const second = guard(report, 'applyAction', () => engine.applyAction(frozen, player, action));
       if (first === undefined) continue;
       if (canonical(first) !== canonical(second)) {
         report(
@@ -166,6 +183,8 @@ function play(
     }
 
     if (next === undefined) {
+      // Que ninguna jugada fuera de turno valga en un estado no es un fallo.
+      if (offTurn !== null) continue;
       report('ninguna de las acciones de prueba fue aceptada en un estado en curso');
       return;
     }

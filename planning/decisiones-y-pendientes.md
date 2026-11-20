@@ -38,6 +38,7 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | ADR-019 | Los próximos juegos, Batalla naval y jugadas simultáneas |
 | ADR-020 | Dominó y asientos retirados con más de dos jugadores |
 | ADR-021 | Despliegue local con dominio y acceso desde otras redes |
+| ADR-022 | Cinco a ciegas y jugadas fuera de turno |
 
 El índice de ADR dice además qué decisiones cambió o precisó cada ADR posterior.
 | ADR-012 | Decisiones de arranque del Hito 1 (S1 a S25): herramientas, versiones, validación, sesiones y entorno local |
@@ -50,6 +51,7 @@ El índice de ADR dice además qué decisiones cambió o precisó cada ADR poste
 | ADR-019 | Los próximos juegos y Batalla naval: Batalla naval y después Dominó, sin opciones en su versión 1, y una regla de derechos común (F1 a F9); reglas, acciones, vista y tiempos de Batalla naval (X1 a X14); jugadas simultáneas, con la versión desde la que está activo cada asiento y sin rechazar una jugada por el reloj de otro (X15 a X17). Aceptadas el 2026-11-19, con el contrato y el código autorizados |
 | ADR-020 | Dominó y asientos retirados: reglas, acción, vista, tiempos y azar del Dominó (DO1 a DO17); la sesión guarda los asientos retirados, que no vuelven a retirarse, siguen en la sala sin contar para su límite y salen al terminar (regla 7.33), y `MatchPlayer.retired` (DO18 a DO22). Aceptadas el 2026-11-19, con el contrato y el código autorizados |
 | ADR-021 | Despliegue local (DL1 a DL7): dominio `boardgame-coliseum.test` en el archivo `hosts` con `app.` y `api.`, opción `--dominio`, certificado con esos nombres, `pnpm local` con lo construido y `NODE_ENV=development`, Tailscale Funnel para entrar desde otras redes y, más adelante, túnel de Cloudflare con un dominio gratuito. Aceptadas el 2026-11-19, con el código autorizado |
+| ADR-022 | Cinco a ciegas (CA1 a CA21): enmienda de la regla de derechos F9 para admitir mecánicas modernas con nombre, arte, textos y presentación propios; juego de deducción de 2 a 4 jugadores en el que cada uno ve los números de los demás y no los suyos, con el catálogo de colores y puntos del original y figuras propias para daltonismo; el servidor da las pistas; se canta en cualquier momento. Jugadas fuera de turno (T-25): un motor puede aceptar jugadas de un asiento que no está activo, sin gastar reloj, y el tablero recibe `canSend`. Aceptadas el 2026-11-20, con el contrato y el código autorizados |
 
 ### Contratos y modelo, versión 1
 
@@ -91,7 +93,7 @@ El registro inicial dejaba quince asuntos por decidir. Así quedaron.
 | 9 | Tiempo agotado, abandono, desconexión y recuperación | Cerrado | ADR-009, reglas 7.16 a 7.29 |
 | 10 | Clasificación | Cerrado: posterior al MVP | ADR-008, punto 14 |
 | 11 | Bots y juego en solitario | Cerrado: posterior al MVP | ADR-008, punto 20 |
-| 12 | Licencias y derechos | Cerrado: el nombre del primer juego (ADR-008) y, el 2026-11-19, la selección de los siguientes y una regla de derechos común (ADR-019, F1 y F9) | ADR-008, sección 4; ADR-019, sección 0 |
+| 12 | Licencias y derechos | Cerrado: el nombre del primer juego (ADR-008) y, el 2026-11-19, la selección de los siguientes y una regla de derechos común (ADR-019, F1 y F9), enmendada el 2026-11-20 para admitir mecánicas modernas con presentación propia (ADR-022, CA1) | ADR-008, sección 4; ADR-019, sección 0; ADR-022, sección 3.1 |
 | 13 | Seguridad de las jugadas, límites de frecuencia e información oculta | Cerrado | El protocolo, la API, el contrato del motor y la matriz de permisos |
 | 14 | Estadísticas correctas ante reintentos | Cerrado | ADR-010, regla 8.15 |
 | 15 | Requisitos medibles de capacidad, latencia y disponibilidad | **Aplazado** | Sección 4 |
