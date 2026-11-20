@@ -1,4 +1,5 @@
 import type { AnyGameEngine } from './contract.js';
+import { dominoesEngine } from './games/dominoes/engine.js';
 import { fourInARowEngine } from './games/four-in-a-row/engine.js';
 import { navalBattleEngine } from './games/naval-battle/engine.js';
 
@@ -11,4 +12,8 @@ import { navalBattleEngine } from './games/naval-battle/engine.js';
  * activan desde la administración cuando el frontend sabe mostrarlos. Los
  * pasos están en `docs/guia-nuevo-juego.md`.
  */
-export const GAME_ENGINES: readonly AnyGameEngine[] = [fourInARowEngine, navalBattleEngine];
+export const GAME_ENGINES: readonly AnyGameEngine[] = [
+  fourInARowEngine,
+  navalBattleEngine,
+  dominoesEngine,
+];

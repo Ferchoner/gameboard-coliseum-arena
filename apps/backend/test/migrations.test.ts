@@ -39,7 +39,7 @@ describe('migraciones', () => {
     await query(`drop database if exists ${name}`);
   });
 
-  it('dan de alta Cuatro en raya activo y Batalla naval inactivo, cada uno con su versión vigente', async () => {
+  it('dan de alta Cuatro en raya activo, y Batalla naval y Dominó inactivos, cada uno con su versión', async () => {
     const rows = await fresh(
       `select games.slug, games.name, games.status, game_versions.version,
               game_versions.status as version_status, game_versions.is_current
@@ -48,6 +48,15 @@ describe('migraciones', () => {
     );
 
     expect(rows).toEqual([
+      // Los juegos nuevos llegan inactivos (ADR-018, Z8; ADR-020, DO1).
+      {
+        slug: 'dominoes',
+        name: 'Dominó',
+        status: 'INACTIVE',
+        version: '1.0.0',
+        version_status: 'INACTIVE',
+        is_current: false,
+      },
       {
         slug: 'four-in-a-row',
         name: 'Cuatro en raya',

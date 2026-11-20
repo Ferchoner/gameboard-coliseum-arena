@@ -165,7 +165,7 @@ Decididos el 2026-11-19 ([ADR-019](../docs/adr/0019-batalla-naval-y-jugadas-simu
 - [x] Jugadas simultáneas: versión por asiento activo y reloj de otro asiento (T-23; ADR-019, X15 a X17).
 - [x] Batalla naval: motor, tablero, alta inactiva y pruebas (ADR-019, X1 a X14). Entra inactiva; se activa desde la administración.
 - [x] Asientos retirados con más de dos jugadores: la sesión los guarda, no se retiran dos veces, siguen en la sala sin contar para su límite y salen al terminar (T-24; ADR-020, DO18 a DO22).
-- [ ] Dominó: motor, generador con semilla, tablero, alta inactiva y pruebas (ADR-020, DO1 a DO17).
+- [x] Dominó: motor, generador con semilla, tablero, alta inactiva y pruebas (ADR-020, DO1 a DO17).
 
 ---
 

@@ -293,3 +293,29 @@ Como Batalla naval, el juego entra **inactivo** y se activa desde la administrac
 ## 7. Aceptación
 
 El 2026-11-19 quien decide aceptó DO1 a DO22 tal como se recomiendan aquí y autorizó la enmienda del contrato de la sección 5 y el código de las dos PR de la sección 6.
+
+## 8. Lo que resultó al construir
+
+### T-24 (PR #16)
+
+- La lista de retirados vive en `game_sessions.retired_seats`. La migración la rellena desde `match_retirements` para las sesiones activas, y en las demás la deja vacía.
+- Las salas no conocen las sesiones de partida. Para el límite, el servidor de salas pregunta cuántas de sus partidas en curso tienen a ese jugador retirado, con la misma interfaz `MatchStarter` que ya usaba para empezarlas. Resta esa cifra de sus pertenencias.
+- Al terminar la partida salen de la sala todos los asientos retirados, más quien perdió por abandono en la retirada que la terminó (regla 7.32).
+- Las pruebas usan un motor de pruebas de tres jugadores que sigue con los demás cuando se retira uno.
+
+### Dominó
+
+- El motor está en `packages/game-engine/src/games/dominoes/` y se registra como `dominoes@1.0.0`. Sus reglas están escritas en su `README.md`.
+- El generador es `packages/game-engine/src/random.ts`: sfc32, con la semilla repartida por cyrb128. Su estado son cuatro enteros, y el estado del juego lo guarda en `random`. Tiene sus propias pruebas, entre ellas que reparte los enteros de forma pareja.
+- El estado guarda la mano en juego entera: las manos, el pozo, la línea orientada y a quién le toca. Robar y pasar ocurren dentro de la transición de la jugada anterior, así que a quien le toca siempre puede jugar.
+- Detalles que el ADR no fijaba, decididos al construir:
+  - Si los dos extremos de la línea tienen el mismo número, no se pide extremo.
+  - Con parejas, tras un tranque ganado sale el jugador de la pareja que menos suma.
+  - Con 3 y un retirado, las manos siguientes se reparten solo entre los dos que siguen, con 14 fichas en el pozo.
+  - Los tres están en el `README.md` del motor.
+- La comprobación común (Z3) juega 21 partidas, 7 con cada número de jugadores.
+- La prueba en navegador:
+  - Juega una partida de tres y comprueba que nadie recibe una ficha de la mano de otro, ni por REST ni en los `MATCH_UPDATED`.
+  - Uno se rinde desde la página, y los otros dos juegan hasta los 100 puntos.
+  - Otra prueba comprueba que el tablero de cuatro cabe en un móvil de 390 px con la línea partida en dos filas.
+- Con tres jugadores, el nombre largo de un jugador empujaba su reloj fuera de la tarjeta en la página de la partida. Ahora el nombre se parte. También faltaba el espacio antes del nombre del asiento, entre paréntesis.

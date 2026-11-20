@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AnyGameEngine, Seat } from './contract.js';
 import { GAME_ENGINES } from './engines.js';
+import type { DominoesState } from './games/dominoes/engine.js';
 import { COLUMN_COUNT } from './games/four-in-a-row/engine.js';
 import { GRID_SIZE, type NavalBattleState } from './games/naval-battle/engine.js';
 import { checkEngineConformance, type ConformanceFixture } from './testing/conformance.js';
@@ -42,6 +43,30 @@ const FIXTURES: Readonly<Record<string, ConformanceFixture>> = {
       return [
         ...picks.flatMap((cell) => (cell ? [{ type: 'FIRE', ...cell }] : [])),
         ...own.slice(0, 1).map((cell) => ({ type: 'FIRE', ...cell })),
+        { type: 'OTRA_COSA' },
+      ];
+    },
+  },
+  'dominoes@1.0.0': {
+    settings: {},
+    // Cada ficha de la mano en los dos extremos y sin extremo, una ficha que
+    // no tiene y una acción mal formada. Juega partidas de 2, 3 y 4.
+    games: 21,
+    candidateActions: (state, seat) => {
+      const { hand } = state as DominoesState;
+      const own = hand.hands[seat] ?? [];
+      const missing = [
+        [0, 0],
+        [6, 6],
+        [3, 4],
+      ].find((tile) => !own.some((one) => one[0] === tile[0] && one[1] === tile[1]));
+      return [
+        ...own.flatMap((tile) => [
+          { type: 'PLAY', tile },
+          { type: 'PLAY', tile: [tile[1], tile[0]], end: 'LEFT' },
+          { type: 'PLAY', tile, end: 'RIGHT' },
+        ]),
+        { type: 'PLAY', tile: missing },
         { type: 'OTRA_COSA' },
       ];
     },
