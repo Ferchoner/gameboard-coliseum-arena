@@ -81,4 +81,35 @@ describe('qué juegos sabe mostrar la aplicación (ADR-018, decisión Z5)', () =
     expect(ui?.endText({ target: 100, scores: [104, 30] })).toBe('Llegó a 100 puntos.');
     expect(ui?.endText({ target: 100, scores: [40, 30] })).toBeNull();
   });
+
+  it('sabe mostrar Cinco a ciegas 1 y da un nombre a cada uno de sus cuatro asientos (ADR-022)', () => {
+    expect(knowsGame('blind-five', '1.0.0')).toBe(true);
+    expect(knowsGame('blind-five', '2.0.0')).toBe(false);
+    expect(gameUi('blind-five', '1.0.0')?.seatNames).toHaveLength(4);
+  });
+
+  it('tiene un texto para cada motivo con el que Cinco a ciegas rechaza una jugada', () => {
+    expect(Object.keys(gameUi('blind-five', '1.0.0')?.rejections ?? {}).sort()).toEqual(
+      [
+        'INVALID_DECLARATION',
+        'MALFORMED_ACTION',
+        'MUST_DECLARE',
+        'POSITION_OUT_OF_RANGE',
+        'SUIT_EXHAUSTED',
+        'TILE_NOT_FACE_UP',
+        'WRONG_STEP',
+      ].sort(),
+    );
+  });
+
+  it('dice cómo terminó Cinco a ciegas: acertando o siendo el último en juego', () => {
+    const ui = gameUi('blind-five', '1.0.0');
+    const right = { seat: 1, numbers: [1, 2, 3, 4, 5], correct: true };
+    const wrong = { seat: 0, numbers: [1, 2, 3, 4, 5], correct: false };
+    expect(ui?.endText({ winner: 1, declarations: [wrong, right] })).toBe(
+      'Acertó sus cinco números.',
+    );
+    expect(ui?.endText({ winner: 1, declarations: [wrong] })).toBe('Fue el último en juego.');
+    expect(ui?.endText({ winner: null, declarations: [] })).toBeNull();
+  });
 });

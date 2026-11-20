@@ -1,4 +1,5 @@
 import { defineAsyncComponent } from 'vue';
+import { blindFiveTexts } from './blind-five';
 import { dominoesTexts } from './dominoes';
 import { fourInARowTexts } from './four-in-a-row';
 import { navalBattleTexts } from './naval-battle';
@@ -25,6 +26,10 @@ const GAME_UIS: Readonly<Record<string, GameUi>> = {
   'dominoes@1': {
     ...dominoesTexts,
     board: defineAsyncComponent(() => import('./dominoes/DominoesBoard.vue')),
+  },
+  'blind-five@1': {
+    ...blindFiveTexts,
+    board: defineAsyncComponent(() => import('./blind-five/BlindFiveBoard.vue')),
   },
 };
 

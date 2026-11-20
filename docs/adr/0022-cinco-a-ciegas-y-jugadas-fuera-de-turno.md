@@ -376,6 +376,8 @@ Con esto no quedó ninguna pregunta sobre las reglas.
 
 El 2026-11-20 quien decide aceptó CA1 a CA21 tal como se recomiendan, incluida la enmienda de F9 (CA1), y autorizó los cambios de contrato de la sección 5 y el código de las dos pull requests de CA21.
 
+Después, el mismo 2026-11-20, quien decide propuso nombrar el juego original en la aplicación y pedir que se marcara "Yo tengo el juego de forma física" antes de jugar. Se valoró y se eligió **"Nombre propio y aviso neutro"**: la marca sigue fuera de la aplicación, y la descripción del catálogo y el pie del tablero dicen, sin la marca, *"Inspirado en un juego de mesa comercial. Si te gusta, apoya a sus autores comprando el original."* La marca, el autor y la editorial solo aparecen en la línea de origen del `README.md` del motor, como pide CA1. No se pide ninguna casilla: no se puede comprobar, y daría a entender un permiso que no existe.
+
 ## 8. Lo que resultó al construir
 
 ### T-25
@@ -384,6 +386,15 @@ El 2026-11-20 quien decide aceptó CA1 a CA21 tal como se recomiendan, incluida 
 - El paquete del motor tiene un tercer motor de pruebas, `createOutOfTurnFakeEngine`, en el que cualquiera canta en cualquier momento y quien canta dos veces gana.
 - La batería común (Z3) exigía `NOT_YOUR_TURN` a toda acción de un asiento no activo. Ahora los datos de prueba de un juego pueden declarar con `allowedOutOfTurn` cuáles admite fuera de turno; a esas no se les exige, y de vez en cuando la batería juega una desde un asiento que no está activo.
 - En la página de la partida, `canSend` (en partida, sin retirarse, con conexión y sin otra orden esperando) es la condición para enviar, y `canPlay` es `canSend` más que le toque. Los tableros que ya había comprueban `canPlay` antes de emitir, para que nada cambie en ellos.
+
+### El juego
+
+- Motor `blind-five` 1.0.0 en `packages/game-engine/src/games/blind-five/`, con 38 pruebas propias y 21 partidas de la batería común (Z3), que declara `DECLARE` como jugada fuera de turno. El palo y los puntos salen del número (CA3): `S1` a `S5` en ciclo y 1, 2 o 3 puntos por bloques de cinco, con el 16 en el palo del 1. Cada palo se baraja aparte con el generador con semilla.
+- El motor también gestiona por sí mismo a quien falla al cantar (CA20): queda fuera, ve sus números y, si tenía el turno, pasa al siguiente. Si solo queda uno en juego, gana.
+- Ninguna vista lleva los números de un asiento a su dueño mientras sigue en juego, y la vista de quien solo mira no lleva ninguno hasta el final (CA15). La prueba en navegador lo comprueba también en lo que llega por tiempo real.
+- Tablero en `apps/frontend/app/games/blind-five/`: cada palo con su color de la paleta Okabe-Ito y su figura (círculo, triángulo, cuadrado, rombo y estrella), sobre fondo liso, también en modo oscuro. La hoja de deducción tacha sola lo que está a la vista y guarda las marcas del jugador en su navegador (CA16); si marca cinco como posibles, el formulario de cantar empieza con ellos.
+- El tablero no recibe el identificador de la partida, así que las marcas se guardan por las cinco fichas que empezaron boca arriba y el asiento.
+- Alta por migración (`20261120190704_alta_cinco_a_ciegas`) con el juego y su versión inactivos (ADR-018, Z8). Se activa desde administración: la versión, que sea la vigente y el juego.
 
 ## Fuentes
 

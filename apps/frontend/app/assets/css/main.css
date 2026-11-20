@@ -1165,3 +1165,372 @@ button.naval-cell:not(:disabled):focus-visible {
   font-size: 1.4rem;
   font-weight: 700;
 }
+
+/* --- Cinco a ciegas (ADR-022, CA3 y CA17) ---------------------------------- */
+
+:root {
+  /*
+   * Un color y una figura por palo, sobre fondo liso, para que se distingan
+   * sin depender del color. Los colores son de la paleta Okabe-Ito, que se
+   * distingue con daltonismo.
+   */
+  --b5-S1: #009e73;
+  --b5-S2: #cc79a7;
+  --b5-S3: #0072b2;
+  --b5-S4: #d55e00;
+  --b5-S5: #e69f00;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --b5-S1: #2fc89a;
+    --b5-S2: #e39bc4;
+    --b5-S3: #56a8e0;
+    --b5-S4: #f08040;
+    --b5-S5: #f0b840;
+  }
+}
+
+.b5-S1 {
+  --b5-color: var(--b5-S1);
+}
+
+.b5-S2 {
+  --b5-color: var(--b5-S2);
+}
+
+.b5-S3 {
+  --b5-color: var(--b5-S3);
+}
+
+.b5-S4 {
+  --b5-color: var(--b5-S4);
+}
+
+.b5-S5 {
+  --b5-color: var(--b5-S5);
+}
+
+.b5-board {
+  display: grid;
+  gap: 1rem;
+}
+
+.b5-status {
+  margin: 0;
+  font-weight: 600;
+}
+
+.b5-rivals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.b5-rival {
+  border-left: 4px solid var(--seat-color, var(--border));
+}
+
+.b5-rival.turn {
+  border-color: var(--seat-color, var(--accent));
+}
+
+.b5-rival.out .b5-stand {
+  opacity: 0.7;
+}
+
+.b5-rival-name,
+.b5-own h3,
+.b5-table h3,
+.b5-declarations h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.b5-own {
+  border-left: 4px solid var(--seat-color, var(--border));
+}
+
+.b5-own > p {
+  margin: 0 0 0.5rem;
+}
+
+.b5-stand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.b5-slot {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 0.4rem;
+  padding-top: 0.6rem;
+}
+
+.b5-slot:empty {
+  width: 0.4rem;
+}
+
+.b5-stand-tile {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.b5-position {
+  font-size: 0.75rem;
+}
+
+.b5-compare {
+  padding: 0 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.b5-compare.same {
+  border-color: var(--ok);
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.b5-tile {
+  display: inline-grid;
+  grid-template-rows: auto auto auto;
+  justify-items: center;
+  align-content: center;
+  width: 2.9rem;
+  min-height: 3.6rem;
+  padding: 0.2rem;
+  border: 2px solid var(--b5-color);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.b5-tile.hidden {
+  background: var(--b5-color);
+  color: #ffffff;
+}
+
+.b5-tile.small {
+  width: 2.1rem;
+  min-height: 2.6rem;
+  font-size: 0.8rem;
+}
+
+.b5-shape {
+  width: 1rem;
+  height: 1rem;
+  fill: var(--b5-color);
+}
+
+.b5-tile.hidden .b5-shape {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: #ffffff;
+}
+
+.b5-tile.small .b5-shape {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.b5-number {
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.b5-dots {
+  display: flex;
+  gap: 2px;
+}
+
+.b5-dot {
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.b5-table {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.b5-supply {
+  font-weight: 400;
+}
+
+.b5-face-up,
+.b5-reveal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.b5-pick {
+  padding: 0.15rem;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+
+.b5-pick:not(:disabled):hover,
+.b5-pick:not(:disabled):focus-visible,
+.b5-pick.chosen {
+  border-color: var(--accent);
+}
+
+.b5-pick:disabled {
+  cursor: default;
+}
+
+.b5-reveal-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+}
+
+.b5-clue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.b5-clue p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.b5-declare {
+  margin-top: 0.75rem;
+}
+
+.panel form.b5-declare-form {
+  display: grid;
+  grid-template-columns: none;
+  gap: 0.5rem;
+}
+
+.b5-declare-form fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.b5-declare-form legend {
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+.b5-declare-number input {
+  width: 3.6rem;
+  padding: 0.4rem;
+  font: inherit;
+  text-align: center;
+}
+
+.b5-declare-form .button {
+  justify-self: start;
+}
+
+.b5-declarations ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.b5-declarations li.correct {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.b5-sheet summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.b5-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.3rem;
+  margin: 0.5rem 0;
+}
+
+.b5-sheet-column {
+  display: grid;
+  gap: 0.2rem;
+  justify-items: stretch;
+}
+
+.b5-sheet-head {
+  justify-self: center;
+}
+
+.b5-sheet-cell {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.15rem 0.35rem;
+  border: 1px solid var(--b5-color);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.b5-sheet-dots {
+  font-size: 0.7rem;
+  letter-spacing: -1px;
+}
+
+.b5-sheet-cell.seen,
+.b5-sheet-cell.crossed {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.b5-sheet-cell.seen {
+  border-style: dotted;
+  cursor: default;
+}
+
+.b5-sheet-cell.possible {
+  background: var(--b5-color);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.b5-credit {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.b5-tile.symbol {
+  width: auto;
+  min-height: 0;
+  padding: 0.25rem;
+  border-width: 1px;
+}
