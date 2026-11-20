@@ -37,6 +37,7 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | ADR-018 | Preparación del segundo juego |
 | ADR-019 | Los próximos juegos, Batalla naval y jugadas simultáneas |
 | ADR-020 | Dominó y asientos retirados con más de dos jugadores |
+| ADR-021 | Despliegue local con dominio y acceso desde otras redes |
 
 El índice de ADR dice además qué decisiones cambió o precisó cada ADR posterior.
 | ADR-012 | Decisiones de arranque del Hito 1 (S1 a S25): herramientas, versiones, validación, sesiones y entorno local |
@@ -48,6 +49,7 @@ El índice de ADR dice además qué decisiones cambió o precisó cada ADR poste
 | ADR-018 | Preparación del segundo juego (Z1 a Z8): semilla, opciones y retiradas guardadas con la partida, comprobación común de los motores, metadatos comprobados al arrancar, el frontend solo ofrece los juegos que sabe mostrar, orden al activar, tablero común y guía para añadir un juego. Aceptadas el 2026-11-19, al autorizar la cuarta tanda del análisis |
 | ADR-019 | Los próximos juegos y Batalla naval: Batalla naval y después Dominó, sin opciones en su versión 1, y una regla de derechos común (F1 a F9); reglas, acciones, vista y tiempos de Batalla naval (X1 a X14); jugadas simultáneas, con la versión desde la que está activo cada asiento y sin rechazar una jugada por el reloj de otro (X15 a X17). Aceptadas el 2026-11-19, con el contrato y el código autorizados |
 | ADR-020 | Dominó y asientos retirados: reglas, acción, vista, tiempos y azar del Dominó (DO1 a DO17); la sesión guarda los asientos retirados, que no vuelven a retirarse, siguen en la sala sin contar para su límite y salen al terminar (regla 7.33), y `MatchPlayer.retired` (DO18 a DO22). Aceptadas el 2026-11-19, con el contrato y el código autorizados |
+| ADR-021 | Despliegue local (DL1 a DL7): dominio `boardgame-coliseum.test` en el archivo `hosts` con `app.` y `api.`, opción `--dominio`, certificado con esos nombres, `pnpm local` con lo construido y `NODE_ENV=development`, Tailscale Funnel para entrar desde otras redes y, más adelante, túnel de Cloudflare con un dominio gratuito. Aceptadas el 2026-11-19, con el código autorizado |
 
 ### Contratos y modelo, versión 1
 

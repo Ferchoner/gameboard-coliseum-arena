@@ -242,6 +242,8 @@ ADR-004 pide que en local el frontend y la API estén en dos orígenes del mismo
 
 El modo HTTPS usa un certificado local que genera un script del repositorio. Sirve para probar en local la cookie con `Secure` y su prefijo, que el modo HTTP no puede probar. La prueba en Safari con un despliegue real sigue en el Hito 7.
 
+*Ampliada el 2026-11-19 (ADR-021, DL1 a DL4): los dos modos aceptan `--dominio`, que sirve la API en `api.boardgame-coliseum.test` y el frontend en `app.boardgame-coliseum.test` con los mismos puertos, y `pnpm local` arranca lo construido en lugar de los servidores de desarrollo. Lo dicho aquí de `app.localhost` y `api.localhost` sigue valiendo: con un solo nivel bajo `localhost` son sitios distintos.*
+
 ### S15. Hash de contraseñas
 
 ADR-004, condición 5.9, pedía confirmar el estado del Argon2id incorporado en Node.js 26. **Está estable.** Se probó en Node.js 26.13.1: reproduce el vector de prueba de la especificación RFC 9106 y tarda unos 35 milisegundos con los parámetros recomendados.
