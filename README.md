@@ -42,6 +42,10 @@ pnpm dev:https   # frontend en https://localhost:3444 y API en https://localhost
 
 `pnpm dev:cert` usa [mkcert](https://github.com/FiloSottile/mkcert) si está instalado, y entonces el navegador confía en el certificado. En Windows se instala con `winget install FiloSottile.mkcert` o con `choco install mkcert`. Si no lo está, crea con `openssl` un certificado firmado por sí mismo. En ese caso hay que abrir una vez <https://localhost:3443/health> y <https://localhost:3444> y aceptar el aviso del navegador en las dos direcciones. Si no se acepta el de la API, el frontend no puede hablar con ella.
 
+### Con dominio y para probar desde otras redes
+
+`pnpm dev:https --dominio` sirve el frontend en `https://app.boardgame-coliseum.test:3444` y la API en `https://api.boardgame-coliseum.test:3443`, dos nombres del mismo sitio como en producción. `pnpm local` arranca lo que se publicaría (la API compilada y el frontend construido) y, con un túnel de Tailscale, deja entrar a personas desde otras redes. Los pasos, con las órdenes de PowerShell, están en [`docs/guia-despliegue-local.md`](docs/guia-despliegue-local.md) (ADR-021).
+
 ### Configuración
 
 Nada es obligatorio en local. Para cambiar la base de datos, el registro de actividad o los límites de las salas y del canal de tiempo real, copia [`apps/backend/.env.example`](apps/backend/.env.example) como `apps/backend/.env`. Los puertos y los orígenes los fija el modo elegido.
@@ -50,7 +54,9 @@ Nada es obligatorio en local. Para cambiar la base de datos, el registro de acti
 
 | Orden | Qué hace |
 |---|---|
-| `pnpm dev`, `pnpm dev:https` | Arranca el entorno local en HTTP o en HTTPS |
+| `pnpm dev`, `pnpm dev:https` | Arranca el entorno local en HTTP o en HTTPS. Con `--dominio`, usa `app.` y `api.boardgame-coliseum.test` en lugar de `localhost` |
+| `pnpm dev:cert` | Crea el certificado del modo HTTPS. Con `--dominio`, vale también para los nombres del dominio; con `--force`, sustituye el que haya |
+| `pnpm local` | Despliegue local: construye todo, aplica las migraciones y arranca la API compilada y el frontend como archivos estáticos. Acepta `--https` y `--dominio`, y los orígenes de un túnel en `LOCAL_FRONTEND_ORIGIN` y `LOCAL_API_ORIGIN`. Ver [`docs/guia-despliegue-local.md`](docs/guia-despliegue-local.md) |
 | `pnpm db:up`, `pnpm db:down` | Arranca o detiene la base de datos |
 | `pnpm db:migrate` | Aplica las migraciones pendientes. Antes hay que construir con `pnpm build`; `pnpm dev` ya lo hace solo |
 | `pnpm test` | Ejecuta las pruebas. Las del backend usan la base de datos `gameboard_test`, que `pnpm db:up` crea |

@@ -8,6 +8,9 @@
  * - `PORT`: puerto del servidor de desarrollo.
  * - `DEV_TLS_CERT_FILE` y `DEV_TLS_KEY_FILE`: certificado para servir el
  *   desarrollo con HTTPS (ADR-012, decisión S14).
+ * - `DEV_ALLOWED_HOST`: nombre del frontend en desarrollo cuando no es
+ *   `localhost` (ADR-021, DL1). Sin él, Vite rechaza la conexión de la
+ *   recarga en caliente que llega con ese nombre.
  */
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -15,6 +18,7 @@ import { join, relative } from 'node:path';
 
 const certFile = process.env.DEV_TLS_CERT_FILE;
 const keyFile = process.env.DEV_TLS_KEY_FILE;
+const allowedHost = process.env.DEV_ALLOWED_HOST;
 
 /**
  * Escribe el service worker en lo construido, con la lista de los archivos
@@ -74,6 +78,9 @@ export default defineNuxtConfig({
   vite: {
     // Zod llega a través del paquete de contratos, que en desarrollo se usa enlazado.
     optimizeDeps: { include: ['@gameboard/contracts > zod'] },
+    ...(allowedHost && allowedHost !== 'localhost'
+      ? { server: { allowedHosts: [allowedHost] } }
+      : {}),
   },
 
   app: {

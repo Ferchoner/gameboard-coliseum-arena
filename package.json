@@ -24,6 +24,7 @@
     "dev": "node scripts/dev.mjs http",
     "dev:https": "node scripts/dev.mjs https",
     "dev:cert": "node scripts/dev-cert.mjs",
+    "local": "node scripts/local.mjs",
     "icons": "node scripts/pwa-icons.mjs"
   },
   "devDependencies": {
