@@ -1719,17 +1719,13 @@ button.naval-cell:not(:disabled):focus-visible {
   list-style: none;
 }
 
-.td-order {
-  display: grid;
-  gap: 0.2rem;
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
 .td-piles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
   margin: 0;
-  padding-left: 1.1rem;
+  padding: 0;
+  list-style: none;
 }
 
 .td-seats {
@@ -1765,37 +1761,6 @@ button.naval-cell:not(:disabled):focus-visible {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-}
-
-.td-birds,
-.td-hand {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-  margin: 0.25rem 0;
-}
-
-.td-bird {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg);
-  color: var(--text);
-  font: inherit;
-}
-
-.td-bird:not(:disabled) {
-  cursor: pointer;
-}
-
-.td-hand-card {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
 }
 
 .td-exchange {
@@ -2073,7 +2038,7 @@ button.naval-cell:not(:disabled):focus-visible {
 
 .td-space.hint-ok,
 .td-port-space.hint-ok,
-.td-bird.hint-ok {
+.td-bird-card.hint-ok {
   outline: 3px solid var(--td-hint);
   outline-offset: 1px;
   box-shadow: 0 0 0 6px var(--accent);
@@ -2154,4 +2119,232 @@ button.naval-cell:not(:disabled):focus-visible {
 
 .td-die.weather.face-breeze {
   background: #7fd8d2;
+}
+
+/* Mareas: encargos y aves como cartas, igual que en la mesa. */
+:root {
+  --td-paper: #fbf6ea;
+  --td-paper-edge: #d8cdb4;
+}
+
+.td-help {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+}
+
+.td-card {
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  align-content: start;
+  gap: 0.35rem;
+  min-width: 0;
+  height: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid rgb(0 0 0 / 22%);
+  border-radius: 12px;
+  background: var(--td-paper);
+  color: var(--td-ink);
+  box-shadow:
+    0 1px 0 rgb(0 0 0 / 15%),
+    0 4px 10px rgb(0 0 0 / 14%);
+  font: inherit;
+  text-align: left;
+}
+
+button.td-card {
+  cursor: pointer;
+}
+
+.td-card .muted {
+  color: #4b505a;
+}
+
+/* Por dentro, todo son `span` (la carta puede ser un botón): cada uno, en su línea. */
+:where(.td-card) > span,
+:where(.td-card-top) > span {
+  display: block;
+}
+
+.td-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.td-card-points {
+  flex: none;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--td-ink);
+  color: var(--td-paper);
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 1;
+}
+
+.td-card-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.td-card-text {
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.td-card-label {
+  display: inline;
+  font-weight: 600;
+}
+
+.td-card-note {
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.td-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.td-card-actions .button {
+  flex: 1;
+}
+
+.td-card-empty {
+  display: grid;
+  place-items: center;
+  min-height: 6rem;
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+}
+
+/* El encargo: papel claro con una franja de mar arriba. */
+.td-order-card {
+  border-top: 6px solid var(--td-sea-1);
+}
+
+.td-cost {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.td-ing {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid rgb(0 0 0 / 25%);
+  border-radius: 999px;
+  color: var(--td-ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.td-ing.ing-fish {
+  background: #a9c8ea;
+}
+
+.td-ing.ing-salt {
+  background: #ffffff;
+}
+
+.td-ing.ing-algae {
+  background: #a6d99a;
+}
+
+/* El ave: la carta del color de su estación. */
+.td-bird-card.land-spring {
+  background: var(--td-spring);
+}
+
+.td-bird-card.land-summer {
+  background: var(--td-summer);
+}
+
+.td-bird-card.land-autumn {
+  background: var(--td-autumn);
+}
+
+.td-bird-card.land-winter {
+  background: var(--td-winter);
+}
+
+/* Un montón: las cartas de debajo asoman por el borde. */
+.td-bird-card.stack {
+  box-shadow:
+    3px 3px 0 -1px var(--td-paper),
+    3px 3px 0 0 rgb(0 0 0 / 25%),
+    6px 6px 0 -1px var(--td-paper),
+    6px 6px 0 0 rgb(0 0 0 / 25%),
+    0 4px 10px rgb(0 0 0 / 14%);
+}
+
+.td-bird-space {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+}
+
+/* Lo que se puede hacer ahora con la carta. */
+.td-card.ready,
+.td-card.hint-ok {
+  outline: 3px solid #ffffff;
+  outline-offset: 0;
+  box-shadow:
+    0 0 0 6px var(--accent),
+    0 4px 12px rgb(0 0 0 / 25%);
+}
+
+.td-card-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.td-card-row.small {
+  flex-basis: 100%;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.td-card-row.small .td-card {
+  padding: 0.45rem 0.55rem;
+}
+
+.td-card-row.small .td-card-name {
+  font-size: 0.95rem;
+}
+
+.td-card-row.small .td-card-text {
+  font-size: 0.78rem;
+}
+
+@media (max-width: 40rem) {
+  .td-orders,
+  .td-piles,
+  .td-card-row {
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: 0.5rem;
+  }
+
+  .td-card {
+    padding: 0.5rem 0.55rem;
+  }
+}
+
+.td-own-cards h4 {
+  margin: 0.75rem 0 0.2rem;
 }

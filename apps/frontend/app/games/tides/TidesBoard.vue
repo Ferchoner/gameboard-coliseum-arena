@@ -12,6 +12,8 @@ import type {
 } from '@gameboard/game-engine/tides';
 import { computed, ref, watch } from 'vue';
 import type { BoardProps } from '../game-ui';
+import BirdCard from './TidesBirdCard.vue';
+import OrderCard from './TidesOrderCard.vue';
 import { tidesStrings as texts } from './texts';
 
 /**
@@ -35,14 +37,6 @@ const dieLabel = (die: TidesDieView) =>
   texts.die(texts.faces[die.face], texts.kinds[die.kind], nameOf(die.owner));
 const islandName = (id: string) => texts.islands[id] ?? id;
 const orderName = (id: string) => texts.orders[id] ?? id;
-const costText = (card: TidesOrderCard) =>
-  BASICS.flatMap((basic) =>
-    Array.from({ length: card.cost[basic] }, () => texts.ingredientSymbols[basic]),
-  ).join(' ');
-const costWords = (card: TidesOrderCard) =>
-  BASICS.filter((basic) => card.cost[basic] > 0)
-    .map((basic) => `${card.cost[basic]} ${texts.ingredients[basic].toLowerCase()}`)
-    .join(', ');
 
 const mine = computed(() => props.view.seats[props.yourSeat]);
 const myTurn = computed(
@@ -308,6 +302,22 @@ function cheapest(ingredients: TidesIngredients, card: TidesOrderCard) {
 }
 
 const canFulfil = computed(() => free.value && props.view.turn?.fulfilled === false);
+
+/** Bajo cada encargo: si te alcanza para pagarlo o qué te falta. */
+function payNote(card: TidesOrderCard): string | null {
+  const own = mine.value;
+  if (!own || own.retired) return null;
+  const short = BASICS.map((basic) => ({
+    basic,
+    count: Math.max(0, card.cost[basic] - own.ingredients[basic]),
+  })).filter((one) => one.count > 0);
+  const total = short.reduce((sum, one) => sum + one.count, 0);
+  if (total <= own.ingredients.PEARL) return texts.cards.canPay;
+  const list = short
+    .map((one) => `${one.count} ${texts.ingredients[one.basic].toLowerCase()}`)
+    .join(', ');
+  return texts.cards.missing(list, own.ingredients.PEARL > 0);
+}
 const canUse = computed(() => free.value && props.view.turn?.used === false);
 
 function fulfil(card: TidesOrderCard): void {
@@ -517,34 +527,35 @@ const seatsView = computed(() =>
     <section v-if="pending" class="td-pending panel" data-pending>
       <template v-if="pending.kind === 'BOARD_BIRD'">
         <p>{{ texts.pending.BOARD_BIRD }}</p>
-        <div class="td-choices">
-          <button
-            v-for="pile in view.birdPiles"
-            :key="pile.season"
-            type="button"
-            class="button"
-            :disabled="pile.count === 0"
-            :data-season="pile.season"
-            @click="play({ type: 'RESOLVE', season: pile.season })"
-          >
-            {{ texts.seasons[pile.season] }}:
-            {{ pile.top ? texts.birds[pile.top.kind] : texts.none }}
-          </button>
+        <div class="td-card-row">
+          <template v-for="pile in view.birdPiles" :key="pile.season">
+            <BirdCard
+              v-if="pile.count > 0"
+              as="button"
+              ready
+              :kind="pile.top?.kind ?? null"
+              :season="pile.season"
+              :count="pile.count"
+              :data-season="pile.season"
+              @click="play({ type: 'RESOLVE', season: pile.season })"
+            />
+          </template>
         </div>
       </template>
       <template v-else-if="pending.kind === 'RELEASE_BIRD'">
         <p>{{ texts.pending.RELEASE_BIRD }}</p>
-        <div class="td-choices">
-          <button
+        <div class="td-card-row">
+          <BirdCard
             v-for="bird in mine?.aboard ?? []"
             :key="bird.id"
-            type="button"
-            class="button"
+            as="button"
+            ready
+            :kind="bird.kind"
+            :season="bird.season"
+            :aria-label="`${texts.actions.release} ${texts.birds[bird.kind]}`"
             :data-release="bird.id"
             @click="play({ type: 'RESOLVE', bird: bird.id })"
-          >
-            {{ texts.birds[bird.kind] }}
-          </button>
+          />
         </div>
       </template>
       <template v-else-if="pending.kind === 'CHOOSE_INGREDIENTS'">
@@ -606,29 +617,25 @@ const seatsView = computed(() =>
       </template>
       <template v-else-if="pending.kind === 'PROMISE'">
         <p>{{ texts.pending.PROMISE }}</p>
-        <div class="td-choices">
-          <button
-            v-if="view.revealed"
-            type="button"
-            class="button"
-            :data-promise="view.revealed.id"
-            @click="play({ type: 'RESOLVE', order: view.revealed.id })"
+        <div class="td-card-row">
+          <OrderCard
+            v-for="card in [view.revealed, ...view.market].filter((one) => one !== null)"
+            :key="card.id"
+            :card="card"
+            ready
+            :note="card.id === view.revealed?.id ? texts.pending.revealed : null"
           >
-            {{ texts.pending.revealed }}: {{ orderName(view.revealed.id) }} ({{
-              costText(view.revealed)
-            }}, {{ texts.points(view.revealed.points) }})
-          </button>
-          <template v-for="card in view.market" :key="card?.id">
             <button
-              v-if="card"
               type="button"
-              class="button quiet"
+              class="button"
               :data-promise="card.id"
               @click="play({ type: 'RESOLVE', order: card.id })"
             >
-              {{ orderName(card.id) }} ({{ costText(card) }}, {{ texts.points(card.points) }})
+              {{ texts.actions.promise }}
             </button>
-          </template>
+          </OrderCard>
+        </div>
+        <div class="td-choices">
           <button
             v-if="pending.optional"
             type="button"
@@ -687,17 +694,15 @@ const seatsView = computed(() =>
         <h3 id="td-market-title">
           {{ texts.market }} <span class="muted">· {{ texts.ordersLeft(view.ordersLeft) }}</span>
         </h3>
+        <p class="muted td-help">{{ texts.marketHelp }}</p>
         <ul class="td-orders">
-          <li
-            v-for="(card, index) in view.market"
-            :key="card?.id ?? `empty-${index}`"
-            class="td-order"
-          >
-            <template v-if="card">
-              <strong>{{ orderName(card.id) }}</strong>
-              <span :aria-label="costWords(card)">{{ costText(card) }}</span>
-              <span>{{ texts.points(card.points) }}</span>
-              <span class="muted">{{ texts.uses[card.use] }}</span>
+          <li v-for="(card, index) in view.market" :key="card?.id ?? `empty-${index}`">
+            <OrderCard
+              v-if="card"
+              :card="card"
+              :ready="canFulfil && !!mine && !!cheapest(mine.ingredients, card)"
+              :note="payNote(card)"
+            >
               <button
                 v-if="canFulfil && mine && cheapest(mine.ingredients, card)"
                 type="button"
@@ -707,19 +712,15 @@ const seatsView = computed(() =>
               >
                 {{ texts.actions.fulfil }}
               </button>
-            </template>
-            <span v-else class="muted">{{ texts.emptySlot }}</span>
+            </OrderCard>
+            <span v-else class="td-card td-card-empty muted">{{ texts.emptySlot }}</span>
           </li>
         </ul>
         <h4>{{ texts.birdPiles }}</h4>
+        <p class="muted td-help">{{ texts.birdsHelp }}</p>
         <ul class="td-piles">
           <li v-for="pile in view.birdPiles" :key="pile.season">
-            <strong>{{ texts.seasons[pile.season] }}</strong>:
-            <template v-if="pile.top">
-              {{ texts.birds[pile.top.kind] }}
-              <span class="muted">{{ texts.birdPowers[pile.top.kind] }}</span>
-            </template>
-            <span class="muted"> ({{ texts.pileLeft(pile.count) }})</span>
+            <BirdCard :kind="pile.top?.kind ?? null" :season="pile.season" :count="pile.count" />
           </li>
         </ul>
       </section>
@@ -794,6 +795,79 @@ const seatsView = computed(() =>
         >
           {{ texts.actions.cancel }}
         </button>
+      </div>
+
+      <div
+        v-if="mine.aboard.length > 0 || mine.promised.length > 0 || mine.hand.length > 0"
+        class="td-own-cards"
+      >
+        <h4>{{ texts.cards.yours }}</h4>
+        <p class="muted td-help">{{ texts.cards.yoursHelp }}</p>
+        <div class="td-card-row">
+          <template v-for="bird in mine.aboard" :key="bird.id">
+            <BirdCard
+              v-if="texts.birdSpaces[bird.kind]"
+              as="button"
+              :kind="bird.kind"
+              :season="bird.season"
+              :class="hintClass(birdHint(bird.kind, bird.die !== null))"
+              :data-bird="bird.id"
+              @click="onBird(bird.id, bird.die)"
+            >
+              <span class="td-bird-space">
+                <span class="muted">{{
+                  texts.cards.space[texts.birdSpaces[bird.kind] as 'BOAT' | 'WEATHER']
+                }}</span>
+                <span
+                  v-if="bird.die"
+                  class="td-die"
+                  :class="[
+                    `seat-${bird.die.owner}`,
+                    bird.die.kind === 'BOAT' ? 'boat' : 'weather',
+                    `face-${bird.die.face.toLowerCase()}`,
+                  ]"
+                  >{{ texts.symbols[bird.die.face] }}</span
+                >
+              </span>
+            </BirdCard>
+            <BirdCard v-else :kind="bird.kind" :season="bird.season" :data-bird="bird.id" />
+          </template>
+          <OrderCard
+            v-for="card in mine.promised"
+            :key="card.id"
+            :card="card"
+            :ready="canFulfil && !!cheapest(mine.ingredients, card)"
+            :note="`${texts.cards.promised}. ${payNote(card)}`"
+          >
+            <button
+              v-if="canFulfil && cheapest(mine.ingredients, card)"
+              type="button"
+              class="button"
+              :data-fulfil="card.id"
+              @click="fulfil(card)"
+            >
+              {{ texts.actions.fulfil }}
+            </button>
+          </OrderCard>
+          <OrderCard
+            v-for="card in mine.hand"
+            :key="card.id"
+            :card="card"
+            :show-cost="false"
+            :ready="canUse"
+            :note="texts.cards.inHand"
+          >
+            <button
+              v-if="canUse"
+              type="button"
+              class="button"
+              :data-use="card.id"
+              @click="startUse(card)"
+            >
+              {{ texts.actions.use }}
+            </button>
+          </OrderCard>
+        </div>
       </div>
 
       <div v-if="nestOptions.some((one) => one.islands.length > 0)" class="td-nest">
@@ -979,23 +1053,19 @@ const seatsView = computed(() =>
               {{ texts.symbols[die.face] }}
             </span>
           </p>
-          <div v-if="seat.aboard.length > 0" class="td-birds">
-            <span class="muted">{{ texts.aboard }}:</span>
-            <button
+          <div
+            v-if="!seat.own && seat.aboard.length + seat.promised.length + seat.hand.length > 0"
+            class="td-card-row small"
+          >
+            <BirdCard
               v-for="bird in seat.aboard"
               :key="bird.id"
-              type="button"
-              class="td-bird"
-              :class="seat.own ? hintClass(birdHint(bird.kind, bird.die !== null)) : ''"
-              :disabled="!seat.own || !texts.birdSpaces[bird.kind]"
-              :title="texts.birdPowers[bird.kind]"
+              :kind="bird.kind"
+              :season="bird.season"
               :data-bird="bird.id"
-              @click="onBird(bird.id, bird.die)"
             >
-              {{ texts.birds[bird.kind] }}
-              <span v-if="texts.birdSpaces[bird.kind]" class="td-bird-space">
+              <span v-if="bird.die" class="td-bird-space">
                 <span
-                  v-if="bird.die"
                   class="td-die"
                   :class="[
                     `seat-${bird.die.owner}`,
@@ -1004,46 +1074,26 @@ const seatsView = computed(() =>
                   ]"
                   >{{ texts.symbols[bird.die.face] }}</span
                 >
-                <span v-else class="muted"
-                  >[{{ texts.kinds[texts.birdSpaces[bird.kind] as 'BOAT' | 'WEATHER'] }}]</span
-                >
               </span>
-            </button>
+            </BirdCard>
+            <OrderCard
+              v-for="card in seat.promised"
+              :key="card.id"
+              :card="card"
+              :note="texts.cards.promised"
+            />
+            <OrderCard
+              v-for="card in seat.hand"
+              :key="card.id"
+              :card="card"
+              :show-cost="false"
+              :note="texts.cards.inHand"
+            />
           </div>
           <p v-if="seat.free.length > 0 || seat.nests.length > 0" class="muted">
             {{ texts.free }}:
             {{ seat.free.map((bird) => texts.birds[bird.kind]).join(', ') || texts.none }} ·
             {{ texts.nests }}: {{ seat.nests.length }}
-          </p>
-          <div v-if="seat.hand.length > 0" class="td-hand">
-            <span class="muted">{{ texts.hand }}:</span>
-            <span v-for="card in seat.hand" :key="card.id" class="td-hand-card">
-              {{ orderName(card.id) }} <span class="muted">({{ texts.uses[card.use] }})</span>
-              <button
-                v-if="seat.own && canUse"
-                type="button"
-                class="button quiet"
-                :data-use="card.id"
-                @click="startUse(card)"
-              >
-                {{ texts.actions.use }}
-              </button>
-            </span>
-          </div>
-          <p v-if="seat.promised.length > 0">
-            <span class="muted">{{ texts.promised }}:</span>
-            <template v-for="card in seat.promised" :key="card.id">
-              {{ orderName(card.id) }} ({{ costText(card) }})
-              <button
-                v-if="seat.own && canFulfil && cheapest(seat.ingredients, card)"
-                type="button"
-                class="button quiet"
-                :data-fulfil="card.id"
-                @click="fulfil(card)"
-              >
-                {{ texts.actions.fulfil }}
-              </button>
-            </template>
           </p>
           <p v-if="seat.used.length > 0" class="muted">
             {{ texts.used }}: {{ seat.used.map((card) => orderName(card.id)).join(', ') }}
