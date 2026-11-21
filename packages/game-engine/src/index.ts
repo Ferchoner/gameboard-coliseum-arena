@@ -7,5 +7,6 @@ export { fourInARowEngine } from './games/four-in-a-row/engine.js';
 export { navalBattleEngine } from './games/naval-battle/engine.js';
 export { dominoesEngine } from './games/dominoes/engine.js';
 export { blindFiveEngine } from './games/blind-five/engine.js';
+export { tidesEngine } from './games/tides/engine.js';
 export { isRandomState, nextRandom, randomInt, seedRandom, shuffle } from './random.js';
 export type { RandomState } from './random.js';

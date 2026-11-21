@@ -3,6 +3,7 @@ import { blindFiveEngine } from './games/blind-five/engine.js';
 import { dominoesEngine } from './games/dominoes/engine.js';
 import { fourInARowEngine } from './games/four-in-a-row/engine.js';
 import { navalBattleEngine } from './games/naval-battle/engine.js';
+import { tidesEngine } from './games/tides/engine.js';
 
 /**
  * Los motores que la plataforma tiene disponibles.
@@ -18,4 +19,5 @@ export const GAME_ENGINES: readonly AnyGameEngine[] = [
   navalBattleEngine,
   dominoesEngine,
   blindFiveEngine,
+  tidesEngine,
 ];

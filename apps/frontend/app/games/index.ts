@@ -3,6 +3,7 @@ import { blindFiveTexts } from './blind-five';
 import { dominoesTexts } from './dominoes';
 import { fourInARowTexts } from './four-in-a-row';
 import { navalBattleTexts } from './naval-battle';
+import { tidesTexts } from './tides';
 import type { GameUi } from './game-ui';
 import { gameUiKey } from './keys';
 
@@ -30,6 +31,10 @@ const GAME_UIS: Readonly<Record<string, GameUi>> = {
   'blind-five@1': {
     ...blindFiveTexts,
     board: defineAsyncComponent(() => import('./blind-five/BlindFiveBoard.vue')),
+  },
+  'tides@1': {
+    ...tidesTexts,
+    board: defineAsyncComponent(() => import('./tides/TidesBoard.vue')),
   },
 };
 

@@ -1534,3 +1534,357 @@ button.naval-cell:not(:disabled):focus-visible {
   padding: 0.25rem;
   border-width: 1px;
 }
+
+/* --- Mareas (ADR-023, MA17) --------------------------------------------------
+ * Cada dado lleva su figura además del color de su asiento; las barcas son
+ * cuadradas y el clima, redondo, para distinguirlos sin color. */
+
+.td-board {
+  display: grid;
+  /* Sin esto, la fila de islas ensancharía la columna en el móvil. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.td-head p {
+  margin: 0;
+}
+
+.td-round {
+  font-weight: 600;
+}
+
+.td-status {
+  margin-top: 0.25rem;
+}
+
+.td-pending {
+  border-left: 4px solid var(--accent);
+}
+
+.td-choices,
+.td-own-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.td-row h3,
+.td-port h3,
+.td-market h3 {
+  margin-top: 0;
+}
+
+.td-islands {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.td-island {
+  border-top: 4px solid var(--seat-color, var(--border));
+}
+
+.td-island h4 {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.td-island-meta {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.85rem;
+}
+
+.td-spaces {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: 0.4rem;
+}
+
+.td-space,
+.td-port-space {
+  display: grid;
+  gap: 0.25rem;
+  align-content: start;
+  min-height: 4.5rem;
+  padding: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.td-space.shoal {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--bg),
+    var(--bg) 6px,
+    var(--border) 6px,
+    var(--border) 8px
+  );
+}
+
+.td-space.picked,
+.td-die.selected {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.td-space-need,
+.td-shoal {
+  font-size: 0.8rem;
+}
+
+.td-shoal {
+  font-weight: 700;
+}
+
+.td-stack {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0;
+}
+
+.td-die {
+  display: inline-grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 2px solid var(--seat-color, var(--border));
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.td-die.boat {
+  border-radius: 4px;
+  background: var(--seat-color, var(--surface));
+  color: #10131a;
+}
+
+.td-die.weather {
+  border-radius: 50%;
+  border-style: dashed;
+}
+
+.td-die.big {
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.td-die.big:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.td-port-spaces {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.5rem;
+}
+
+.td-port-space.used {
+  opacity: 0.7;
+}
+
+.td-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.td-own {
+  border-left: 4px solid var(--seat-color, var(--border));
+}
+
+.td-own h3 {
+  margin-top: 0;
+}
+
+.td-orders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.td-order {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.td-piles {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.td-seats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.td-seat {
+  border-left: 4px solid var(--seat-color, var(--border));
+}
+
+.td-seat h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0;
+}
+
+.td-seat.retired {
+  opacity: 0.7;
+}
+
+.td-seat p {
+  margin: 0.25rem 0;
+}
+
+.td-ingredients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.td-birds,
+.td-hand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0;
+}
+
+.td-bird {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.td-bird:not(:disabled) {
+  cursor: pointer;
+}
+
+.td-hand-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.td-exchange {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.td-exchange-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.td-credit {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.td-band {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.td-tabs {
+  display: none;
+}
+
+@media (max-width: 40rem) {
+  .td-tabs {
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+  }
+
+  .td-tab {
+    flex: 0 0 auto;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+  }
+
+  .td-tab[aria-selected='true'] {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-text);
+  }
+
+  .td-tab-hidden {
+    display: none;
+  }
+
+  .td-band {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* En el móvil, las islas van primero y el resto, en pestañas debajo. */
+  .td-row,
+  .td-force {
+    order: 1;
+  }
+
+  .td-tabs {
+    order: 2;
+  }
+
+  .td-band {
+    order: 3;
+  }
+
+  .td-credit {
+    order: 4;
+  }
+
+  /* La fila de islas siempre a la vista, con desplazamiento lateral. */
+  .td-islands {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(15rem, 85%);
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+}

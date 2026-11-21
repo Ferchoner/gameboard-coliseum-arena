@@ -39,6 +39,7 @@ Están en [`docs/adr/`](../docs/adr/README.md). Las once primeras se aceptaron e
 | ADR-020 | Dominó y asientos retirados con más de dos jugadores |
 | ADR-021 | Despliegue local con dominio y acceso desde otras redes |
 | ADR-022 | Cinco a ciegas y jugadas fuera de turno |
+| ADR-023 | Mareas, colocación de dados y control de islas |
 
 El índice de ADR dice además qué decisiones cambió o precisó cada ADR posterior.
 | ADR-012 | Decisiones de arranque del Hito 1 (S1 a S25): herramientas, versiones, validación, sesiones y entorno local |
@@ -52,6 +53,7 @@ El índice de ADR dice además qué decisiones cambió o precisó cada ADR poste
 | ADR-020 | Dominó y asientos retirados: reglas, acción, vista, tiempos y azar del Dominó (DO1 a DO17); la sesión guarda los asientos retirados, que no vuelven a retirarse, siguen en la sala sin contar para su límite y salen al terminar (regla 7.33), y `MatchPlayer.retired` (DO18 a DO22). Aceptadas el 2026-11-19, con el contrato y el código autorizados |
 | ADR-021 | Despliegue local (DL1 a DL7): dominio `boardgame-coliseum.test` en el archivo `hosts` con `app.` y `api.`, opción `--dominio`, certificado con esos nombres, `pnpm local` con lo construido y `NODE_ENV=development`, Tailscale Funnel para entrar desde otras redes y, más adelante, túnel de Cloudflare con un dominio gratuito. Aceptadas el 2026-11-19, con el código autorizado |
 | ADR-022 | Cinco a ciegas (CA1 a CA21): enmienda de la regla de derechos F9 para admitir mecánicas modernas con nombre, arte, textos y presentación propios; juego de deducción de 2 a 4 jugadores en el que cada uno ve los números de los demás y no los suyos, con el catálogo de colores y puntos del original y figuras propias para daltonismo; el servidor da las pistas; se canta en cualquier momento. Jugadas fuera de turno (T-25): un motor puede aceptar jugadas de un asiento que no está activo, sin gastar reloj, y el tablero recibe `canSend`. Aceptadas el 2026-11-20, con el contrato y el código autorizados |
+| ADR-023 | Mareas (MA1 a MA20): juego de colocación de dados y control de islas de 2 a 4 jugadores, con las reglas y mecánicas de un juego comercial y tema, cartas y personajes propios (archipiélago de pescadores, cuatro estaciones); catálogo propio en su anexo, equilibrado con simulación del motor; solo tiempo real (15, 20 y 30 minutos); sin cambios de plataforma. Aceptadas el 2026-11-21, con el código autorizado |
 
 ### Contratos y modelo, versión 1
 

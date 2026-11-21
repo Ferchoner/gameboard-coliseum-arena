@@ -8,6 +8,8 @@
 | **Cierra** | El resto del pendiente 12 (derechos de arte y selección de juegos futuros, ADR-008, sección 4) |
 | **Decisiones** | Recogidas en [ADR-019](../docs/adr/0019-batalla-naval-y-jugadas-simultaneas.md), sección 0. En la conversación se llamaron J1 a J9; aquí son F1 a F9, porque J1 a J5 ya nombran los ajustes del catálogo de errores |
 
+*Añadida el 2026-11-21:* después de esta propuesta llegaron, cada uno con su ADR y fuera de esta lista, [Cinco a ciegas](../docs/adr/0022-cinco-a-ciegas-y-jugadas-fuera-de-turno.md) (ADR-022) y [Mareas](../docs/adr/0023-mareas-colocacion-de-dados-y-control-de-islas.md) (ADR-023), juego de colocación de dados con las reglas de un juego comercial y tema, cartas y personajes propios.
+
 ---
 
 ## 1. Resumen
