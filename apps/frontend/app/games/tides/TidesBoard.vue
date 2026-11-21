@@ -68,8 +68,8 @@ const exchange = ref<{ give: TidesIngredient | ''; take: TidesBasic | '' }[]>([]
 const flamingo = ref(0);
 
 /** La pestaña abierta en el móvil; en pantallas anchas se ve todo (MA17). */
-const TABS = ['OWN', 'PORT', 'ORDERS', 'RIVALS'] as const;
-const tab = ref<(typeof TABS)[number]>('OWN');
+const TABS = ['ORDERS', 'RIVALS'] as const;
+const tab = ref<(typeof TABS)[number]>('ORDERS');
 
 function reset(): void {
   selectedDie.value = null;
@@ -126,6 +126,8 @@ const rowView = computed(() =>
     index,
     name: islandName(island.id),
     seasonsText: island.seasons.map((season) => texts.seasons[season]).join(' y '),
+    landClass: island.seasons.map((season) => `land-${season.toLowerCase()}`).join(' '),
+    twoSeasons: island.seasons.length > 1,
     leaderText: island.leader === null ? texts.noLeader : texts.leader(nameOf(island.leader)),
   })),
 );
@@ -192,6 +194,80 @@ const spaceLabel = (
   );
 
 // --- Puerto --------------------------------------------------------------------
+
+// --- Dónde puede ir lo elegido ----------------------------------------------------
+// Solo es una ayuda a la vista: lo que vale lo decide el servidor (K7).
+
+type Hint = 'ok' | 'force' | null;
+
+/** Si una casilla de isla está vacía y sin bajío. */
+const isOpenSpot = (spot: TidesView['row'][number]['spaces'][number]) =>
+  !spot.shoal && spot.stack.length === 0;
+
+function spaceHint(island: number, space: number): Hint {
+  const spot = props.view.row[island]?.spaces[space];
+  if (!spot) return null;
+  const head = pending.value;
+  if (head?.kind === 'SHOAL') {
+    return isOpenSpot(spot) && (head.island === null || head.island === island) ? 'ok' : null;
+  }
+  if (head?.kind === 'MOVE_BOAT') {
+    if (movePick.value === null) return spot.stack.at(-1)?.kind === 'BOAT' ? 'ok' : null;
+    const boat = props.view.row
+      .flatMap((one) => one.spaces.flatMap((other) => other.stack))
+      .find((die) => die.id === movePick.value);
+    return isOpenSpot(spot) && boat?.face === spot.figure ? 'ok' : null;
+  }
+  const die = chosenDie.value;
+  if (!die || !canPlace.value || spot.shoal) return null;
+  const top = spot.stack.at(-1);
+  if (die.kind === 'BOAT') {
+    if (top) return null;
+    return die.face === spot.figure ? 'ok' : 'force';
+  }
+  if (!top || die.face === 'STORM') return 'ok';
+  return die.face === 'BREEZE' && top.kind === 'BOAT' && top.owner === props.yourSeat ? 'ok' : null;
+}
+
+function portHint(space: TidesPortSpace, used: boolean): Hint {
+  const die = chosenDie.value;
+  if (!die || !canPlace.value) return null;
+  if (space === 'ANY_1' || space === 'ANY_2') return 'ok';
+  return die.kind === 'WEATHER' && die.face === space && !used ? 'ok' : null;
+}
+
+function birdHint(kind: string, occupied: boolean): Hint {
+  const die = chosenDie.value;
+  if (!die || !canPlace.value || occupied) return null;
+  return texts.birdSpaces[kind] === die.kind ? 'ok' : null;
+}
+
+const hintClass = (hint: Hint) => (hint ? `hint-${hint}` : '');
+
+/** Si hay algo elegido que se pone en una casilla: el resto se atenúa. */
+const choosing = computed(
+  () =>
+    chosenDie.value !== null ||
+    pending.value?.kind === 'SHOAL' ||
+    pending.value?.kind === 'MOVE_BOAT',
+);
+
+/** Los pasos del turno propio, para saber por dónde se va. */
+const steps = computed(() => {
+  const turn = props.view.turn;
+  if (!myTurn.value || !turn) return [];
+  const placed = turn.placementsLeft === 0;
+  return [
+    { key: 'place', text: texts.steps.place, done: placed, current: !placed },
+    {
+      key: 'orders',
+      text: texts.steps.orders,
+      done: turn.fulfilled && turn.used,
+      current: placed && pending.value === null,
+    },
+    { key: 'end', text: texts.steps.end, done: false, current: false },
+  ];
+});
 
 const portView = computed(() =>
   props.view.port.map((one) => ({
@@ -411,13 +487,30 @@ const seatsView = computed(() =>
 </script>
 
 <template>
-  <div class="td-board" :class="{ locked: !canPlay }">
+  <div class="td-board" :class="{ locked: !canPlay, choosing }">
     <header class="td-head">
       <p class="td-round">
         {{ texts.round(view.round, texts.port[view.portSide]) }}
         <span class="muted">· {{ texts.islandsLeft(view.islandsLeft) }}</span>
       </p>
       <p v-if="waitingText" class="td-status" data-status>{{ waitingText }}</p>
+      <ol v-if="steps.length > 0" class="td-steps" :aria-label="texts.steps.label">
+        <li
+          v-for="(step, index) in steps"
+          :key="step.key"
+          :class="{ done: step.done, current: step.current }"
+          :data-step="step.key"
+        >
+          <span class="td-step-number" aria-hidden="true">{{ step.done ? '✓' : index + 1 }}</span>
+          {{ step.text }}
+        </li>
+      </ol>
+      <details class="td-guide" data-guide>
+        <summary>{{ texts.guide.title }}</summary>
+        <ol>
+          <li v-for="(line, index) in texts.guide.lines" :key="index">{{ line }}</li>
+        </ol>
+      </details>
     </header>
 
     <!-- Lo que hay que decidir ahora -->
@@ -567,7 +660,7 @@ const seatsView = computed(() =>
       </div>
     </section>
 
-    <!-- En el móvil, todo salvo las islas va en pestañas (MA17) -->
+    <!-- En el móvil, los encargos y los jugadores van en pestañas (MA17) -->
     <div class="td-tabs" role="tablist" :aria-label="texts.tabs.label">
       <button
         v-for="one in TABS"
@@ -583,44 +676,8 @@ const seatsView = computed(() =>
       </button>
     </div>
 
-    <!-- Arriba: puerto, encargos y aves -->
+    <!-- Arriba: encargos y aves -->
     <div class="td-band" data-band>
-      <!-- El puerto -->
-      <section
-        class="td-port panel"
-        :class="{ 'td-tab-hidden': tab !== 'PORT' }"
-        aria-labelledby="td-port-title"
-      >
-        <h3 id="td-port-title">{{ texts.port.title }} · {{ texts.port[view.portSide] }}</h3>
-        <div class="td-port-spaces">
-          <button
-            v-for="spot in portView"
-            :key="spot.space"
-            type="button"
-            class="td-port-space"
-            :class="{ used: spot.used }"
-            :data-port="spot.space"
-            @click="onPort(spot.space)"
-          >
-            <strong>{{ spot.name }}</strong>
-            <span class="muted">{{ spot.effect }}</span>
-            <span v-if="spot.used" class="visually-hidden">{{ texts.port.used }}</span>
-            <span class="td-stack">
-              <span
-                v-for="die in spot.dice"
-                :key="die.id"
-                class="td-die"
-                :class="[`seat-${die.owner}`, die.kind === 'BOAT' ? 'boat' : 'weather']"
-                :aria-label="dieLabel(die)"
-                role="img"
-              >
-                {{ texts.symbols[die.face] }}
-              </span>
-            </span>
-          </button>
-        </div>
-      </section>
-
       <!-- Mercado y aves de paso -->
       <section
         class="td-market panel"
@@ -668,15 +725,109 @@ const seatsView = computed(() =>
       </section>
     </div>
 
-    <!-- Las islas de la ronda -->
-    <section class="td-row" aria-labelledby="td-row-title">
+    <!-- Tus dados, justo encima del mar: se elige uno y después la casilla -->
+    <section v-if="mine && !mine.retired" class="td-own panel" :class="`seat-${yourSeat}`">
+      <h3>{{ texts.yourPool }}</h3>
+      <div class="td-pool" role="group" :aria-label="texts.yourPool">
+        <button
+          v-for="die in mine.pool"
+          :key="die.id"
+          type="button"
+          class="td-die big"
+          :class="[
+            `seat-${die.owner}`,
+            die.kind === 'BOAT' ? 'boat' : 'weather',
+            `face-${die.face.toLowerCase()}`,
+            { selected: selectedDie === die.id || using?.picks.includes(die.id) },
+          ]"
+          :aria-pressed="selectedDie === die.id"
+          :aria-label="dieLabel(die)"
+          :disabled="!myTurn || pending !== null"
+          :data-die="die.id"
+          @click="selectDie(die.id)"
+        >
+          {{ texts.symbols[die.face] }}
+        </button>
+      </div>
+
+      <div v-if="turnFaces.length > 0" class="td-choices" data-turn-faces>
+        <button
+          v-for="one in turnFaces"
+          :key="one.face"
+          type="button"
+          class="button"
+          :data-face="one.face"
+          @click="turnTo(one.face)"
+        >
+          {{ one.label }}
+        </button>
+      </div>
+      <div v-if="using?.use === 'REROLL'" class="td-choices" data-reroll>
+        <button
+          type="button"
+          class="button"
+          :disabled="using.picks.length === 0"
+          @click="reroll(false)"
+        >
+          {{ texts.actions.confirm }}
+        </button>
+        <button type="button" class="button quiet" @click="reroll(true)">
+          {{ texts.actions.rollAll }}
+        </button>
+      </div>
+
+      <div class="td-own-actions">
+        <button
+          v-if="canEndTurn"
+          type="button"
+          class="button"
+          data-end-turn
+          @click="play({ type: 'END_TURN' })"
+        >
+          {{ texts.actions.endTurn }}
+        </button>
+        <button
+          v-if="selectedDie || using || forceAt"
+          type="button"
+          class="button quiet"
+          @click="reset"
+        >
+          {{ texts.actions.cancel }}
+        </button>
+      </div>
+
+      <div v-if="nestOptions.some((one) => one.islands.length > 0)" class="td-nest">
+        <template v-for="option in nestOptions" :key="option.bird.id">
+          <p v-if="option.islands.length > 0">
+            {{ texts.birds[option.bird.kind] }}:
+            <button
+              v-for="island in option.islands"
+              :key="island.id"
+              type="button"
+              class="button quiet"
+              :data-nest="`${option.bird.id}-${island.id}`"
+              @click="play({ type: 'NEST', bird: option.bird.id, island: island.id })"
+            >
+              {{ texts.actions.nest }} {{ islandName(island.id) }}
+            </button>
+          </p>
+        </template>
+      </div>
+    </section>
+
+    <!-- El mar: las islas de la ronda y el puerto -->
+    <section class="td-row td-sea" aria-labelledby="td-row-title">
       <h3 id="td-row-title">{{ texts.rowTitle }}</h3>
       <ul class="td-islands">
         <li
           v-for="island in rowView"
           :key="island.id"
-          class="td-island panel"
-          :class="island.leader === null ? '' : `seat-${island.leader}`"
+          class="td-island"
+          :class="[
+            island.landClass,
+            { 'two-seasons': island.twoSeasons, led: island.leader !== null },
+            island.leader === null ? '' : `seat-${island.leader}`,
+          ]"
           :data-island="island.index"
         >
           <h4>
@@ -692,18 +843,25 @@ const seatsView = computed(() =>
               :key="index"
               type="button"
               class="td-space"
-              :class="{
-                shoal: spot.shoal,
-                picked: spot.stack.some(
-                  (die) => die.id === movePick || using?.picks.includes(die.id),
-                ),
-              }"
+              :class="[
+                {
+                  shoal: spot.shoal,
+                  picked: spot.stack.some(
+                    (die) => die.id === movePick || using?.picks.includes(die.id),
+                  ),
+                },
+                hintClass(spaceHint(island.index, index)),
+              ]"
               :aria-label="spaceLabel(island.id, index, spot)"
               :data-space="`${island.index}-${index}`"
               @click="onSpace(island.index, index)"
             >
               <span class="td-space-need" aria-hidden="true">
-                {{ texts.symbols[spot.figure] }} → {{ texts.rewards[spot.reward] }}
+                <span class="td-figure">{{ texts.symbols[spot.figure] }}</span>
+                {{ texts.faces[spot.figure] }}
+              </span>
+              <span class="td-space-reward" aria-hidden="true">
+                → {{ texts.rewards[spot.reward] }}
               </span>
               <span v-if="spot.shoal" class="td-shoal">{{ texts.shoal }}</span>
               <span class="td-stack" aria-hidden="true">
@@ -711,7 +869,11 @@ const seatsView = computed(() =>
                   v-for="die in spot.stack"
                   :key="die.id"
                   class="td-die"
-                  :class="[`seat-${die.owner}`, die.kind === 'BOAT' ? 'boat' : 'weather']"
+                  :class="[
+                    `seat-${die.owner}`,
+                    die.kind === 'BOAT' ? 'boat' : 'weather',
+                    `face-${die.face.toLowerCase()}`,
+                  ]"
                 >
                   {{ texts.symbols[die.face] }}
                 </span>
@@ -720,6 +882,42 @@ const seatsView = computed(() =>
           </div>
         </li>
       </ul>
+
+      <!-- El puerto, en la orilla -->
+      <section class="td-port" aria-labelledby="td-port-title">
+        <h3 id="td-port-title">{{ texts.port.title }} · {{ texts.port[view.portSide] }}</h3>
+        <div class="td-port-spaces">
+          <button
+            v-for="spot in portView"
+            :key="spot.space"
+            type="button"
+            class="td-port-space"
+            :class="[{ used: spot.used }, hintClass(portHint(spot.space, spot.used))]"
+            :data-port="spot.space"
+            @click="onPort(spot.space)"
+          >
+            <strong>{{ spot.name }}</strong>
+            <span class="muted">{{ spot.effect }}</span>
+            <span v-if="spot.used" class="visually-hidden">{{ texts.port.used }}</span>
+            <span class="td-stack">
+              <span
+                v-for="die in spot.dice"
+                :key="die.id"
+                class="td-die"
+                :class="[
+                  `seat-${die.owner}`,
+                  die.kind === 'BOAT' ? 'boat' : 'weather',
+                  `face-${die.face.toLowerCase()}`,
+                ]"
+                :aria-label="dieLabel(die)"
+                role="img"
+              >
+                {{ texts.symbols[die.face] }}
+              </span>
+            </span>
+          </button>
+        </div>
+      </section>
     </section>
 
     <div v-if="forceAt" class="td-force panel" data-force>
@@ -740,101 +938,8 @@ const seatsView = computed(() =>
       </button>
     </div>
 
-    <!-- Abajo: lo tuyo y los demás -->
+    <!-- Abajo: los jugadores -->
     <div class="td-band" data-band>
-      <!-- Tus dados y lo que puedes hacer -->
-      <section
-        v-if="mine && !mine.retired"
-        class="td-own panel"
-        :class="[`seat-${yourSeat}`, { 'td-tab-hidden': tab !== 'OWN' }]"
-      >
-        <h3>{{ texts.yourPool }}</h3>
-        <div class="td-pool" role="group" :aria-label="texts.yourPool">
-          <button
-            v-for="die in mine.pool"
-            :key="die.id"
-            type="button"
-            class="td-die big"
-            :class="[
-              `seat-${die.owner}`,
-              die.kind === 'BOAT' ? 'boat' : 'weather',
-              { selected: selectedDie === die.id || using?.picks.includes(die.id) },
-            ]"
-            :aria-pressed="selectedDie === die.id"
-            :aria-label="dieLabel(die)"
-            :disabled="!myTurn || pending !== null"
-            :data-die="die.id"
-            @click="selectDie(die.id)"
-          >
-            {{ texts.symbols[die.face] }}
-          </button>
-        </div>
-
-        <div v-if="turnFaces.length > 0" class="td-choices" data-turn-faces>
-          <button
-            v-for="one in turnFaces"
-            :key="one.face"
-            type="button"
-            class="button"
-            :data-face="one.face"
-            @click="turnTo(one.face)"
-          >
-            {{ one.label }}
-          </button>
-        </div>
-        <div v-if="using?.use === 'REROLL'" class="td-choices" data-reroll>
-          <button
-            type="button"
-            class="button"
-            :disabled="using.picks.length === 0"
-            @click="reroll(false)"
-          >
-            {{ texts.actions.confirm }}
-          </button>
-          <button type="button" class="button quiet" @click="reroll(true)">
-            {{ texts.actions.rollAll }}
-          </button>
-        </div>
-
-        <div class="td-own-actions">
-          <button
-            v-if="canEndTurn"
-            type="button"
-            class="button"
-            data-end-turn
-            @click="play({ type: 'END_TURN' })"
-          >
-            {{ texts.actions.endTurn }}
-          </button>
-          <button
-            v-if="selectedDie || using || forceAt"
-            type="button"
-            class="button quiet"
-            @click="reset"
-          >
-            {{ texts.actions.cancel }}
-          </button>
-        </div>
-
-        <div v-if="nestOptions.some((one) => one.islands.length > 0)" class="td-nest">
-          <template v-for="option in nestOptions" :key="option.bird.id">
-            <p v-if="option.islands.length > 0">
-              {{ texts.birds[option.bird.kind] }}:
-              <button
-                v-for="island in option.islands"
-                :key="island.id"
-                type="button"
-                class="button quiet"
-                :data-nest="`${option.bird.id}-${island.id}`"
-                @click="play({ type: 'NEST', bird: option.bird.id, island: island.id })"
-              >
-                {{ texts.actions.nest }} {{ islandName(island.id) }}
-              </button>
-            </p>
-          </template>
-        </div>
-      </section>
-
       <!-- Los asientos -->
       <ul class="td-seats" :class="{ 'td-tab-hidden': tab !== 'RIVALS' }">
         <li
@@ -863,7 +968,11 @@ const seatsView = computed(() =>
               v-for="die in seat.pool"
               :key="die.id"
               class="td-die"
-              :class="[`seat-${die.owner}`, die.kind === 'BOAT' ? 'boat' : 'weather']"
+              :class="[
+                `seat-${die.owner}`,
+                die.kind === 'BOAT' ? 'boat' : 'weather',
+                `face-${die.face.toLowerCase()}`,
+              ]"
               :aria-label="dieLabel(die)"
               role="img"
             >
@@ -877,6 +986,7 @@ const seatsView = computed(() =>
               :key="bird.id"
               type="button"
               class="td-bird"
+              :class="seat.own ? hintClass(birdHint(bird.kind, bird.die !== null)) : ''"
               :disabled="!seat.own || !texts.birdSpaces[bird.kind]"
               :title="texts.birdPowers[bird.kind]"
               :data-bird="bird.id"
@@ -887,7 +997,11 @@ const seatsView = computed(() =>
                 <span
                   v-if="bird.die"
                   class="td-die"
-                  :class="[`seat-${bird.die.owner}`, bird.die.kind === 'BOAT' ? 'boat' : 'weather']"
+                  :class="[
+                    `seat-${bird.die.owner}`,
+                    bird.die.kind === 'BOAT' ? 'boat' : 'weather',
+                    `face-${bird.die.face.toLowerCase()}`,
+                  ]"
                   >{{ texts.symbols[bird.die.face] }}</span
                 >
                 <span v-else class="muted"

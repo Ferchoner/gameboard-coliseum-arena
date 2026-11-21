@@ -720,7 +720,8 @@ a {
 .naval-label {
   display: grid;
   place-items: center;
-  color: var(--board-hole);
+  /* Sobre el azul del tablero, en claro y en oscuro: siempre claro. */
+  color: #f6f5f1;
   font-size: 0.7rem;
   font-weight: 600;
 }
@@ -1570,8 +1571,6 @@ button.naval-cell:not(:disabled):focus-visible {
   margin-top: 0.5rem;
 }
 
-.td-row h3,
-.td-port h3,
 .td-market h3 {
   margin-top: 0;
 }
@@ -1583,10 +1582,6 @@ button.naval-cell:not(:disabled):focus-visible {
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-.td-island {
-  border-top: 4px solid var(--seat-color, var(--border));
 }
 
 .td-island h4 {
@@ -1862,6 +1857,7 @@ button.naval-cell:not(:disabled):focus-visible {
   }
 
   /* En el móvil, las islas van primero y el resto, en pestañas debajo. */
+  .td-own,
   .td-row,
   .td-force {
     order: 1;
@@ -1887,4 +1883,275 @@ button.naval-cell:not(:disabled):focus-visible {
     overflow-x: auto;
     padding-bottom: 0.25rem;
   }
+}
+
+/* --- Mareas: el mar y las islas ----------------------------------------------
+ * El centro del tablero es un mar azul; cada isla es tierra del color de su
+ * estación, y el puerto, un muelle de madera en la orilla. El texto sobre la
+ * tierra y el muelle es oscuro en los dos temas, porque el fondo es claro. */
+
+:root {
+  --td-sea-1: #2b6fa8;
+  --td-sea-2: #1d4f80;
+  --td-wave: rgb(255 255 255 / 10%);
+  --td-ink: #1d1f23;
+  --td-spring: #9ccf7f;
+  --td-summer: #f0d27a;
+  --td-autumn: #e3a868;
+  --td-winter: #dbe7ee;
+  --td-dock: #c9a27a;
+  --td-dock-line: #a9805a;
+  --td-hint: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --td-sea-1: #1c4a73;
+    --td-sea-2: #10304f;
+    --td-wave: rgb(255 255 255 / 6%);
+  }
+}
+
+.td-sea {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: calc(var(--radius) * 1.5);
+  background:
+    radial-gradient(ellipse 60px 8px at 20% 30%, var(--td-wave) 50%, transparent 51%),
+    radial-gradient(ellipse 80px 9px at 70% 60%, var(--td-wave) 50%, transparent 51%),
+    radial-gradient(ellipse 50px 7px at 40% 85%, var(--td-wave) 50%, transparent 51%),
+    linear-gradient(160deg, var(--td-sea-1), var(--td-sea-2));
+  background-size:
+    260px 140px,
+    320px 180px,
+    220px 160px,
+    100% 100%;
+}
+
+.td-sea > h3 {
+  margin: 0;
+  color: #ffffff;
+}
+
+.td-islands {
+  gap: 1.25rem;
+}
+
+.td-island {
+  position: relative;
+  padding: 0.9rem 1rem 1rem;
+  border: 3px solid rgb(0 0 0 / 15%);
+  border-radius: 2.2rem 3rem 2.6rem 3.4rem / 2.8rem 2.2rem 3.2rem 2.4rem;
+  background: var(--td-land, var(--td-summer));
+  box-shadow:
+    0 0 0 6px rgb(255 255 255 / 18%),
+    0 6px 14px rgb(0 0 0 / 25%);
+  color: var(--td-ink);
+}
+
+.td-island.land-spring {
+  --td-land: var(--td-spring);
+}
+
+.td-island.land-summer {
+  --td-land: var(--td-summer);
+}
+
+.td-island.land-autumn {
+  --td-land: var(--td-autumn);
+}
+
+.td-island.land-winter {
+  --td-land: var(--td-winter);
+}
+
+/* Las islas de dos estaciones, mitad y mitad. */
+.td-island.two-seasons.land-spring.land-summer {
+  background: linear-gradient(135deg, var(--td-spring) 50%, var(--td-summer) 50%);
+}
+
+.td-island.two-seasons.land-autumn.land-winter {
+  background: linear-gradient(135deg, var(--td-autumn) 50%, var(--td-winter) 50%);
+}
+
+.td-island.two-seasons.land-spring.land-winter {
+  background: linear-gradient(135deg, var(--td-spring) 50%, var(--td-winter) 50%);
+}
+
+.td-island.two-seasons.land-summer.land-autumn {
+  background: linear-gradient(135deg, var(--td-summer) 50%, var(--td-autumn) 50%);
+}
+
+/* Quien la domina pone su color en la orilla. */
+.td-island.led {
+  border-color: var(--seat-color);
+  border-width: 5px;
+}
+
+.td-island .muted,
+.td-island .badge {
+  color: var(--td-ink);
+}
+
+.td-island .badge {
+  border-color: rgb(0 0 0 / 25%);
+  background: rgb(255 255 255 / 55%);
+}
+
+.td-island-meta {
+  opacity: 0.85;
+}
+
+.td-space {
+  border: 1px solid rgb(0 0 0 / 18%);
+  background: rgb(255 255 255 / 55%);
+  color: var(--td-ink);
+}
+
+.td-space-need {
+  font-weight: 600;
+}
+
+.td-figure {
+  font-size: 1.05rem;
+}
+
+.td-space-reward {
+  font-size: 0.8rem;
+}
+
+.td-space.shoal {
+  background: repeating-linear-gradient(
+    45deg,
+    rgb(255 255 255 / 55%),
+    rgb(255 255 255 / 55%) 6px,
+    rgb(0 0 0 / 15%) 6px,
+    rgb(0 0 0 / 15%) 8px
+  );
+}
+
+/* El puerto: un muelle de madera en la orilla del mar. */
+.td-port {
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  background: repeating-linear-gradient(
+    90deg,
+    var(--td-dock),
+    var(--td-dock) 46px,
+    var(--td-dock-line) 46px,
+    var(--td-dock-line) 48px
+  );
+  color: var(--td-ink);
+}
+
+.td-port h3 {
+  margin: 0 0 0.5rem;
+}
+
+.td-port-space {
+  border: 1px solid rgb(0 0 0 / 20%);
+  background: rgb(255 255 255 / 70%);
+  color: var(--td-ink);
+}
+
+.td-port-space .muted {
+  color: #3e434c;
+}
+
+/* Dónde puede ir lo elegido: resaltado; lo demás, atenuado. */
+.td-board.choosing .td-space,
+.td-board.choosing .td-port-space {
+  opacity: 0.55;
+}
+
+.td-board.choosing .td-space.hint-ok,
+.td-board.choosing .td-space.hint-force,
+.td-board.choosing .td-port-space.hint-ok {
+  opacity: 1;
+}
+
+.td-space.hint-ok,
+.td-port-space.hint-ok,
+.td-bird.hint-ok {
+  outline: 3px solid var(--td-hint);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 6px var(--accent);
+}
+
+.td-space.hint-force {
+  outline: 3px dashed var(--td-hint);
+  outline-offset: 1px;
+}
+
+/* Los pasos del turno y la guía. */
+.td-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.td-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+}
+
+.td-steps li.current {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.td-steps li.done {
+  color: var(--ok);
+}
+
+.td-step-number {
+  display: inline-grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 2px solid currentcolor;
+  border-radius: 50%;
+  font-size: 0.8rem;
+}
+
+.td-guide {
+  margin-top: 0.5rem;
+}
+
+.td-guide ol {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}
+
+@media (max-width: 40rem) {
+  .td-sea {
+    padding: 0.75rem;
+  }
+}
+
+/* Cada cara de clima tiene su color de relleno, igual para todos; el aro
+ * de puntos lleva el color de su dueño. Las barcas, el de su asiento. */
+.td-die.weather {
+  border-width: 3px;
+  color: var(--td-ink);
+}
+
+.td-die.weather.face-calm {
+  background: #ffd75e;
+}
+
+.td-die.weather.face-storm {
+  background: #4a3f78;
+  color: #ffffff;
+}
+
+.td-die.weather.face-breeze {
+  background: #7fd8d2;
 }

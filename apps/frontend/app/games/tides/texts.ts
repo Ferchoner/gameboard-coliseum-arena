@@ -180,11 +180,25 @@ export const tidesStrings = {
     count === 1 ? 'Queda 1 isla en el mazo' : `Quedan ${count} islas en el mazo`,
   ordersLeft: (count: number) =>
     count === 1 ? 'Queda 1 encargo en el mazo' : `Quedan ${count} encargos en el mazo`,
-  rowTitle: 'Islas de la ronda',
+  rowTitle: 'El archipiélago: islas de esta ronda',
+  steps: {
+    label: 'Tu turno',
+    place: 'Coloca un dado',
+    orders: 'Si quieres, cumple o usa un encargo',
+    end: 'Termina el turno',
+  },
+  guide: {
+    title: 'Cómo se juega',
+    lines: [
+      'En tu turno, toca uno de tus dados y después una casilla resaltada: una isla, el puerto o un ave tuya con casilla.',
+      'Una barca recoge lo que da la casilla de su misma figura (red, ancla o vela). En otra figura se puede forzar pagando, sin recoger.',
+      'El clima va en una casilla vacía. La calma recoge dos más, la tormenta puede ir encima de cualquier dado y la brisa, encima de una barca tuya, que vuelve a tu mano.',
+      'Con lo recogido, cumple encargos del mercado: dan puntos y se usan una vez. Después, termina el turno.',
+      'Al acabar la ronda, cada isla es de quien tiene más barcas arriba de sus pilas. Tras cuatro rondas gana quien tenga más puntos.',
+    ],
+  },
   tabs: {
     label: 'Zonas del tablero',
-    OWN: 'Lo mío',
-    PORT: 'Puerto',
     ORDERS: 'Encargos y aves',
     RIVALS: 'Jugadores',
   },
