@@ -396,7 +396,7 @@ Ajustes de detalle hechos al construir, dentro de lo aceptado. Ninguno cambia un
 | Motivos de rechazo (MA16) | Sin `NO_DIE_LEFT`: siempre hay una jugada, porque las dos casillas del puerto para cualquier dado nunca se bloquean. Se añaden `BAD_PAYMENT` (el pago no es el coste justo), `BAD_CHOICE` (la elección no vale para la decisión pendiente) y `WRONG_PHASE` |
 | Vista (MA10) | Lleva `revealed`, la carta revelada al apalabrar con su coste y sus puntos, solo para quien decide |
 | Pago | `FULFIL` lleva el pago exacto; el tablero propone el más barato (lo básico primero y perlas para el resto) |
-| Tablero (MA17) | Las pestañas del móvil son Lo mío, Puerto, Encargos y aves, y Jugadores (sin cofradías en la versión 1). En pantallas anchas, las tres franjas |
+| Tablero (MA17) | *Cambiado el 2026-11-21, tras la primera prueba de quien decide:* el centro es un mar azul con las islas como tierra del color de su estación (dos colores si tiene dos) y el puerto como un muelle en la orilla. Los dados propios van justo encima del mar. Al elegir un dado, se resaltan las casillas donde puede ir (en discontinuo, las que obligan a forzar) y se atenúa el resto. Arriba, los tres pasos del turno y una guía corta, "Cómo se juega". Cada cara de clima tiene su color (calma amarilla, tormenta morada, brisa turquesa); las barcas siguen con el color del asiento. En el móvil, solo dos pestañas: Encargos y aves, y Jugadores |
 | Jugadas posibles | `legal.ts` da las jugadas posibles de un asiento. Lo usan la comprobación común, las pruebas y la simulación; la plataforma no |
 
 
