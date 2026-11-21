@@ -5,6 +5,8 @@ import { type BlindFiveState, SUITS } from './games/blind-five/engine.js';
 import type { DominoesState } from './games/dominoes/engine.js';
 import { COLUMN_COUNT } from './games/four-in-a-row/engine.js';
 import { GRID_SIZE, type NavalBattleState } from './games/naval-battle/engine.js';
+import type { TidesState } from './games/tides/engine.js';
+import { candidateActions as tidesCandidates } from './games/tides/legal.js';
 import { checkEngineConformance, type ConformanceFixture } from './testing/conformance.js';
 import {
   createFakeEngine,
@@ -103,6 +105,18 @@ const FIXTURES: Readonly<Record<string, ConformanceFixture>> = {
         { type: 'OTRA_COSA' },
       ];
     },
+  },
+  'tides@1.0.0': {
+    settings: {},
+    // Las jugadas que el generador propone (colocar cada dado en cada sitio,
+    // con y sin forzar; cumplir, usar, anidar, resolver y terminar), más una
+    // mal formada. Una partida son unas 200 jugadas. Juega partidas de 2, 3 y 4.
+    games: 12,
+    maxSteps: 3000,
+    candidateActions: (state, seat) => [
+      ...tidesCandidates(state as TidesState, seat),
+      { type: 'OTRA_COSA' },
+    ],
   },
 };
 
