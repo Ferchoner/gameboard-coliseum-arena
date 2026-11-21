@@ -112,4 +112,48 @@ describe('qué juegos sabe mostrar la aplicación (ADR-018, decisión Z5)', () =
     expect(ui?.endText({ winner: 1, declarations: [wrong] })).toBe('Fue el último en juego.');
     expect(ui?.endText({ winner: null, declarations: [] })).toBeNull();
   });
+
+  it('sabe mostrar Mareas 1 y da un nombre a cada uno de sus cuatro asientos (ADR-023)', () => {
+    expect(knowsGame('tides', '1.0.0')).toBe(true);
+    expect(knowsGame('tides', '2.0.0')).toBe(false);
+    expect(gameUi('tides', '1.0.0')?.seatNames).toHaveLength(4);
+  });
+
+  it('tiene un texto para cada motivo con el que Mareas rechaza una jugada', () => {
+    expect(Object.keys(gameUi('tides', '1.0.0')?.rejections ?? {}).sort()).toEqual(
+      [
+        'ALREADY_FULFILLED',
+        'ALREADY_PLACED',
+        'ALREADY_USED',
+        'BAD_CHOICE',
+        'BAD_PAYMENT',
+        'BAD_TARGET',
+        'CANNOT_AFFORD',
+        'CANNOT_FORCE',
+        'DIE_NOT_IN_POOL',
+        'FACE_MISMATCH',
+        'MALFORMED_ACTION',
+        'MUST_PLACE_FIRST',
+        'NEST_NOT_ALLOWED',
+        'NOT_YOUR_BIRD',
+        'NO_PENDING_DECISION',
+        'ORDER_NOT_AVAILABLE',
+        'PENDING_DECISION',
+        'PORT_SPACE_USED',
+        'SPACE_OCCUPIED',
+        'SPACE_SHOALED',
+        'WRONG_PHASE',
+      ].sort(),
+    );
+  });
+
+  it('dice cómo terminó Mareas: con cuántos puntos ganó o si la victoria fue compartida', () => {
+    const ui = gameUi('tides', '1.0.0');
+    const seat = (total: number) => ({ score: { total } });
+    expect(ui?.endText({ winners: [1], seats: [seat(40), seat(58)] })).toBe('Ganó con 58 puntos.');
+    expect(ui?.endText({ winners: [0, 1], seats: [seat(50), seat(50)] })).toBe(
+      'Victoria compartida, con 50 puntos.',
+    );
+    expect(ui?.endText({ winners: [], seats: [] })).toBeNull();
+  });
 });

@@ -1,5 +1,5 @@
 /**
- * Mareas: simulación de equilibrio (ADR-023, MA19). Juega partidas enteras
+ * Mareas: simulación de equilibrio (ADR-023, MA4 y MA18). Juega partidas enteras
  * con jugadores automáticos y resume las puntuaciones, para ajustar el
  * catálogo propio a la escala que se busca (ganador de 55 a 65 puntos). La
  * plataforma no lo usa; lo usan las pruebas.

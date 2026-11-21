@@ -448,7 +448,9 @@ describe('los encargos (MA7, MA15, B4)', () => {
     const revealed = (pending as { revealed: string }).revealed;
     // La carta revelada solo la ve quien decide.
     expect(engine.getView(waiting, 0).pending).toMatchObject({ revealed });
+    expect(engine.getView(waiting, 0).revealed?.id).toBe(revealed);
     expect(engine.getView(waiting, 1).pending).toMatchObject({ revealed: null });
+    expect(engine.getView(waiting, 1).revealed).toBeNull();
     expect(engine.getView(waiting, null).pending).toMatchObject({ revealed: null });
     expect(rejection(waiting, 0, { type: 'RESOLVE', skip: true })).toBe('BAD_CHOICE');
     const { state: next } = apply(waiting, 0, { type: 'RESOLVE', order: 'E13' });
@@ -712,7 +714,7 @@ describe('el estado guardado (MA16)', () => {
   });
 });
 
-describe('partidas completas y equilibrio (MA19)', () => {
+describe('partidas completas y equilibrio (MA4 y MA18)', () => {
   it('siempre hay una jugada válida y las partidas de 2, 3 y 4 terminan', () => {
     for (const players of [2, 3, 4]) {
       let state = engine.createInitialState({

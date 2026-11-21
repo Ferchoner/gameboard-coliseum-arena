@@ -106,4 +106,4 @@ Cualquier acción de un asiento al que no le toca se rechaza con `NOT_YOUR_TURN`
 
 ## Equilibrio
 
-`simulation.ts` juega partidas enteras con jugadores automáticos (MA19). Con jugadores voraces de un paso, el ganador hace de media unos 47 puntos y la media de todos ronda los 40, con 2, 3 y 4 jugadores; las victorias se reparten entre asientos. Una persona juega mejor que esos automáticos, así que se espera un ganador de 55 a 65 puntos, la escala buscada. `legal.ts` da las jugadas posibles de un asiento; lo usan las pruebas y la simulación.
+`simulation.ts` juega partidas enteras con jugadores automáticos (MA4 y MA18). Con jugadores voraces de un paso, el ganador hace de media unos 47 puntos y la media de todos ronda los 40, con 2, 3 y 4 jugadores; las victorias se reparten entre asientos. Una persona juega mejor que esos automáticos, así que se espera un ganador de 55 a 65 puntos, la escala buscada. `legal.ts` da las jugadas posibles de un asiento; lo usan las pruebas y la simulación.

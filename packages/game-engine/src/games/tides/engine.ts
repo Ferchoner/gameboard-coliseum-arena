@@ -432,6 +432,10 @@ function viewOf(state: TidesState, viewer: Seat | null): TidesView {
         : head.kind === 'PROMISE' && !ownDecision
           ? { ...head, revealed: null }
           : { ...head },
+    revealed:
+      head?.kind === 'PROMISE' && head.revealed !== null && ownDecision
+        ? structuredOrder(head.revealed)
+        : null,
     roundChoices: [...state.roundChoices],
     winners: [...state.winners],
   };

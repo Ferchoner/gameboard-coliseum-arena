@@ -171,6 +171,7 @@ El 2026-11-20 quien decide pidió, como prueba, un juego de deducción moderno q
 
 - [x] Jugadas fuera de turno: un motor puede aceptar jugadas de un asiento que no está activo, sin gastar reloj; la página de la partida y la batería común las admiten (T-25; ADR-022, CA19).
 - [x] Cinco a ciegas: motor, tablero, hoja de deducción, alta inactiva y pruebas (ADR-022, CA1 a CA18 y CA20).
+- [x] Mareas: motor, catálogo propio, simulación de equilibrio, tablero, alta inactiva y pruebas (ADR-023, MA1 a MA20).
 
 ---
 

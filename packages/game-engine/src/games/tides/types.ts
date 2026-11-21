@@ -348,6 +348,8 @@ export interface TidesView {
   readonly turn: TidesTurnView | null;
   /** La decisión pendiente. La carta revelada al apalabrar solo la ve quien decide. */
   readonly pending: TidesPending | null;
+  /** La carta revelada al apalabrar, entera, para quien decide; si no, `null`. */
+  readonly revealed: TidesOrderCard | null;
   /** En el fin de ronda, los asientos que aún tienen que elegir. */
   readonly roundChoices: readonly number[];
   /** Al terminar, los asientos que ganan. */
