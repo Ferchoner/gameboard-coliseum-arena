@@ -216,8 +216,28 @@ export const tidesStrings = {
     `${name}: cuesta ${cost}, ${points} puntos`,
   cost: 'Coste',
   points: (points: number) => (points === 1 ? '1 punto' : `${points} puntos`),
+  marketHelp:
+    'En tu turno, cumple un encargo pagando sus ingredientes: ganas sus puntos y te quedas la carta para usar su efecto una vez.',
   birdPiles: 'Aves de paso',
-  pileLeft: (count: number) => (count === 1 ? 'queda 1' : `quedan ${count}`),
+  birdsHelp:
+    'Un ave sube a bordo cuando colocas un dado en una casilla que da «ave» o en el puerto que lo dice. Mientras la llevas, te da su poder.',
+  cards: {
+    order: 'Encargo',
+    bird: 'Ave',
+    effect: 'Al usarlo:',
+    canPay: 'Te alcanza para cumplirlo.',
+    missing: (list: string, pearls: boolean) =>
+      `Te falta: ${list}${pearls ? ' (cada perla cubre uno)' : ''}.`,
+    emptyPile: 'Montón vacío.',
+    pile: (count: number) =>
+      count === 1 ? 'Es la última del montón' : `Quedan ${count} en el montón`,
+    space: { BOAT: 'Casilla para una barca', WEATHER: 'Casilla para un clima' },
+    yours: 'Tus cartas',
+    yoursHelp:
+      'Tus aves a bordo, los encargos que apalabraste y los cumplidos que aún puedes usar.',
+    promised: 'Apalabrado',
+    inHand: 'Cumplido, sin usar',
+  },
 
   yourPool: 'Tus dados',
   pool: 'Reserva',
@@ -257,6 +277,9 @@ export const tidesStrings = {
     cancel: 'Cancelar',
     fulfil: 'Cumplir',
     use: 'Usar',
+    promise: 'Apalabrar',
+    release: 'Soltar',
+    board: 'Subir a bordo',
     nest: 'Anidar en',
     force: (what: string) => `Forzar pagando ${what}`,
     forceTitle: 'Esa casilla pide otra figura. Puedes forzar pagando:',
@@ -265,8 +288,8 @@ export const tidesStrings = {
     rollAll: 'Todos',
   },
   pending: {
-    BOARD_BIRD: 'Elige de qué montón sube un ave a bordo.',
-    RELEASE_BIRD: 'Llevas cuatro aves: elige cuál sueltas.',
+    BOARD_BIRD: 'Elige qué ave sube a bordo: toca uno de los montones de aves de paso.',
+    RELEASE_BIRD: 'Llevas cuatro aves: toca la que sueltas.',
     CHOOSE_INGREDIENTS: {
       ONE: 'Elige un ingrediente.',
       TWO_SAME: 'Elige un ingrediente: te llevas dos.',
@@ -281,7 +304,7 @@ export const tidesStrings = {
         ? 'Puedes poner un bajío: toca una casilla vacía.'
         : `Puedes poner hasta ${remaining} bajíos: toca casillas vacías.`,
     MOVE_BOAT: 'Toca una barca de las islas y después la casilla vacía de su figura a la que va.',
-    PROMISE: 'Apalabra un encargo: la carta revelada o una del mercado.',
+    PROMISE: 'Apalabra un encargo: la carta revelada o una del mercado. Solo tú podrás cumplirlo.',
     revealed: 'Carta revelada',
     waiting: (name: string) => `${name} está decidiendo.`,
   },
