@@ -810,26 +810,11 @@ const seatsView = computed(() =>
               as="button"
               :kind="bird.kind"
               :season="bird.season"
+              :die="bird.die"
               :class="hintClass(birdHint(bird.kind, bird.die !== null))"
               :data-bird="bird.id"
               @click="onBird(bird.id, bird.die)"
-            >
-              <span class="td-bird-space">
-                <span class="muted">{{
-                  texts.cards.space[texts.birdSpaces[bird.kind] as 'BOAT' | 'WEATHER']
-                }}</span>
-                <span
-                  v-if="bird.die"
-                  class="td-die"
-                  :class="[
-                    `seat-${bird.die.owner}`,
-                    bird.die.kind === 'BOAT' ? 'boat' : 'weather',
-                    `face-${bird.die.face.toLowerCase()}`,
-                  ]"
-                  >{{ texts.symbols[bird.die.face] }}</span
-                >
-              </span>
-            </BirdCard>
+            />
             <BirdCard v-else :kind="bird.kind" :season="bird.season" :data-bird="bird.id" />
           </template>
           <OrderCard
@@ -1062,20 +1047,9 @@ const seatsView = computed(() =>
               :key="bird.id"
               :kind="bird.kind"
               :season="bird.season"
+              :die="bird.die"
               :data-bird="bird.id"
-            >
-              <span v-if="bird.die" class="td-bird-space">
-                <span
-                  class="td-die"
-                  :class="[
-                    `seat-${bird.die.owner}`,
-                    bird.die.kind === 'BOAT' ? 'boat' : 'weather',
-                    `face-${bird.die.face.toLowerCase()}`,
-                  ]"
-                  >{{ texts.symbols[bird.die.face] }}</span
-                >
-              </span>
-            </BirdCard>
+            />
             <OrderCard
               v-for="card in seat.promised"
               :key="card.id"

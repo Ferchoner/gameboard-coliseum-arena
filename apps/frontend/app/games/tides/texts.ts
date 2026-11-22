@@ -93,6 +93,13 @@ export const tidesStrings = {
     PETREL: 'Casilla de barca: apalabra 1 encargo.',
     SHAG: 'Al soltar otra ave: +1 punto.',
   },
+  /** Lo que da poner un dado en la casilla propia del ave. */
+  birdSpaceRewards: {
+    SKUA: 'mueve una barca colocada a una casilla vacía de su figura, sin recoger',
+    CORMORANT: '+1 perla',
+    HERON: '2 ingredientes distintos',
+    PETREL: 'apalabra 1 encargo',
+  } as Readonly<Record<string, string>>,
   /** Las aves con casilla propia y el dado que admite. */
   birdSpaces: {
     SKUA: 'WEATHER',
@@ -231,7 +238,9 @@ export const tidesStrings = {
     emptyPile: 'Montón vacío.',
     pile: (count: number) =>
       count === 1 ? 'Es la última del montón' : `Quedan ${count} en el montón`,
-    space: { BOAT: 'Casilla para una barca', WEATHER: 'Casilla para un clima' },
+    space: { BOAT: 'Cualquier barca', WEATHER: 'Cualquier clima' },
+    spaceSymbols: { BOAT: '# ⚓ ⛵', WEATHER: '☀ ⚡ ≈' },
+    spaceIntro: 'Tiene casilla propia: pon ahí un dado de tu reserva y gana lo que indica.',
     yours: 'Tus cartas',
     yoursHelp:
       'Tus aves a bordo, los encargos que apalabraste y los cumplidos que aún puedes usar.',

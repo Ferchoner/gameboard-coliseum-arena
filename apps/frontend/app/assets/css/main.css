@@ -2038,7 +2038,7 @@ button.naval-cell:not(:disabled):focus-visible {
 
 .td-space.hint-ok,
 .td-port-space.hint-ok,
-.td-bird-card.hint-ok {
+.td-bird-card.hint-ok .td-bird-slot {
   outline: 3px solid var(--td-hint);
   outline-offset: 1px;
   box-shadow: 0 0 0 6px var(--accent);
@@ -2290,16 +2290,18 @@ button.td-card {
     0 4px 10px rgb(0 0 0 / 14%);
 }
 
-.td-bird-space {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
+/* La casilla propia de un ave: como las de las islas, dentro de la carta. */
+.td-bird-slot {
+  min-height: 0;
+  cursor: inherit;
+}
+
+.td-board.choosing .td-bird-card.hint-ok .td-bird-slot {
+  opacity: 1;
 }
 
 /* Lo que se puede hacer ahora con la carta. */
-.td-card.ready,
-.td-card.hint-ok {
+.td-card.ready {
   outline: 3px solid #ffffff;
   outline-offset: 0;
   box-shadow:
